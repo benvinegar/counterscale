@@ -18,7 +18,8 @@
     "@remix-run/react": "^2.4.1",
     "isbot": "^3.6.8",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "run": "^1.4.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230518.0",
@@ -34,7 +35,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "typescript": "^5.1.6",
-    "wrangler": "3.8.0"
+    "wrangler": "3.22.1"
   },
   "engines": {
     "node": ">=18.0.0"
