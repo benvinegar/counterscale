@@ -1,0 +1,4 @@
+# You also need to specify these as environment variables in 
+# your Cloudflare configuration
+CF_BEARER_TOKEN=''
+CF_ACCOUNT_ID=''
