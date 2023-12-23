@@ -1,6 +1,9 @@
 import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 import type { AppLoadContext } from "@remix-run/cloudflare";
 import { createRequestHandler, logDevReady } from "@remix-run/cloudflare";
+
+import { processLogEntry } from "./ingest";
+
 import * as build from "@remix-run/dev/server-build";
 // eslint-disable-next-line import/no-unresolved
 import __STATIC_CONTENT_MANIFEST from "__STATIC_CONTENT_MANIFEST";
@@ -12,15 +15,28 @@ if (process.env.NODE_ENV === "development") {
   logDevReady(build);
 }
 
+interface CFAnalyticsEngine {
+  writeDataPoint: Function
+}
+
+interface Environment {
+  __STATIC_CONTENT: Fetcher;
+  TALLYHO: CFAnalyticsEngine
+  CF_BEARER_TOKEN: string
+}
+
 export default {
   async fetch(
     request: Request,
-    env: {
-      __STATIC_CONTENT: Fetcher;
-    },
+    env: Environment,
     ctx: ExecutionContext
   ): Promise<Response> {
     try {
+      processLogEntry(env.TALLYHO, {
+        referer: request.headers.get("Referer"),
+        'user-agent': request.headers.get('User-Agent')
+      });
+
       const url = new URL(request.url);
       const ttl = url.pathname.startsWith("/build/")
         ? 60 * 60 * 24 * 365 // 1 year

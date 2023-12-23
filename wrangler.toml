@@ -1,4 +1,4 @@
-name = "remix-cloudflare-workers"
+name = "tallyho-web"
 
 workers_dev = true
 main = "./build/index.js"
@@ -10,3 +10,7 @@ compatibility_date = "2023-04-20"
 
 [build]
   command = "npm run build"
+
+[[analytics_engine_datasets]]
+  binding = "TALLYHO"
+  dataset = "metricsDataset"
