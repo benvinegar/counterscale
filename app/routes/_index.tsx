@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import { AnalyticsEngineAPI } from "../analytics";
+import { AnalyticsEngineAPI } from "../analytics/query";
 
 export const meta: MetaFunction = () => {
     return [

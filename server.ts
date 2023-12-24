@@ -2,7 +2,7 @@ import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 import type { AppLoadContext } from "@remix-run/cloudflare";
 import { createRequestHandler, logDevReady } from "@remix-run/cloudflare";
 
-import { collectRequestHandler } from "./app/collect";
+import { collectRequestHandler } from "./app/analytics/collect";
 
 import * as build from "@remix-run/dev/server-build";
 // eslint-disable-next-line import/no-unresolved
