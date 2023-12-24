@@ -1,3 +1,14 @@
+interface AnalyticsQueryResult {
+  meta: string,
+  data: [
+    {
+      [key: string]: any
+    }
+  ],
+  rows: number,
+  rows_before_limit_at_least: number
+}
+
 export class AnalyticsEngineAPI {
   cfApiToken: string;
   cfAccountId: string;
@@ -20,7 +31,7 @@ export class AnalyticsEngineAPI {
     }
   }
 
-  async getCount(sinceDays: number): Promise<any> {
+  async getCount(sinceDays: number): Promise<number> {
     // defaults to 1 day if not specified
     const interval = sinceDays || 1;
 
@@ -29,21 +40,24 @@ export class AnalyticsEngineAPI {
       FROM metricsDataset 
       WHERE timestamp > NOW() - INTERVAL '${interval}' DAY`;
 
-    const returnPromise = new Promise((resolve, reject) => {
-      const response = fetch(this.defaultUrl, {
+    const returnPromise = new Promise<number>((resolve, reject) => (async () => {
+      const response = await fetch(this.defaultUrl, {
         method: 'POST',
         body: query,
         headers: this.defaultHeaders,
-      }).then((response) => {
-        resolve(response.json());
-      }).catch((error) => {
-        reject(error);
       });
-    });
+
+      if (!response.ok) {
+        reject(response.statusText);
+      }
+
+      const responseData = await response.json() as AnalyticsQueryResult;
+      resolve(responseData.data[0]['count']);
+    })());
     return returnPromise;
   }
 
-  async getCountByReferer(sinceDays: number): Promise<Response> {
+  async getCountByReferer(sinceDays: number): Promise<any> {
     // defaults to 1 day if not specified
     const interval = sinceDays || 1;
 
@@ -55,11 +69,25 @@ export class AnalyticsEngineAPI {
       ORDER BY count DESC
     `;
 
-    const response = await fetch(this.defaultUrl, {
-      method: 'POST',
-      body: query,
-      headers: this.defaultHeaders,
-    });
-    return response;
+    const returnPromise = new Promise<any>((resolve, reject) => (async () => {
+      const response = await fetch(this.defaultUrl, {
+        method: 'POST',
+        body: query,
+        headers: this.defaultHeaders,
+      });
+
+      if (!response.ok) {
+        reject(response.statusText);
+      }
+
+      const responseData = await response.json() as AnalyticsQueryResult;
+      var result = responseData.data.reduce((acc, cur) => {
+        acc.push([cur['referer'], cur['count']]);
+        return acc;
+      }, []);
+      console.log(result);;
+      resolve(result);
+    })());
+    return returnPromise;
   }
 }

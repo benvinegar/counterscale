@@ -23,9 +23,14 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
   const analyticsEngine = new AnalyticsEngineAPI(context.env.CF_ACCOUNT_ID, context.env.CF_BEARER_TOKEN);
 
   const days = 1;
-  const responseData = await analyticsEngine.getCount(days);
+  const count = analyticsEngine.getCount(days);
+  const countByReferer = analyticsEngine.getCountByReferer(days);
 
-  return json({ test: "testing", count: responseData.data[0].count });
+  return json({
+    test: "testing",
+    count: await count,
+    countByReferer: await countByReferer
+  });
 };
 
 export default function Index() {
@@ -34,8 +39,17 @@ export default function Index() {
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
       <h1>Welcome to Tally-ho</h1>
+
+      <h2>Hits</h2>
       <ul>
         <li>Hits (all time): {data.count}</li>
+      </ul>
+
+      <h2>Hits by Referer</h2>
+      <ul>
+        {data.countByReferer.map((item: any) => (
+          <li key={item[0]}>{item[0]}: {item[1]}</li>
+        ))}
       </ul>
     </div>
   );
