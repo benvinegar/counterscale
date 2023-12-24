@@ -1,5 +1,12 @@
-const ColumnMappings = {
-    userAgent: "blob2"
+interface ColumnMappingsType {
+    [key: string]: any
+}
+
+const ColumnMappings: ColumnMappingsType = {
+    host: "blob1",
+    userAgent: "blob2",
+    path: "blob3",
+    country: "blob4",
 };
 
 interface AnalyticsQueryResult {
@@ -61,12 +68,13 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByUserAgent(sinceDays: number): Promise<any> {
+    async getCountByColumn(sinceDays: number, column: string): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
 
+        const _column: string = ColumnMappings[column];
         const query = `
-            SELECT SUM(_sample_interval) as count, ${ColumnMappings.userAgent} as userAgent 
+            SELECT SUM(_sample_interval) as count, ${_column} as userAgent 
             FROM metricsDataset 
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY 
             GROUP BY userAgent
@@ -92,5 +100,9 @@ export class AnalyticsEngineAPI {
             resolve(result);
         })());
         return returnPromise;
+    }
+
+    async getCountByUserAgent(sinceDays: number): Promise<any> {
+        return this.getCountByColumn(sinceDays, 'userAgent');
     }
 }
