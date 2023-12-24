@@ -24,12 +24,12 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
 
     const days = 1;
     const count = analyticsEngine.getCount(days);
-    const countByReferer = analyticsEngine.getCountByReferer(days);
+    const countByUserAgent = analyticsEngine.getCountByUserAgent(days);
 
     return json({
         test: "testing",
         count: await count,
-        countByReferer: await countByReferer
+        countByUserAgent: await countByUserAgent
     });
 };
 
@@ -45,9 +45,9 @@ export default function Index() {
                 <li>Hits (all time): {data.count}</li>
             </ul>
 
-            <h2>Hits by Referer</h2>
+            <h2>Hits by User Agent</h2>
             <ul>
-                {data.countByReferer.map((item: any) => (
+                {data.countByUserAgent.map((item: any) => (
                     <li key={item[0]}>{item[0]}: {item[1]}</li>
                 ))}
             </ul>

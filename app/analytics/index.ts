@@ -1,3 +1,7 @@
+const ColumnMappings = {
+    userAgent: "blob2"
+};
+
 interface AnalyticsQueryResult {
     meta: string,
     data: [
@@ -57,18 +61,17 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByReferer(sinceDays: number): Promise<any> {
+    async getCountByUserAgent(sinceDays: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
 
         const query = `
-      SELECT SUM(_sample_interval) as count, blob2 as referer 
-      FROM metricsDataset 
-      WHERE timestamp > NOW() - INTERVAL '${interval}' DAY 
-      GROUP BY referer
-      ORDER BY count DESC
-    `;
-
+            SELECT SUM(_sample_interval) as count, ${ColumnMappings.userAgent} as userAgent 
+            FROM metricsDataset 
+            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY 
+            GROUP BY userAgent
+            ORDER BY count DESC
+        `;
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
                 method: 'POST',
@@ -81,11 +84,12 @@ export class AnalyticsEngineAPI {
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
+            console.log(responseData);
             var result = responseData.data.reduce((acc, cur) => {
-                acc.push([cur['referer'], cur['count']]);
+                acc.push([cur['userAgent'], cur['count']]);
                 return acc;
             }, []);
-            console.log(result);;
+
             resolve(result);
         })());
         return returnPromise;
