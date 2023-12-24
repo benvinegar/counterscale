@@ -12,6 +12,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
         host: params.h,
         path: params.p,
         userAgent: request.headers.get('user-agent'),
+        country: (request as any).cf?.country
     }
 
     processLogEntry(env.TALLYHO, data);
@@ -26,6 +27,7 @@ export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
             data.host || "",
             data.userAgent || "",
             data.path || "",
+            data.country || "",
             // data.RayID || "",
             // data.ClientIP || "",
             // data.ClientRequestMethod || "",
