@@ -68,9 +68,10 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByColumn(sinceDays: number, column: string): Promise<any> {
+    async getCountByColumn(column: string, sinceDays: number, limit?: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
+        limit = limit || 10;
 
         const _column: string = ColumnMappings[column];
         const query = `
@@ -79,6 +80,7 @@ export class AnalyticsEngineAPI {
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY 
             GROUP BY userAgent
             ORDER BY count DESC
+            LIMIT ${limit}
         `;
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
@@ -103,6 +105,10 @@ export class AnalyticsEngineAPI {
     }
 
     async getCountByUserAgent(sinceDays: number): Promise<any> {
-        return this.getCountByColumn(sinceDays, 'userAgent');
+        return this.getCountByColumn('userAgent', sinceDays);
+    }
+
+    async getCountByCountry(sinceDays: number): Promise<any> {
+        return this.getCountByColumn('country', sinceDays);
     }
 }

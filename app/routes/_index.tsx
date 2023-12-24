@@ -25,11 +25,12 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     const days = 1;
     const count = analyticsEngine.getCount(days);
     const countByUserAgent = analyticsEngine.getCountByUserAgent(days);
+    const countByCountry = analyticsEngine.getCountByCountry(days);
 
     return json({
-        test: "testing",
         count: await count,
-        countByUserAgent: await countByUserAgent
+        countByUserAgent: await countByUserAgent,
+        countByCountry: await countByCountry,
     });
 };
 
@@ -48,6 +49,13 @@ export default function Index() {
             <h2>Hits by User Agent</h2>
             <ul>
                 {data.countByUserAgent.map((item: any) => (
+                    <li key={item[0]}>{item[0]}: {item[1]}</li>
+                ))}
+            </ul>
+
+            <h2>Hits by Country</h2>
+            <ul>
+                {data.countByCountry.map((item: any) => (
                     <li key={item[0]}>{item[0]}: {item[1]}</li>
                 ))}
             </ul>
