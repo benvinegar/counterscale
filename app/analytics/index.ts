@@ -8,6 +8,9 @@ const ColumnMappings: ColumnMappingsType = {
     path: "blob3",
     country: "blob4",
     referrer: "blob5",
+
+    newVisitor: "double1",
+    newSession: "double2",
 };
 
 interface AnalyticsQueryResult {

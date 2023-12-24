@@ -13,7 +13,9 @@ export function collectRequestHandler(request: Request, env: Environment) {
         path: params.p,
         referrer: params.r,
         userAgent: request.headers.get('user-agent'),
-        country: (request as any).cf?.country
+        country: (request as any).cf?.country,
+        newVisitor: params.nv,
+        newSession: params.ns,
     }
 
     processLogEntry(env.TALLYHO, data);
@@ -36,6 +38,8 @@ export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
             // data.ClientRequestURI || "",
         ],
         doubles: [
+            data.newVisitor || 0,
+            data.newSession || 0,
             // // Supply a maximum of 20 doubles
             // data.EdgeStartTimestamp || 0,
             // data.EdgeEndTimestamp || 0,
