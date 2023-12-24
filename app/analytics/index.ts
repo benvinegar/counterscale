@@ -7,6 +7,7 @@ const ColumnMappings: ColumnMappingsType = {
     userAgent: "blob2",
     path: "blob3",
     country: "blob4",
+    referrer: "blob5",
 };
 
 interface AnalyticsQueryResult {
@@ -110,5 +111,9 @@ export class AnalyticsEngineAPI {
 
     async getCountByCountry(sinceDays: number): Promise<any> {
         return this.getCountByColumn('country', sinceDays);
+    }
+
+    async getCountByReferrer(sinceDays: number): Promise<any> {
+        return this.getCountByColumn('referrer', sinceDays);
     }
 }

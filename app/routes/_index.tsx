@@ -26,11 +26,13 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     const count = analyticsEngine.getCount(days);
     const countByUserAgent = analyticsEngine.getCountByUserAgent(days);
     const countByCountry = analyticsEngine.getCountByCountry(days);
+    const countByReferrer = analyticsEngine.getCountByReferrer(days); // Add this line
 
     return json({
         count: await count,
         countByUserAgent: await countByUserAgent,
         countByCountry: await countByCountry,
+        countByReferrer: await countByReferrer
     });
 };
 
@@ -56,6 +58,13 @@ export default function Index() {
             <h2>Hits by Country</h2>
             <ul>
                 {data.countByCountry.map((item: any) => (
+                    <li key={item[0]}>{item[0]}: {item[1]}</li>
+                ))}
+            </ul>
+
+            <h2>Hits by Referrer</h2>
+            <ul>
+                {data.countByReferrer.map((item: any) => ( // Update this line
                     <li key={item[0]}>{item[0]}: {item[1]}</li>
                 ))}
             </ul>

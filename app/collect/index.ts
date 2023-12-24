@@ -11,6 +11,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
     const data = {
         host: params.h,
         path: params.p,
+        referrer: params.r,
         userAgent: request.headers.get('user-agent'),
         country: (request as any).cf?.country
     }
@@ -28,6 +29,7 @@ export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
             data.userAgent || "",
             data.path || "",
             data.country || "",
+            data.referrer || "",
             // data.RayID || "",
             // data.ClientIP || "",
             // data.ClientRequestMethod || "",
