@@ -12,63 +12,63 @@ const MANIFEST = JSON.parse(__STATIC_CONTENT_MANIFEST);
 const handleRemixRequest = createRequestHandler(build, process.env.NODE_ENV);
 
 if (process.env.NODE_ENV === "development") {
-  logDevReady(build);
+    logDevReady(build);
 }
 
 interface CFAnalyticsEngine {
-  writeDataPoint: Function
+    writeDataPoint: Function
 }
 
 interface Environment {
-  __STATIC_CONTENT: Fetcher;
-  TALLYHO: CFAnalyticsEngine
-  CF_BEARER_TOKEN: string
-  CF_ACCOUNT_ID: string
+    __STATIC_CONTENT: Fetcher;
+    TALLYHO: CFAnalyticsEngine
+    CF_BEARER_TOKEN: string
+    CF_ACCOUNT_ID: string
 }
 
 export default {
-  async fetch(
-    request: Request,
-    env: Environment,
-    ctx: ExecutionContext
-  ): Promise<Response> {
-    try {
-      processLogEntry(env.TALLYHO, {
-        referer: request.headers.get("Referer"),
-        'user-agent': request.headers.get('User-Agent')
-      });
+    async fetch(
+        request: Request,
+        env: Environment,
+        ctx: ExecutionContext
+    ): Promise<Response> {
+        try {
+            processLogEntry(env.TALLYHO, {
+                referer: request.headers.get("Referer"),
+                'user-agent': request.headers.get('User-Agent')
+            });
 
-      const url = new URL(request.url);
+            const url = new URL(request.url);
 
-      const ttl = url.pathname.startsWith("/build/")
-        ? 60 * 60 * 24 * 365 // 1 year
-        : 60 * 5; // 5 minutes
-      return await getAssetFromKV(
-        {
-          request,
-          waitUntil: ctx.waitUntil.bind(ctx),
-        } as FetchEvent,
-        {
-          ASSET_NAMESPACE: env.__STATIC_CONTENT,
-          ASSET_MANIFEST: MANIFEST,
-          cacheControl: {
-            browserTTL: ttl,
-            edgeTTL: ttl,
-          },
+            const ttl = url.pathname.startsWith("/build/")
+                ? 60 * 60 * 24 * 365 // 1 year
+                : 60 * 5; // 5 minutes
+            return await getAssetFromKV(
+                {
+                    request,
+                    waitUntil: ctx.waitUntil.bind(ctx),
+                } as FetchEvent,
+                {
+                    ASSET_NAMESPACE: env.__STATIC_CONTENT,
+                    ASSET_MANIFEST: MANIFEST,
+                    cacheControl: {
+                        browserTTL: ttl,
+                        edgeTTL: ttl,
+                    },
+                }
+            );
+        } catch (error) {
+            // No-op
         }
-      );
-    } catch (error) {
-      // No-op
-    }
 
-    try {
-      const loadContext: AppLoadContext = {
-        env,
-      };
-      return await handleRemixRequest(request, loadContext);
-    } catch (error) {
-      console.log(error);
-      return new Response("An unexpected error occurred", { status: 500 });
-    }
-  },
+        try {
+            const loadContext: AppLoadContext = {
+                env,
+            };
+            return await handleRemixRequest(request, loadContext);
+        } catch (error) {
+            console.log(error);
+            return new Response("An unexpected error occurred", { status: 500 });
+        }
+    },
 };
