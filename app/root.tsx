@@ -14,6 +14,7 @@ export const links: LinksFunction = () => [
 ];
 
 export default function App() {
+
     return (
         <html lang="en">
             <head>
@@ -27,6 +28,8 @@ export default function App() {
                 <ScrollRestoration />
                 <Scripts />
                 <LiveReload />
+                <script dangerouslySetInnerHTML={{ __html: "window.tallyho = {'q': [['trackPageview']] };" }}></script>
+                <script id="tallyho-script" src="/tracker.js"></script>
             </body>
         </html>
     );

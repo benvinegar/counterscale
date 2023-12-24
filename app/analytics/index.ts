@@ -84,7 +84,6 @@ export class AnalyticsEngineAPI {
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
-            console.log(responseData);
             var result = responseData.data.reduce((acc, cur) => {
                 acc.push([cur['userAgent'], cur['count']]);
                 return acc;
