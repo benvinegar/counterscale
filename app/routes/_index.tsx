@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import AnalyticsEngineAPI from "../analytics/queries";
+import { AnalyticsEngineAPI } from "../analytics";
 
 export const meta: MetaFunction = () => {
   return [
@@ -22,9 +22,8 @@ declare module "@remix-run/server-runtime" {
 export const loader = async ({ context }: LoaderFunctionArgs) => {
   const analyticsEngine = new AnalyticsEngineAPI(context.env.CF_ACCOUNT_ID, context.env.CF_BEARER_TOKEN);
 
-  const response = await analyticsEngine.getCount();
-
-  const responseData: any = await response.json();
+  const days = 1;
+  const responseData = await analyticsEngine.getCount(days);
 
   return json({ test: "testing", count: responseData.data[0].count });
 };

@@ -39,6 +39,7 @@ export default {
       });
 
       const url = new URL(request.url);
+
       const ttl = url.pathname.startsWith("/build/")
         ? 60 * 60 * 24 * 365 // 1 year
         : 60 * 5; // 5 minutes
