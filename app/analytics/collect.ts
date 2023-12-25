@@ -1,3 +1,5 @@
+import { UAParser } from 'ua-parser-js';
+
 export function collectRequestHandler(request: Request, env: Environment) {
     const params: any = {};
     const url = new URL(request.url)
@@ -8,14 +10,23 @@ export function collectRequestHandler(request: Request, env: Environment) {
         if (kv[0]) params[kv[0]] = decodeURIComponent(kv[1])
     });
 
+    const userAgent = request.headers.get('user-agent') || undefined;
+    const parsedUserAgent = new UAParser(userAgent);
+
+    parsedUserAgent.getBrowser().name;
+
     const data = {
         host: params.h,
         path: params.p,
         referrer: params.r,
-        userAgent: request.headers.get('user-agent'),
-        country: (request as any).cf?.country,
         newVisitor: params.nv,
         newSession: params.ns,
+        // user agent stuff
+        userAgent: userAgent,
+        browserName: parsedUserAgent.getBrowser().name,
+        deviceModel: parsedUserAgent.getDevice().model,
+        // location
+        country: (request as any).cf?.country,
     }
 
     processLogEntry(env.TALLYHO, data);
@@ -32,6 +43,8 @@ export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
             data.path || "",
             data.country || "",
             data.referrer || "",
+            data.browserName || "",
+            data.deviceModel || "",
             // data.RayID || "",
             // data.ClientIP || "",
             // data.ClientRequestMethod || "",

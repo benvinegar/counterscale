@@ -24,13 +24,16 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
 
     const days = 1;
     const count = analyticsEngine.getCount(days);
-    const countByUserAgent = analyticsEngine.getCountByUserAgent(days);
+    const countByPath = analyticsEngine.getCountByPath(days);
+    // const countByUserAgent = analyticsEngine.getCountByUserAgent(days);
     const countByCountry = analyticsEngine.getCountByCountry(days);
-    const countByReferrer = analyticsEngine.getCountByReferrer(days); // Add this line
+    const countByReferrer = analyticsEngine.getCountByReferrer(days);
+    const countByBrowser = analyticsEngine.getCountByBrowser(days);
 
     return json({
         count: await count,
-        countByUserAgent: await countByUserAgent,
+        countByPath: await countByPath,
+        countByBrowser: await countByBrowser,
         countByCountry: await countByCountry,
         countByReferrer: await countByReferrer
     });
@@ -48,9 +51,16 @@ export default function Index() {
                 <li>Hits (all time): {data.count}</li>
             </ul>
 
-            <h2>Hits by User Agent</h2>
+            <h2>Hits by Path</h2>
             <ul>
-                {data.countByUserAgent.map((item: any) => (
+                {data.countByPath.map((item: any) => (
+                    <li key={item[0]}>{item[0]}: {item[1]}</li>
+                ))}
+            </ul>
+
+            <h2>Hits by Browser</h2>
+            <ul>
+                {data.countByBrowser.map((item: any) => (
                     <li key={item[0]}>{item[0]}: {item[1]}</li>
                 ))}
             </ul>

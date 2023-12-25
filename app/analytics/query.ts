@@ -8,6 +8,8 @@ const ColumnMappings: ColumnMappingsType = {
     path: "blob3",
     country: "blob4",
     referrer: "blob5",
+    browserName: "blob6",
+    deviceModel: "blob7",
 
     newVisitor: "double1",
     newSession: "double2",
@@ -118,5 +120,13 @@ export class AnalyticsEngineAPI {
 
     async getCountByReferrer(sinceDays: number): Promise<any> {
         return this.getCountByColumn('referrer', sinceDays);
+    }
+
+    async getCountByPath(sinceDays: number): Promise<any> {
+        return this.getCountByColumn('path', sinceDays);
+    }
+
+    async getCountByBrowser(sinceDays: number): Promise<any> {
+        return this.getCountByColumn('browserName', sinceDays);
     }
 }
