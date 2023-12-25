@@ -31,7 +31,26 @@ export function collectRequestHandler(request: Request, env: Environment) {
 
     processLogEntry(env.TALLYHO, data);
 
-    return new Response("OK", { status: 200 });
+    // encode 1x1 transparent gif
+    const gif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const gifData = atob(gif);
+    const gifLength = gifData.length;
+    const arrayBuffer = new ArrayBuffer(gifLength);
+    const uintArray = new Uint8Array(arrayBuffer);
+    for (let i = 0; i < gifLength; i++) {
+        uintArray[i] = gifData.charCodeAt(i);
+    }
+
+    return new Response(arrayBuffer, {
+        headers: {
+            "Content-Type": "image/gif",
+            "Expires": "Mon, 01 Jan 1990 00:00:00 GMT",
+            "Cache-Control": "no-store",
+            "Pragma": "no-cache",
+            "Tk": "N", // not tracking
+        },
+        status: 200
+    });
 }
 
 export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
