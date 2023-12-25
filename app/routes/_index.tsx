@@ -1,3 +1,5 @@
+import { Button } from "~/components/ui/button"
+
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
@@ -44,8 +46,11 @@ export default function Index() {
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-            <h1>Welcome to Tally-ho</h1>
+            <h1 className="text-3xl font-bold underline">
+                Hello world!
+            </h1>
 
+            <Button>hello</Button>
             <h2>Hits</h2>
             <ul>
                 <li>Hits (all time): {data.count}</li>

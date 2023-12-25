@@ -13,13 +13,19 @@
   },
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.1.3",
+    "@radix-ui/react-slot": "^1.0.2",
     "@remix-run/cloudflare": "^2.4.1",
     "@remix-run/css-bundle": "^2.4.1",
     "@remix-run/react": "^2.4.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
     "isbot": "^3.6.8",
+    "lucide-react": "^0.302.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "run": "^1.4.0",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss-animate": "^1.0.7",
     "ua-parser-js": "^1.0.37"
   },
   "devDependencies": {
@@ -29,6 +35,7 @@
     "@types/react-dom": "^18.2.7",
     "@types/ua-parser-js": "^0.7.39",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "autoprefixer": "^10.4.16",
     "eslint": "^8.38.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",
@@ -36,6 +43,7 @@
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "tailwindcss": "^3.4.0",
     "typescript": "^5.1.6",
     "wrangler": "3.22.1"
   },
