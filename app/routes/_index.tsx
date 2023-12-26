@@ -1,4 +1,6 @@
 import { Button } from "~/components/ui/button"
+import { Card, CardTitle, CardDescription, CardContent, CardHeader } from "~/components/ui/card"
+
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
@@ -46,15 +48,33 @@ export default function Index() {
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-            <h1 className="text-3xl font-bold underline">
-                Hello world!
+
+            <h1 className="text-3xl mb-4">
+                Tallyho
             </h1>
 
-            <Button>hello</Button>
-            <h2>Hits</h2>
-            <ul>
-                <li>Hits (all time): {data.count}</li>
-            </ul>
+            <div className="grid grid-cols-3 gap-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Hits</CardTitle>
+                    </CardHeader>
+                    <CardContent>{data.count}</CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Visits</CardTitle>
+                    </CardHeader>
+                    <CardContent>n/a</CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Bounce Rate</CardTitle>
+                    </CardHeader>
+                    <CardContent>n/a</CardContent>
+                </Card>
+            </div>
 
             <h2>Hits by Path</h2>
             <ul>

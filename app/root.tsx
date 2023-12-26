@@ -26,7 +26,12 @@ export default function App() {
                 <Links />
             </head>
             <body>
-                <Outlet />
+                <div className="container mx-auto mt-8">
+
+                    <main role="main" className="w-full">
+                        <Outlet />
+                    </main>
+                </div>
                 <ScrollRestoration />
                 <Scripts />
                 <LiveReload />
