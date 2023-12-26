@@ -53,7 +53,7 @@ export default function Index() {
                 Tallyho
             </h1>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 mb-4">
                 <Card>
                     <CardHeader>
                         <CardTitle>Hits</CardTitle>
@@ -76,33 +76,68 @@ export default function Index() {
                 </Card>
             </div>
 
-            <h2>Hits by Path</h2>
-            <ul>
-                {data.countByPath.map((item: any) => (
-                    <li key={item[0]}>{item[0]}: {item[1]}</li>
-                ))}
-            </ul>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Pages</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul>
+                            {data.countByPath.map((item: any) => (
+                                <li key={item[0]}>{item[0]}: {item[1]}</li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
 
-            <h2>Hits by Browser</h2>
-            <ul>
-                {data.countByBrowser.map((item: any) => (
-                    <li key={item[0]}>{item[0]}: {item[1]}</li>
-                ))}
-            </ul>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Referrers</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul>
+                            {data.countByReferrer.map((item: any) => ( // Update this line
+                                <li key={item[0]}>{item[0]}: {item[1]}</li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            </div>
 
-            <h2>Hits by Country</h2>
-            <ul>
-                {data.countByCountry.map((item: any) => (
-                    <li key={item[0]}>{item[0]}: {item[1]}</li>
-                ))}
-            </ul>
+            <div className="grid grid-cols-3 gap-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Browsers</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul>
+                            {data.countByBrowser.map((item: any) => (
+                                <li key={item[0]}>{item[0]}: {item[1]}</li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
 
-            <h2>Hits by Referrer</h2>
-            <ul>
-                {data.countByReferrer.map((item: any) => ( // Update this line
-                    <li key={item[0]}>{item[0]}: {item[1]}</li>
-                ))}
-            </ul>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Devices</CardTitle>
+                    </CardHeader>
+                    <CardContent>n/a</CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Countries</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul>
+                            {data.countByCountry.map((item: any) => (
+                                <li key={item[0]}>{item[0]}: {item[1]}</li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }
