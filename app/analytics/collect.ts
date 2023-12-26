@@ -16,6 +16,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
     parsedUserAgent.getBrowser().name;
 
     const data = {
+        siteId: params.sid,
         host: params.h,
         path: params.p,
         referrer: params.r,
@@ -57,13 +58,14 @@ export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
     const datapoint = {
         indexes: [data.ClientRequestHost || ""], // Supply one index
         blobs: [
-            data.host || "",
-            data.userAgent || "",
-            data.path || "",
-            data.country || "",
-            data.referrer || "",
-            data.browserName || "",
-            data.deviceModel || "",
+            data.host || "", // blob1
+            data.userAgent || "", // blob2
+            data.path || "", // blob3
+            data.country || "", // blob4
+            data.referrer || "", // blob5
+            data.browserName || "", // blob6
+            data.deviceModel || "", // blob7
+            data.siteId || "", // blob8
             // data.RayID || "",
             // data.ClientIP || "",
             // data.ClientRequestMethod || "",

@@ -27,12 +27,16 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     const analyticsEngine = new AnalyticsEngineAPI(context.env.CF_ACCOUNT_ID, context.env.CF_BEARER_TOKEN);
 
     const days = 7;
-    const count = analyticsEngine.getCount(days);
-    const countByPath = analyticsEngine.getCountByPath(days);
-    // const countByUserAgent = analyticsEngine.getCountByUserAgent(days);
-    const countByCountry = analyticsEngine.getCountByCountry(days);
-    const countByReferrer = analyticsEngine.getCountByReferrer(days);
-    const countByBrowser = analyticsEngine.getCountByBrowser(days);
+
+    const sitesByHits = analyticsEngine.getSitesByHits(days);
+    // pick first non-empty site
+    const siteId = (await sitesByHits).find(([site, hits]: [string, number]) => site != '' && hits > 0)[0];
+
+    const count = analyticsEngine.getCount(siteId, days);
+    const countByPath = analyticsEngine.getCountByPath(siteId, days);
+    const countByCountry = analyticsEngine.getCountByCountry(siteId, days);
+    const countByReferrer = analyticsEngine.getCountByReferrer(siteId, days);
+    const countByBrowser = analyticsEngine.getCountByBrowser(siteId, days);
 
     return json({
         count: await count,

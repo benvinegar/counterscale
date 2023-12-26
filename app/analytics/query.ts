@@ -10,6 +10,7 @@ const ColumnMappings: ColumnMappingsType = {
     referrer: "blob5",
     browserName: "blob6",
     deviceModel: "blob7",
+    siteId: "blob8",
 
     newVisitor: "double1",
     newSession: "double2",
@@ -48,14 +49,16 @@ export class AnalyticsEngineAPI {
         }
     }
 
-    async getCount(sinceDays: number): Promise<number> {
+    async getCount(siteId: string, sinceDays: number): Promise<number> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
+        const siteIdColumn = ColumnMappings['siteId'];
 
         const query = `
-      SELECT SUM(_sample_interval) as count 
-      FROM metricsDataset 
-      WHERE timestamp > NOW() - INTERVAL '${interval}' DAY`;
+            SELECT SUM(_sample_interval) as count 
+            FROM metricsDataset 
+            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            AND ${siteIdColumn} = '${siteId}'`;
 
         const returnPromise = new Promise<number>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
@@ -74,17 +77,69 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByColumn(column: string, sinceDays: number, limit?: number): Promise<any> {
+    async getCountByColumn(siteId: string, column: string, sinceDays: number, limit?: number): Promise<any> {
+        // defaults to 1 day if not specified
+        const interval = sinceDays || 1;
+        limit = limit || 10;
+        const siteIdColumn = ColumnMappings['siteId'];
+
+        const _column: string = ColumnMappings[column];
+        const query = `
+            SELECT ${_column}, SUM(_sample_interval) as count 
+            FROM metricsDataset 
+            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            AND ${siteIdColumn} = '${siteId}'
+            GROUP BY ${_column}
+            ORDER BY count DESC
+            LIMIT ${limit}`;
+
+        const returnPromise = new Promise<any>((resolve, reject) => (async () => {
+            const response = await fetch(this.defaultUrl, {
+                method: 'POST',
+                body: query,
+                headers: this.defaultHeaders,
+            });
+
+            if (!response.ok) {
+                reject(response.statusText);
+            }
+
+            const responseData = await response.json() as AnalyticsQueryResult;
+            resolve(responseData.data);
+        })());
+        return returnPromise;
+    }
+
+    async getCountByUserAgent(siteId: string, sinceDays: number): Promise<any> {
+        return this.getCountByColumn(siteId, 'userAgent', sinceDays);
+    }
+
+    async getCountByCountry(siteId: string, sinceDays: number): Promise<any> {
+        return this.getCountByColumn(siteId, 'country', sinceDays);
+    }
+
+    async getCountByReferrer(siteId: string, sinceDays: number): Promise<any> {
+        return this.getCountByColumn(siteId, 'referrer', sinceDays);
+    }
+
+    async getCountByPath(siteId: string, sinceDays: number): Promise<any> {
+        return this.getCountByColumn(siteId, 'path', sinceDays);
+    }
+
+    async getCountByBrowser(siteId: string, sinceDays: number): Promise<any> {
+        return this.getCountByColumn(siteId, 'browserName', sinceDays);
+    }
+
+    async getSitesByHits(sinceDays: number, limit?: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;
 
-        const _column: string = ColumnMappings[column];
         const query = `
-            SELECT SUM(_sample_interval) as count, ${_column} as userAgent 
+            SELECT SUM(_sample_interval) as count, blob8 as siteId 
             FROM metricsDataset 
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY 
-            GROUP BY userAgent
+            GROUP BY siteId
             ORDER BY count DESC
             LIMIT ${limit}
         `;
@@ -101,32 +156,12 @@ export class AnalyticsEngineAPI {
 
             const responseData = await response.json() as AnalyticsQueryResult;
             var result = responseData.data.reduce((acc, cur) => {
-                acc.push([cur['userAgent'], cur['count']]);
+                acc.push([cur['siteId'], cur['count']]);
                 return acc;
             }, []);
 
             resolve(result);
         })());
         return returnPromise;
-    }
-
-    async getCountByUserAgent(sinceDays: number): Promise<any> {
-        return this.getCountByColumn('userAgent', sinceDays);
-    }
-
-    async getCountByCountry(sinceDays: number): Promise<any> {
-        return this.getCountByColumn('country', sinceDays);
-    }
-
-    async getCountByReferrer(sinceDays: number): Promise<any> {
-        return this.getCountByColumn('referrer', sinceDays);
-    }
-
-    async getCountByPath(sinceDays: number): Promise<any> {
-        return this.getCountByColumn('path', sinceDays);
-    }
-
-    async getCountByBrowser(sinceDays: number): Promise<any> {
-        return this.getCountByColumn('browserName', sinceDays);
     }
 }
