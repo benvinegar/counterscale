@@ -1,6 +1,11 @@
-import { Button } from "~/components/ui/button"
 import { Card, CardTitle, CardDescription, CardContent, CardHeader } from "~/components/ui/card"
-
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "~/components/ui/select"
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
@@ -28,9 +33,9 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
 
     const days = 7;
 
-    const sitesByHits = analyticsEngine.getSitesByHits(days);
+    const sitesByHits = (await analyticsEngine.getSitesByHits(days)).filter(([site, hits]: [string, number]) => site != '');
     // pick first non-empty site
-    const siteId = (await sitesByHits).find(([site, hits]: [string, number]) => site != '' && hits > 0)[0];
+    const siteId = sitesByHits[0][0];
 
     const count = analyticsEngine.getCount(siteId, days);
     const countByPath = analyticsEngine.getCountByPath(siteId, days);
@@ -38,7 +43,10 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     const countByReferrer = analyticsEngine.getCountByReferrer(siteId, days);
     const countByBrowser = analyticsEngine.getCountByBrowser(siteId, days);
 
+    console.log((await sitesByHits));
     return json({
+        siteId,
+        sites: (await sitesByHits).map(([site,]: [string,]) => site),
         count: await count,
         countByPath: await countByPath,
         countByBrowser: await countByBrowser,
@@ -56,6 +64,20 @@ export default function Index() {
             <h1 className="text-3xl mb-4">
                 Tallyho
             </h1>
+
+            <div className="w-full mb-4">
+
+                <Select value={data.siteId}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Site" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {data.sites.map((siteId: string) =>
+                            <SelectItem value={siteId}>{siteId}</SelectItem>
+                        )}
+                    </SelectContent>
+                </Select>
+            </div>
 
             <div className="grid grid-cols-3 gap-4 mb-4">
                 <Card>
