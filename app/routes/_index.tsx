@@ -9,13 +9,13 @@ import {
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import { AnalyticsEngineAPI } from "../analytics/query";
 
 export const meta: MetaFunction = () => {
     return [
-        { title: "New Remix App" },
-        { name: "description", content: "Welcome to Remix!" },
+        { title: "Tallyho" },
+        { name: "description", content: "Tallyho analytics" },
     ];
 };
 
@@ -28,25 +28,30 @@ declare module "@remix-run/server-runtime" {
     }
 }
 
-export const loader = async ({ context }: LoaderFunctionArgs) => {
+export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const analyticsEngine = new AnalyticsEngineAPI(context.env.CF_ACCOUNT_ID, context.env.CF_BEARER_TOKEN);
 
     const days = 7;
+    const sitesByHits = (await analyticsEngine.getSitesByHits(days));
 
-    const sitesByHits = (await analyticsEngine.getSitesByHits(days)).filter(([site, hits]: [string, number]) => site != '');
-    // pick first non-empty site
-    const siteId = sitesByHits[0][0];
+    const url = new URL(request.url);
+    let siteId = url.searchParams.get("site") || '';
+    if (!siteId) {
+        // pick first non-empty site
+        siteId = sitesByHits[0][0];
+    }
 
-    const count = analyticsEngine.getCount(siteId, days);
-    const countByPath = analyticsEngine.getCountByPath(siteId, days);
-    const countByCountry = analyticsEngine.getCountByCountry(siteId, days);
-    const countByReferrer = analyticsEngine.getCountByReferrer(siteId, days);
-    const countByBrowser = analyticsEngine.getCountByBrowser(siteId, days);
+    let actualSiteId = siteId == '@unknown' ? '' : siteId;
 
-    console.log((await sitesByHits));
+    const count = analyticsEngine.getCount(actualSiteId, days);
+    const countByPath = analyticsEngine.getCountByPath(actualSiteId, days);
+    const countByCountry = analyticsEngine.getCountByCountry(actualSiteId, days);
+    const countByReferrer = analyticsEngine.getCountByReferrer(actualSiteId, days);
+    const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, days);
+
     return json({
-        siteId,
-        sites: (await sitesByHits).map(([site,]: [string,]) => site),
+        siteId: siteId || '@unknown',
+        sites: sitesByHits.map(([site,]: [string,]) => site),
         count: await count,
         countByPath: await countByPath,
         countByBrowser: await countByBrowser,
@@ -57,7 +62,11 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
 
 export default function Index() {
     const data = useLoaderData<typeof loader>();
+    let navigate = useNavigate()
 
+    function changeSite(site: string) {
+        navigate(`/?site=${site}`)
+    }
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
 
@@ -67,13 +76,14 @@ export default function Index() {
 
             <div className="w-full mb-4">
 
-                <Select value={data.siteId}>
+                <Select defaultValue={data.siteId} onValueChange={(site) => changeSite(site)}>
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Site" />
+                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                        {/* SelectItem explodes if given an empty string for `value` so coerce to @unknown */}
                         {data.sites.map((siteId: string) =>
-                            <SelectItem value={siteId}>{siteId}</SelectItem>
+                            <SelectItem key={`k-${siteId}`} value={siteId || '@unknown'}>{siteId || '(unknown)'}</SelectItem>
                         )}
                     </SelectContent>
                 </Select>
