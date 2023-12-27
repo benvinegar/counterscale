@@ -105,7 +105,9 @@ export class AnalyticsEngineAPI {
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
-            resolve(responseData.data);
+            resolve(responseData.data.map((row) => {
+                return [row[_column], row['count']];
+            }));
         })());
         return returnPromise;
     }
