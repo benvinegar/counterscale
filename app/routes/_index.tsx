@@ -43,7 +43,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     let actualSiteId = siteId == '@unknown' ? '' : siteId;
 
-    const count = analyticsEngine.getCount(actualSiteId, days);
+    const counts = analyticsEngine.getCounts(actualSiteId, days);
     const countByPath = analyticsEngine.getCountByPath(actualSiteId, days);
     const countByCountry = analyticsEngine.getCountByCountry(actualSiteId, days);
     const countByReferrer = analyticsEngine.getCountByReferrer(actualSiteId, days);
@@ -52,7 +52,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     return json({
         siteId: siteId || '@unknown',
         sites: sitesByHits.map(([site,]: [string,]) => site),
-        count: await count,
+        views: (await counts).hits,
+        visits: (await counts).visits,
         countByPath: await countByPath,
         countByBrowser: await countByBrowser,
         countByCountry: await countByCountry,
@@ -92,16 +93,16 @@ export default function Index() {
             <div className="grid grid-cols-3 gap-4 mb-4">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Hits</CardTitle>
+                        <CardTitle>Views</CardTitle>
                     </CardHeader>
-                    <CardContent>{data.count}</CardContent>
+                    <CardContent>{data.views}</CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
                         <CardTitle>Visits</CardTitle>
                     </CardHeader>
-                    <CardContent>n/a</CardContent>
+                    <CardContent>{data.visits}</CardContent>
                 </Card>
 
                 <Card>

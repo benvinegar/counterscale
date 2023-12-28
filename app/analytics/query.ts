@@ -16,13 +16,13 @@ const ColumnMappings: ColumnMappingsType = {
     newSession: "double2",
 };
 
+interface AnalyticsQueryResultRow {
+
+    [key: string]: any
+}
 interface AnalyticsQueryResult {
     meta: string,
-    data: [
-        {
-            [key: string]: any
-        }
-    ],
+    data: AnalyticsQueryResultRow[],
     rows: number,
     rows_before_limit_at_least: number
 }
@@ -49,18 +49,23 @@ export class AnalyticsEngineAPI {
         }
     }
 
-    async getCount(siteId: string, sinceDays: number): Promise<number> {
+    async getCounts(siteId: string, sinceDays: number): Promise<{
+        hits: number,
+        visits: number
+    }> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
 
         const query = `
-            SELECT SUM(_sample_interval) as count 
+            SELECT SUM(_sample_interval) as count, double1 as isVisit 
             FROM metricsDataset 
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
-            AND ${siteIdColumn} = '${siteId}'`;
+            AND ${siteIdColumn} = '${siteId}'
+            GROUP BY isVisit
+            ORDER BY isVisit ASC`;
 
-        const returnPromise = new Promise<number>((resolve, reject) => (async () => {
+        const returnPromise = new Promise<Object>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
                 method: 'POST',
                 body: query,
@@ -72,7 +77,10 @@ export class AnalyticsEngineAPI {
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
-            resolve(responseData.data[0]['count']);
+            resolve({
+                hits: responseData.data[0]['count'],
+                visits: responseData.data[1]['count'],
+            })
         })());
         return returnPromise;
     }
