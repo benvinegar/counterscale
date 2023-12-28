@@ -49,10 +49,11 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const countByReferrer = analyticsEngine.getCountByReferrer(actualSiteId, days);
     const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, days);
 
+    console.log(await counts);
     return json({
         siteId: siteId || '@unknown',
         sites: sitesByHits.map(([site,]: [string,]) => site),
-        views: (await counts).hits,
+        views: (await counts).views,
         visits: (await counts).visits,
         countByPath: await countByPath,
         countByBrowser: await countByBrowser,
@@ -75,19 +76,36 @@ export default function Index() {
                 Tallyho
             </h1>
 
-            <div className="w-full mb-4">
+            <div className="w-full mb-4 items-stretch flex">
 
-                <Select defaultValue={data.siteId} onValueChange={(site) => changeSite(site)}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {/* SelectItem explodes if given an empty string for `value` so coerce to @unknown */}
-                        {data.sites.map((siteId: string) =>
-                            <SelectItem key={`k-${siteId}`} value={siteId || '@unknown'}>{siteId || '(unknown)'}</SelectItem>
-                        )}
-                    </SelectContent>
-                </Select>
+                <div className="flex-none w-1/6 mr-4">
+                    <Select defaultValue={data.siteId} onValueChange={(site) => changeSite(site)}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {/* SelectItem explodes if given an empty string for `value` so coerce to @unknown */}
+                            {data.sites.map((siteId: string) =>
+                                <SelectItem key={`k-${siteId}`} value={siteId || '@unknown'}>{siteId || '(unknown)'}</SelectItem>
+                            )}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex-none w-1/6">
+
+                    <Select defaultValue="7">
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="1">1 day</SelectItem>
+                            <SelectItem value="7">7 days</SelectItem>
+                            <SelectItem value="30">30 days</SelectItem>
+                            <SelectItem value="90">90 days</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-4">

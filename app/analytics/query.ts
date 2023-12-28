@@ -27,6 +27,11 @@ interface AnalyticsQueryResult {
     rows_before_limit_at_least: number
 }
 
+interface AnalyticsCountResult {
+    views: number,
+    visits: number
+};
+
 export class AnalyticsEngineAPI {
     cfApiToken: string;
     cfAccountId: string;
@@ -49,10 +54,7 @@ export class AnalyticsEngineAPI {
         }
     }
 
-    async getCounts(siteId: string, sinceDays: number): Promise<{
-        hits: number,
-        visits: number
-    }> {
+    async getCounts(siteId: string, sinceDays: number): Promise<AnalyticsCountResult> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
@@ -65,7 +67,7 @@ export class AnalyticsEngineAPI {
             GROUP BY isVisit
             ORDER BY isVisit ASC`;
 
-        const returnPromise = new Promise<Object>((resolve, reject) => (async () => {
+        const returnPromise = new Promise<AnalyticsCountResult>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
                 method: 'POST',
                 body: query,
@@ -77,10 +79,13 @@ export class AnalyticsEngineAPI {
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
-            resolve({
-                hits: responseData.data[0]['count'],
-                visits: responseData.data[1]['count'],
-            })
+
+            const visits = Number(responseData.data[1]['count']);
+            const nonVisits = Number(responseData.data[0]['count']);
+
+            const views = nonVisits + visits;
+
+            resolve({ views: views, visits });
         })());
         return returnPromise;
     }
