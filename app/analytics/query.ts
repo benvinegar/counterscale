@@ -80,12 +80,23 @@ export class AnalyticsEngineAPI {
 
             const responseData = await response.json() as AnalyticsQueryResult;
 
-            const visits = Number(responseData.data[1]['count']);
-            const nonVisits = Number(responseData.data[0]['count']);
+
+            let visits = 0,
+                nonVisits = 0;
+
+            // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but 
+            //       no row where isVisit=0), so this code makes no assumption on number of results
+            responseData.data.forEach((row) => {
+                if (row.isVisit === 1) {
+                    visits = Number(row.count);
+                } else {
+                    nonVisits = Number(row.count);
+                }
+            });
 
             const views = nonVisits + visits;
-
             resolve({ views: views, visits });
+
         })());
         return returnPromise;
     }
