@@ -156,6 +156,10 @@ export class AnalyticsEngineAPI {
         return this.getCountByColumn(siteId, 'browserName', sinceDays);
     }
 
+    async getCountByDevice(siteId: string, sinceDays: number): Promise<any> {
+        return this.getCountByColumn(siteId, 'deviceModel', sinceDays);
+    }
+
     async getSitesByHits(sinceDays: number, limit?: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;

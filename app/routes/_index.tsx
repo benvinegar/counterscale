@@ -14,6 +14,7 @@ import { AnalyticsEngineAPI } from "../analytics/query";
 
 import BrowserCard from "~/components/BrowserCard";
 import CountryCard from "~/components/CountryCard";
+import TableCard from "~/components/TableCard";
 
 export const meta: MetaFunction = () => {
     return [
@@ -51,8 +52,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const countByCountry = analyticsEngine.getCountByCountry(actualSiteId, days);
     const countByReferrer = analyticsEngine.getCountByReferrer(actualSiteId, days);
     const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, days);
+    const countByDevice = analyticsEngine.getCountByDevice(actualSiteId, days);
 
-    console.log(await counts);
     return json({
         siteId: siteId || '@unknown',
         sites: sitesByHits.map(([site,]: [string,]) => site),
@@ -61,7 +62,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         countByPath: await countByPath,
         countByBrowser: await countByBrowser,
         countByCountry: await countByCountry,
-        countByReferrer: await countByReferrer
+        countByReferrer: await countByReferrer,
+        countByDevice: await countByDevice
     });
 };
 
@@ -135,44 +137,17 @@ export default function Index() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Pages</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul>
-                            {data.countByPath.map((item: any) => (
-                                <li key={item[0]}>{item[0]}: {item[1]}</li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
+                <TableCard countByProperty={data.countByPath} propertyName={"Page"} />
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Referrers</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul>
-                            {data.countByReferrer.map((item: any) => ( // Update this line
-                                <li key={item[0]}>{item[0]}: {item[1]}</li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
+                <TableCard countByProperty={data.countByReferrer} propertyName={"Referrer"} />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-                <BrowserCard countByBrowser={data.countByBrowser} />
+                <TableCard countByProperty={data.countByBrowser} propertyName={"Browser"} />
 
-                <CountryCard countByCountry={data.countByCountry} />
+                <TableCard countByProperty={data.countByCountry} propertyName={"Country"} />
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Devices</CardTitle>
-                    </CardHeader>
-                    <CardContent>n/a</CardContent>
-                </Card>
+                <TableCard countByProperty={data.countByDevice} propertyName={"Device"}></TableCard>
             </div>
         </div>
     );
