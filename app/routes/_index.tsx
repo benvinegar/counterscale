@@ -12,7 +12,8 @@ import { json } from "@remix-run/cloudflare";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { AnalyticsEngineAPI } from "../analytics/query";
 
-import { BrowserCard } from "~/components/cards";
+import BrowserCard from "~/components/BrowserCard";
+import CountryCard from "~/components/CountryCard";
 
 export const meta: MetaFunction = () => {
     return [
@@ -164,24 +165,13 @@ export default function Index() {
             <div className="grid grid-cols-3 gap-4">
                 <BrowserCard countByBrowser={data.countByBrowser} />
 
+                <CountryCard countByCountry={data.countByCountry} />
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Devices</CardTitle>
                     </CardHeader>
                     <CardContent>n/a</CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Countries</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul>
-                            {data.countByCountry.map((item: any) => (
-                                <li key={item[0]}>{item[0]}: {item[1]}</li>
-                            ))}
-                        </ul>
-                    </CardContent>
                 </Card>
             </div>
         </div>

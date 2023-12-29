@@ -13,7 +13,7 @@ import {
 
 import { Card, CardTitle, CardDescription, CardContent, CardHeader } from "~/components/ui/card"
 
-export function BrowserCard({ countByBrowser }: InferProps<typeof BrowserCard.propTypes>) {
+export default function BrowserCard({ countByBrowser }: InferProps<typeof BrowserCard.propTypes>) {
     return (<Card>
         <Table>
             <TableHeader>
