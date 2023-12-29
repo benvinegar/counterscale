@@ -16,7 +16,7 @@ export default function TableCard({ countByProperty, propertyName }: InferProps<
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[100px] text-left">{propertyName}</TableHead>
+                    <TableHead className="text-left">{propertyName}</TableHead>
                     <TableHead className="text-right">Visitors</TableHead>
                 </TableRow>
             </TableHeader>
