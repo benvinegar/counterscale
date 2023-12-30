@@ -135,26 +135,20 @@ export default function Index() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="w-full mb-4">
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Views</CardTitle>
-                    </CardHeader>
-                    <CardContent>{data.views}</CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Visits</CardTitle>
-                    </CardHeader>
-                    <CardContent>{data.visits}</CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Bounce Rate</CardTitle>
-                    </CardHeader>
-                    <CardContent>n/a</CardContent>
+                    <CardContent className="pt-6">
+                        <div className="grid grid-cols-3 gap-10">
+                            <div>
+                                <div className="text-muted-foreground">Page Views</div>
+                                <div className="text-4xl">{data.views}</div>
+                            </div>
+                            <div>
+                                <div className="text-muted-foreground">Visitors</div>
+                                <div className="text-4xl">{data.visits}</div>
+                            </div>
+                        </div>
+                    </CardContent>
                 </Card>
             </div>
 
