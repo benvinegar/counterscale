@@ -11,13 +11,14 @@ import {
 
 import { Card } from "~/components/ui/card"
 
-export default function TableCard({ countByProperty, propertyName }: InferProps<typeof TableCard.propTypes>) {
+export default function TableCard({ countByProperty, columnHeaders }: InferProps<typeof TableCard.propTypes>) {
     return (<Card>
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="text-left">{propertyName}</TableHead>
-                    <TableHead className="text-right">Visitors</TableHead>
+                    {(columnHeaders || []).map((header: string, index) => (
+                        <TableHead key={header} className={index === 0 ? "text-left" : "text-right"}>{header}</TableHead>
+                    ))}
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -34,5 +35,6 @@ export default function TableCard({ countByProperty, propertyName }: InferProps<
 
 TableCard.propTypes = {
     propertyName: PropTypes.string,
-    countByProperty: PropTypes.array
+    countByProperty: PropTypes.array,
+    columnHeaders: PropTypes.array
 }

@@ -153,17 +153,17 @@ export default function Index() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
-                <TableCard countByProperty={data.countByPath} propertyName={"Page"} />
+                <TableCard countByProperty={data.countByPath} columnHeaders={["Page", "Page Views"]} />
 
-                <TableCard countByProperty={data.countByReferrer} propertyName={"Referrer"} />
+                <TableCard countByProperty={data.countByReferrer} columnHeaders={["Referrer", "Page Views"]} />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-                <TableCard countByProperty={data.countByBrowser} propertyName={"Browser"} />
+                <TableCard countByProperty={data.countByBrowser} columnHeaders={["Browser", "Page Views"]} />
 
-                <TableCard countByProperty={data.countByCountry} propertyName={"Country"} />
+                <TableCard countByProperty={data.countByCountry} columnHeaders={["Country", "Page Views"]} />
 
-                <TableCard countByProperty={data.countByDevice} propertyName={"Device"}></TableCard>
+                <TableCard countByProperty={data.countByDevice} columnHeaders={["Device", "Page Views"]}></TableCard>
             </div>
         </div>
     );
