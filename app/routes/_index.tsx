@@ -9,7 +9,8 @@ import {
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react";
+
 import { AnalyticsEngineAPI } from "../analytics/query";
 
 import BrowserCard from "~/components/BrowserCard";
@@ -35,11 +36,19 @@ declare module "@remix-run/server-runtime" {
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const analyticsEngine = new AnalyticsEngineAPI(context.env.CF_ACCOUNT_ID, context.env.CF_BEARER_TOKEN);
 
-    const days = 7;
-    const sitesByHits = (await analyticsEngine.getSitesByHits(days));
 
     const url = new URL(request.url);
     let siteId = url.searchParams.get("site") || '';
+    let interval;
+    try {
+        interval = url.searchParams.get("interval") || '7';
+        interval = Number(interval);
+    } catch (err) {
+        interval = 7;
+    }
+
+    const sitesByHits = (await analyticsEngine.getSitesByHits(interval));
+
     if (!siteId) {
         // pick first non-empty site
         siteId = sitesByHits[0][0];
@@ -47,12 +56,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     let actualSiteId = siteId == '@unknown' ? '' : siteId;
 
-    const counts = analyticsEngine.getCounts(actualSiteId, days);
-    const countByPath = analyticsEngine.getCountByPath(actualSiteId, days);
-    const countByCountry = analyticsEngine.getCountByCountry(actualSiteId, days);
-    const countByReferrer = analyticsEngine.getCountByReferrer(actualSiteId, days);
-    const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, days);
-    const countByDevice = analyticsEngine.getCountByDevice(actualSiteId, days);
+    const counts = analyticsEngine.getCounts(actualSiteId, interval);
+    const countByPath = analyticsEngine.getCountByPath(actualSiteId, interval);
+    const countByCountry = analyticsEngine.getCountByCountry(actualSiteId, interval);
+    const countByReferrer = analyticsEngine.getCountByReferrer(actualSiteId, interval);
+    const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, interval);
+    const countByDevice = analyticsEngine.getCountByDevice(actualSiteId, interval);
 
     return json({
         siteId: siteId || '@unknown',
@@ -68,12 +77,25 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const data = useLoaderData<typeof loader>();
     let navigate = useNavigate()
 
     function changeSite(site: string) {
-        navigate(`/?site=${site}`)
+        setSearchParams((prev) => {
+            prev.set("site", site);
+            return prev;
+        });
     }
+
+    function changeInterval(interval: string) {
+        setSearchParams((prev) => {
+            prev.set("interval", interval);
+            return prev;
+        });
+    }
+
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
 
@@ -99,7 +121,7 @@ export default function Index() {
 
                 <div className="flex-none w-1/6">
 
-                    <Select defaultValue="7">
+                    <Select defaultValue="7" onValueChange={(interval) => changeInterval(interval)}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue />
                         </SelectTrigger>
