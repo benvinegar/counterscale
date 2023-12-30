@@ -19,7 +19,7 @@ import TableCard from "~/components/TableCard";
 
 export const meta: MetaFunction = () => {
     return [
-        { title: "Tallyho" },
+        { title: "Web Analytics" },
         { name: "description", content: "Tallyho analytics" },
     ];
 };
@@ -100,7 +100,7 @@ export default function Index() {
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
 
             <h1 className="text-3xl mb-4">
-                Tallyho
+                Web Analytics
             </h1>
 
             <div className="w-full mb-4 items-stretch flex">
