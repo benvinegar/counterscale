@@ -130,7 +130,8 @@ export class AnalyticsEngineAPI {
 
             const responseData = await response.json() as AnalyticsQueryResult;
             resolve(responseData.data.map((row) => {
-                return [row[_column], row['count']];
+                const key = row[_column] === '' ? '(none)' : row[_column];
+                return [key, row['count']];
             }));
         })());
         return returnPromise;
