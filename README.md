@@ -51,6 +51,17 @@ npm start
 
 Then refresh the same URL in your browser (no live reload for production builds).
 
+## Notes
+
+### Database
+
+There is only one "database": the Cloudflare Analytics Engine dataset, which is communicated entirely over HTTP using Cloudflare's API.
+
+Right now there is no local "test" database. This means in local development:
+
+* Writes will no-op (no hits will be recorded)
+* Reads will be read from the production Analaytics Engine dataset (local development shows production data)
+
 ## Deployment
 
 If you don't already have an account, then [create a cloudflare account here](https://dash.cloudflare.com/sign-up) and after verifying your email address with Cloudflare, go to your dashboard and set up your free custom Cloudflare Workers subdomain.
