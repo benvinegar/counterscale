@@ -1,4 +1,4 @@
-import { Card, CardTitle, CardDescription, CardContent, CardHeader } from "~/components/ui/card"
+import { Card, CardContent } from "~/components/ui/card"
 import {
     Select,
     SelectContent,
@@ -9,12 +9,10 @@ import {
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react";
+import { useLoaderData, useSearchParams } from "@remix-run/react";
 
 import { AnalyticsEngineAPI } from "../analytics/query";
 
-import BrowserCard from "~/components/BrowserCard";
-import CountryCard from "~/components/CountryCard";
 import TableCard from "~/components/TableCard";
 
 export const meta: MetaFunction = () => {
@@ -54,7 +52,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         siteId = sitesByHits[0][0];
     }
 
-    let actualSiteId = siteId == '@unknown' ? '' : siteId;
+    const actualSiteId = siteId == '@unknown' ? '' : siteId;
 
     const counts = analyticsEngine.getCounts(actualSiteId, interval);
     const countByPath = analyticsEngine.getCountByPath(actualSiteId, interval);
@@ -77,10 +75,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [, setSearchParams] = useSearchParams();
 
     const data = useLoaderData<typeof loader>();
-    let navigate = useNavigate()
 
     function changeSite(site: string) {
         setSearchParams((prev) => {

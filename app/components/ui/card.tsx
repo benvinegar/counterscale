@@ -1,3 +1,4 @@
+/* eslint react/prop-types: 0 */
 import * as React from "react"
 
 import { cn } from "~/lib/utils"
@@ -33,6 +34,7 @@ const CardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
+  /* eslint jsx-a11y/heading-has-content: 0 */
   <h3
     ref={ref}
     className={cn(

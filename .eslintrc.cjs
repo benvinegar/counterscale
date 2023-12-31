@@ -20,6 +20,11 @@ module.exports = {
     es6: true,
   },
 
+  globals: {
+    // tracker global on window
+    'tallyho': true
+  },
+
   // Base config
   extends: ["eslint:recommended"],
 
@@ -61,6 +66,14 @@ module.exports = {
             alwaysTryTypes: true,
           },
         },
+      },
+      rules: {
+        // we're cool with explicit any (for now)
+        "@typescript-eslint/no-explicit-any": 0,
+
+        // https://stackoverflow.com/questions/68802881/get-rid-of-is-defined-but-never-used-in-function-parameter
+        "no-unused-vars": 0,
+        "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
       },
       extends: [
         "plugin:@typescript-eslint/recommended",

@@ -1,5 +1,9 @@
 interface CFAnalyticsEngine {
-    writeDataPoint: Function
+    writeDataPoint: (data: {
+        indexes: string[],
+        blobs: string[],
+        doubles: number[],
+    }) => void;
 }
 
 interface Environment {

@@ -14,7 +14,7 @@ const defaultRequestParams = {
         ns: '1',
     }).toString(),
     headers: {
-        get: (header: string) => {
+        get: (_header: string) => {
             return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
         }
     },
@@ -32,10 +32,10 @@ describe("collectRequestHandler", () => {
             } as CFAnalyticsEngine,
         } as Environment;
 
-        // @ts-expect-error
+        // @ts-expect-error - we're mocking the request object
         const request = httpMocks.createRequest(defaultRequestParams);
 
-        const response = collectRequestHandler(request, env);
+        collectRequestHandler(request, env);
 
         const writeDataPoint = env.TALLYHO.writeDataPoint;
         expect(env.TALLYHO.writeDataPoint).toHaveBeenCalled();

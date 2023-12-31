@@ -30,7 +30,7 @@ interface AnalyticsQueryResult {
 interface AnalyticsCountResult {
     views: number,
     visits: number
-};
+}
 
 export class AnalyticsEngineAPI {
     cfApiToken: string;
@@ -186,7 +186,7 @@ export class AnalyticsEngineAPI {
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
-            var result = responseData.data.reduce((acc, cur) => {
+            const result = responseData.data.reduce((acc, cur) => {
                 acc.push([cur['siteId'], cur['count']]);
                 return acc;
             }, []);
