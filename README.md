@@ -1,5 +1,7 @@
 # Counterscale
 
+![](/public/counterscale-logo-300x300.webp)
+
 Counterscale is a simple web analytics tracker and dashboard that you self-host on Cloudflare.
 
 It's designed to be easy to deploy and maintain, and should cost you near-zero to operate – even at high levels of traffic (i.e. in the millions of pageviews/month).
