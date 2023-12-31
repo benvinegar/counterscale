@@ -20,8 +20,8 @@ export function collectRequestHandler(request: Request, env: Environment) {
         host: params.h,
         path: params.p,
         referrer: params.r,
-        newVisitor: params.nv,
-        newSession: params.ns,
+        newVisitor: Number(params.nv),
+        newSession: Number(params.ns),
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,

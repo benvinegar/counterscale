@@ -9,6 +9,7 @@
     "dev": "remix dev --manual -c \"npm start\"",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "wrangler dev ./build/index.js",
+    "test": "vitest",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -44,8 +45,10 @@
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "node-mocks-http": "^1.14.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.1.6",
+    "vitest": "^1.1.0",
     "wrangler": "3.22.1"
   },
   "engines": {
