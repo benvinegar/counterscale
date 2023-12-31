@@ -27,7 +27,7 @@ const defaultRequestParams = {
 describe("collectRequestHandler", () => {
     test("invokes writeDataPoint with transformed params", () => {
         const env = {
-            TALLYHO: {
+            COUNTERSCALE_AE: {
                 writeDataPoint: vi.fn()
             } as CFAnalyticsEngine,
         } as Environment;
@@ -37,8 +37,8 @@ describe("collectRequestHandler", () => {
 
         collectRequestHandler(request, env);
 
-        const writeDataPoint = env.TALLYHO.writeDataPoint;
-        expect(env.TALLYHO.writeDataPoint).toHaveBeenCalled();
+        const writeDataPoint = env.COUNTERSCALE_AE.writeDataPoint;
+        expect(env.COUNTERSCALE_AE.writeDataPoint).toHaveBeenCalled();
 
         // verify data shows up in the right place
         expect((writeDataPoint as any).mock.calls[0][0]).toEqual({

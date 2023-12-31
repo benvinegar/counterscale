@@ -17,8 +17,8 @@ import TableCard from "~/components/TableCard";
 
 export const meta: MetaFunction = () => {
     return [
-        { title: "Web Analytics" },
-        { name: "description", content: "Tallyho analytics" },
+        { title: "Counterscale: Web Analytics" },
+        { name: "description", content: "Counterscale: Web Analytics" },
     ];
 };
 

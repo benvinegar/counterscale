@@ -8,7 +8,7 @@ interface CFAnalyticsEngine {
 
 interface Environment {
     __STATIC_CONTENT: Fetcher;
-    TALLYHO: CFAnalyticsEngine
+    COUNTERSCALE_AE: CFAnalyticsEngine
     CF_BEARER_TOKEN: string
     CF_ACCOUNT_ID: string
 }

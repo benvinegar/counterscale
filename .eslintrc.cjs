@@ -22,7 +22,7 @@ module.exports = {
 
   globals: {
     // tracker global on window
-    'tallyho': true
+    'counterscale': true
   },
 
   // Base config

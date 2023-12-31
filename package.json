@@ -1,5 +1,5 @@
 {
-  "name": "tallyho-workers",
+  "name": "counterscale",
   "private": true,
   "sideEffects": false,
   "type": "module",

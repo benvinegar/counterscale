@@ -35,8 +35,8 @@ export default function App() {
                 <ScrollRestoration />
                 <Scripts />
                 <LiveReload />
-                <script dangerouslySetInnerHTML={{ __html: "window.tallyho = {'q': [['set', 'siteId', 'tallyho-dev'], ['trackPageview']] };" }}></script>
-                <script id="tallyho-script" src="/tracker.js"></script>
+                <script dangerouslySetInnerHTML={{ __html: "window.counterscale = {'q': [['set', 'siteId', 'counterscale-dev'], ['trackPageview']] };" }}></script>
+                <script id="counterscale-script" src="/tracker.js"></script>
             </body>
         </html>
     );

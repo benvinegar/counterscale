@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    let queue = (window.tallyho && window.tallyho.q) || [];
+    let queue = (window.counterscale && window.counterscale.q) || [];
     let config = {
         'siteId': '',
         'trackerUrl': '',
@@ -76,7 +76,7 @@
         let thirtyMinsAgo = new Date();
         thirtyMinsAgo.setMinutes(thirtyMinsAgo.getMinutes() - 30);
 
-        let data = getCookie('_tallyho');
+        let data = getCookie('_counterscale');
         if (!data) {
             return newVisitorData();
         }
@@ -96,7 +96,7 @@
     }
 
     function findTrackerUrl() {
-        const el = document.getElementById('tallyho-script')
+        const el = document.getElementById('counterscale-script')
         return el ? el.src.replace('tracker.js', 'collect') : '';
     }
 
@@ -183,7 +183,7 @@
             data.isNewVisitor = false;
             data.isNewSession = false;
             data.lastSeen = +new Date();
-            setCookie('_tallyho', JSON.stringify(data), { expires: midnight, path: '/' });
+            setCookie('_counterscale', JSON.stringify(data), { expires: midnight, path: '/' });
 
             // remove tracking img from DOM
             document.body.removeChild(img)
@@ -203,13 +203,13 @@
         document.body.appendChild(img);
     }
 
-    // override global tallyho object
-    window.tallyho = function () {
+    // override global counterscale object
+    window.counterscale = function () {
         var args = [].slice.call(arguments);
         var c = args.shift();
         commands[c].apply(this, args);
     };
 
     // process existing queue
-    queue.forEach((i) => tallyho.apply(this, i));
+    queue.forEach((i) => counterscale.apply(this, i));
 })()

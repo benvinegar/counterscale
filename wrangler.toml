@@ -1,4 +1,4 @@
-name = "tallyho-web"
+name = "counterscale"
 
 workers_dev = true
 main = "./build/index.js"
@@ -12,5 +12,5 @@ compatibility_date = "2023-04-20"
   command = "npm run build"
 
 [[analytics_engine_datasets]]
-  binding = "TALLYHO"
+  binding = "COUNTERSCALE_AE"
   dataset = "metricsDataset"
