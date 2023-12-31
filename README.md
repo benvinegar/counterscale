@@ -4,7 +4,9 @@
 
 Counterscale is a simple web analytics tracker and dashboard that you self-host on Cloudflare.
 
-It's designed to be easy to deploy and maintain, and should cost you near-zero to operate – even at high levels of traffic (i.e. in the millions of pageviews/month).
+It's designed to be easy to deploy and maintain, and should cost you near-zero to operate – even at high levels of traffic (Cloudflare's [free tier](https://developers.cloudflare.com/workers/platform/pricing/#workers) could hypothetically support up to 100k hits/day).
+
+_NOTE: Counterscale is currently in very early development and if you're prepared to run it, expect to get your hands dirty._
 
 ## Prerequisites
 
