@@ -30,7 +30,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
         country: (request as any).cf?.country,
     }
 
-    processLogEntry(env.COUNTERSCALE_AE, data);
+    processLogEntry(env.WEB_COUNTER_AE, data);
 
     // encode 1x1 transparent gif
     const gif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";

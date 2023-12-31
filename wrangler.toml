@@ -12,5 +12,5 @@ compatibility_date = "2023-04-20"
   command = "npm run build"
 
 [[analytics_engine_datasets]]
-  binding = "COUNTERSCALE_AE"
+  binding = "WEB_COUNTER_DS"
   dataset = "metricsDataset"
