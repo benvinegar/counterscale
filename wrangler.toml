@@ -1,3 +1,6 @@
+# default deploy name
+name = "counterscale"
+
 workers_dev = true
 main = "./build/index.js"
 # https://developers.cloudflare.com/workers/platform/compatibility-dates
@@ -10,5 +13,5 @@ compatibility_date = "2023-04-20"
   command = "npm run build"
 
 [[analytics_engine_datasets]]
-  binding = "WEB_COUNTER_DS"
+  binding = "WEB_COUNTER_AE"
   dataset = "metricsDataset"

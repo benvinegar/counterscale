@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "remix build",
-    "_deploy": "wrangler deploy --name $CF_APP_NAME",
-    "deploy": "dotenv -e .dev.vars -- npm run _deploy",
+    "deploy": "wrangler deploy",
     "dev": "remix dev --manual -c \"npm start\"",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "wrangler dev ./build/index.js",
@@ -39,7 +38,6 @@
     "@types/ua-parser-js": "^0.7.39",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "autoprefixer": "^10.4.16",
-    "dotenv-cli": "^7.3.0",
     "eslint": "^8.38.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",

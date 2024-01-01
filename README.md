@@ -8,28 +8,30 @@ It's designed to be easy to deploy and maintain, and should cost you near-zero t
 
 _NOTE: Counterscale is currently in very early development and if you're prepared to run it, expect to get your hands dirty._
 
-## Prerequisites
+## Deployment
 
-You need a Cloudflare account, and have enabled [Cloudflare Analytics Engine beta](https://developers.cloudflare.com/analytics/analytics-engine/get-started/).
+If you don't have one already, [create a Cloudflare account here](https://dash.cloudflare.com/sign-up).
 
-## Configuration
-
-You need to create a [Clouflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions.
-
-Once you have the token, and your Cloudflare account ID, you need to:
-
-1. Copy `.dev.vars.example` to `.dev.vars`
-2. Add `CF_BEARER_TOKEN` (this is your API token)
-3. Add `CF_ACCOUNT_ID` (this is your Cloudflare account ID)
-4. Open up the Cloudflare Dashboard (web), and add both values as environment variables
+1. Go to your Cloudflare dashboard and set up a Cloudflare Workers subdomain
+1. Enable [Cloudflare Analytics Engine beta](https://developers.cloudflare.com/analytics/analytics-engine/get-started/) for your account
+1. Create a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions at a minimum.
+1. Run `npm install`
+1. Run `npx wrangler secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
+1. Run `npx wrangler secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
+1. Run `npm run deploy` – this will do two things:
+    1. Create a new worker, `counterscale`, now visible under *Workers and Pages* in Cloudflare
+    1. Create a new Analytics Engine dataset, called `metricsDataset`
+1. It should now be live. Visit `https://counterscale.{yoursubdomain}.workers.dev`.
 
 ## Development
 
-Install dependencies using `npm`:
+### Config
 
-```sh
-npm install
-```
+To get started, in the project root, copy `.dev.vars.example` to `.dev.vars`.
+
+Open `.dev.vars` and enter the same values for `CF_BEARER_TOKEN` and `CF_ACCOUNT_ID` you used earlier.
+
+### Running the Server
 
 Counterscale is built on Remix and Cloudflare Workers. In development, you'll run two servers:
 
@@ -63,13 +65,4 @@ Right now there is no local "test" database. This means in local development:
 
 * Writes will no-op (no hits will be recorded)
 * Reads will be read from the production Analaytics Engine dataset (local development shows production data)
-
-## Deployment
-
-If you don't already have an account, then [create a cloudflare account here](https://dash.cloudflare.com/sign-up) and after verifying your email address with Cloudflare, go to your dashboard and set up your free custom Cloudflare Workers subdomain.
-
-Once that's done, you should be able to deploy your app:
-
-```sh
-npm run deploy
-```
+ 
