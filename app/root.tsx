@@ -29,13 +29,17 @@ export default function App() {
             <body>
                 <div className="container mx-auto mt-4">
 
-                    <header className="border-b-2 mb-8 py-4">
+                    <header className="border-b-2 mb-12 py-4">
                         <nav className="flex justify-between items-center">
                             <div className="flex items-center">
                                 <a href="/" className="text-2xl font-bold">Counterscale</a>
+                                <img className="ml-1" src="/favicon.png" />
                             </div>
                             <div className="flex items-center">
                                 <a href="/dashboard" className="text-lg font-medium">Dashboard</a>
+                                <a href="https://github.com/benvinegar/counterscale" className="w-8 ml-4">
+                                    <img src="/github-mark.svg" style={{ filter: "invert(21%) sepia(27%) saturate(271%) hue-rotate(113deg) brightness(97%) contrast(97%);" }} />
+                                </a>
                             </div>
                         </nav>
                     </header>

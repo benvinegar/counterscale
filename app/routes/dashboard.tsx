@@ -95,11 +95,6 @@ export default function Dashboard() {
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-
-            <h1 className="text-3xl mb-4">
-                Web Analytics
-            </h1>
-
             <div className="w-full mb-4 items-stretch flex">
 
                 <div className="flex-none w-1/6 mr-4">
