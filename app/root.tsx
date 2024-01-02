@@ -27,8 +27,18 @@ export default function App() {
                 <Links />
             </head>
             <body>
-                <div className="container mx-auto mt-8">
+                <div className="container mx-auto mt-4">
 
+                    <header className="border-b-2 mb-8 py-4">
+                        <nav className="flex justify-between items-center">
+                            <div className="flex items-center">
+                                <a href="/" className="text-2xl font-bold">Counterscale</a>
+                            </div>
+                            <div className="flex items-center">
+                                <a href="/dashboard" className="text-lg font-medium">Dashboard</a>
+                            </div>
+                        </nav>
+                    </header>
                     <main role="main" className="w-full">
                         <Outlet />
                     </main>
