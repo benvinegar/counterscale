@@ -32,6 +32,18 @@ interface AnalyticsCountResult {
     visits: number
 }
 
+
+/**
+ * NOTE: There are a bunch of "unsafe" SQL-like queries in here, in the sense that
+ *       they are unparameterized raw SQL-like strings sent over HTTP. Cloudflare Analytics Engine
+ *       does NOT support parameterized queries, nor is there an easy SQL-escaping
+ *       library floating around for NodeJS (without using a database client library).
+ *       Since Cloudflare Analytics Engine SQL API only supports SELECT, I think it's okay to
+ *       leave it like this for now (i.e. an attacker cannot DROP TABLES or mutate data).
+ *
+ *       See: https://developers.cloudflare.com/analytics/analytics-engine/sql-reference/
+ */
+
 export class AnalyticsEngineAPI {
     cfApiToken: string;
     cfAccountId: string;
@@ -60,8 +72,8 @@ export class AnalyticsEngineAPI {
         const siteIdColumn = ColumnMappings['siteId'];
 
         const query = `
-            SELECT SUM(_sample_interval) as count, double1 as isVisit 
-            FROM metricsDataset 
+            SELECT SUM(_sample_interval) as count, double1 as isVisit
+            FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisit
@@ -84,7 +96,7 @@ export class AnalyticsEngineAPI {
             let visits = 0,
                 nonVisits = 0;
 
-            // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but 
+            // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but
             //       no row where isVisit=0), so this code makes no assumption on number of results
             responseData.data.forEach((row) => {
                 if (row.isVisit === 1) {
@@ -109,8 +121,8 @@ export class AnalyticsEngineAPI {
 
         const _column: string = ColumnMappings[column];
         const query = `
-            SELECT ${_column}, SUM(_sample_interval) as count 
-            FROM metricsDataset 
+            SELECT ${_column}, SUM(_sample_interval) as count
+            FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY ${_column}
@@ -167,9 +179,9 @@ export class AnalyticsEngineAPI {
         limit = limit || 10;
 
         const query = `
-            SELECT SUM(_sample_interval) as count, blob8 as siteId 
-            FROM metricsDataset 
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY 
+            SELECT SUM(_sample_interval) as count, blob8 as siteId
+            FROM metricsDataset
+            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             GROUP BY siteId
             ORDER BY count DESC
             LIMIT ${limit}
