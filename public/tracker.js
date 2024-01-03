@@ -30,71 +30,6 @@
             }).join('&');
     }
 
-    function getCookie(name) {
-        var cookies = document.cookie ? document.cookie.split('; ') : [];
-
-        for (var i = 0; i < cookies.length; i++) {
-            var parts = cookies[i].split('=');
-            if (decodeURIComponent(parts[0]) !== name) {
-                continue;
-            }
-
-            var cookie = parts.slice(1).join('=');
-            return decodeURIComponent(cookie);
-        }
-
-        return '';
-    }
-
-    function setCookie(name, data, args) {
-        name = encodeURIComponent(name);
-        data = encodeURIComponent(String(data));
-
-        var str = name + '=' + data;
-
-        if (args.path) {
-            str += ';path=' + args.path;
-        }
-        if (args.expires) {
-            str += ';expires=' + args.expires.toUTCString();
-        }
-
-        document.cookie = str + ';SameSite=None;Secure';
-    }
-
-    function newVisitorData() {
-        return {
-            isNewVisitor: true,
-            isNewSession: true,
-            pagesViewed: [],
-            previousPageviewId: '',
-            lastSeen: +new Date(),
-        }
-    }
-
-    function getData() {
-        let thirtyMinsAgo = new Date();
-        thirtyMinsAgo.setMinutes(thirtyMinsAgo.getMinutes() - 30);
-
-        let data = getCookie('_counterscale');
-        if (!data) {
-            return newVisitorData();
-        }
-
-        try {
-            data = JSON.parse(data);
-        } catch (e) {
-            console.error(e);
-            return newVisitorData();
-        }
-
-        if (data.lastSeen < (+thirtyMinsAgo)) {
-            data.isNewSession = true;
-        }
-
-        return data;
-    }
-
     function findTrackerUrl() {
         const el = document.getElementById('counterscale-script')
         return el ? el.src.replace('tracker.js', 'collect') : '';
@@ -153,15 +88,10 @@
             referrer = document.referrer;
         }
 
-        let data = getData();
         const d = {
-            pid: data.previousPageviewId || '',
             p: path,
             h: hostname,
             r: referrer,
-            u: data.pagesViewed.indexOf(path) == -1 ? 1 : 0,
-            nv: data.isNewVisitor ? 1 : 0,
-            ns: data.isNewSession ? 1 : 0,
             sid: config.siteId,
         };
 
@@ -172,19 +102,6 @@
         img.setAttribute('style', 'position:absolute');
         img.src = url + stringifyObject(d);
         img.addEventListener('load', function () {
-            let midnight = new Date();
-            midnight.setHours(24); midnight.setMinutes(0); midnight.setSeconds(0);
-
-            // update data in cookie
-            if (data.pagesViewed.indexOf(path) == -1) {
-                data.pagesViewed.push(path);
-            }
-            data.previousPageviewId = d.id;
-            data.isNewVisitor = false;
-            data.isNewSession = false;
-            data.lastSeen = +new Date();
-            setCookie('_counterscale', JSON.stringify(data), { expires: midnight, path: '/' });
-
             // remove tracking img from DOM
             document.body.removeChild(img)
         });
