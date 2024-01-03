@@ -1,9 +1,11 @@
 import { UAParser } from 'ua-parser-js';
 
-function checkVisitorSession(request: Request): { newVisitor: number, newSession: number } {
-    const ifModifiedSince = request.headers.get('if-modified-since');
-    let newVisitor = 1;
-    let newSession = 1;
+function checkVisitorSession(ifModifiedSince: string | null): {
+    newVisitor: boolean,
+    newSession: boolean
+} {
+    let newVisitor = true;
+    let newSession = true;
 
     const minutesUntilSessionResets = 30;
     if (ifModifiedSince) {
@@ -16,7 +18,7 @@ function checkVisitorSession(request: Request): { newVisitor: number, newSession
             today.getDate() === ifModifiedSinceDate.getDate()
         ) {
             // if ifModifiedSince is today, this is not a new visitor
-            newVisitor = 0;
+            newVisitor = false;
         }
 
         // check ifModifiedSince is less than 30 mins ago
@@ -24,7 +26,7 @@ function checkVisitorSession(request: Request): { newVisitor: number, newSession
             minutesUntilSessionResets * 60 * 1000
         ) {
             // this is a continuation of the same session
-            newSession = 0;
+            newSession = false;
         }
     }
 
@@ -52,15 +54,15 @@ export function collectRequestHandler(request: Request, env: Environment) {
 
     parsedUserAgent.getBrowser().name;
 
-    const { newVisitor, newSession } = checkVisitorSession(request);
+    const { newVisitor, newSession } = checkVisitorSession(request.headers.get('if-modified-since'));
 
     const data = {
         siteId: params.sid,
         host: params.h,
         path: params.p,
         referrer: params.r,
-        newVisitor: newVisitor,
-        newSession: newSession,
+        newVisitor: newVisitor ? 1 : 0,
+        newSession: newSession ? 1 : 0,
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
@@ -69,7 +71,6 @@ export function collectRequestHandler(request: Request, env: Environment) {
         country: (request as any).cf?.country,
     }
 
-    console.log(data);
     processLogEntry(env.WEB_COUNTER_AE, data);
 
     // encode 1x1 transparent gif
@@ -89,7 +90,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
             "Expires": "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
             "Pragma": "no-cache",
-            "Last-Modified": new Date(),
+            "Last-Modified": new Date().toUTCString(),
             "Tk": "N", // not tracking
         },
         status: 200
