@@ -31,16 +31,21 @@ function checkVisitorSession(request: Request): { newVisitor: number, newSession
     return { newVisitor, newSession };
 }
 
-
-export function collectRequestHandler(request: Request, env: Environment) {
-    const params: any = {};
-    const url = new URL(request.url)
+function extractParamsFromQueryString(requestUrl: string): any {
+    const url = new URL(requestUrl)
     const queryString = url.search.slice(1).split('&')
+
+    const params: any = {};
 
     queryString.forEach(item => {
         const kv = item.split('=')
         if (kv[0]) params[kv[0]] = decodeURIComponent(kv[1])
     });
+    return params;
+}
+
+export function collectRequestHandler(request: Request, env: Environment) {
+    const params = extractParamsFromQueryString(request.url);
 
     const userAgent = request.headers.get('user-agent') || undefined;
     const parsedUserAgent = new UAParser(userAgent);
