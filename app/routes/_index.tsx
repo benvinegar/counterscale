@@ -1,4 +1,12 @@
+import { MetaFunction } from "@remix-run/cloudflare";
 import { Button } from "~/components/ui/button";
+
+export const meta: MetaFunction = () => {
+    return [
+        { title: "Counterscale: Web Analytics" },
+        { name: "description", content: "Counterscale: Web Analytics" },
+    ];
+};
 
 export default function Index() {
     return <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
