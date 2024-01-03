@@ -1,5 +1,37 @@
 import { UAParser } from 'ua-parser-js';
 
+function checkVisitorSession(request: Request): { newVisitor: number, newSession: number } {
+    const ifModifiedSince = request.headers.get('if-modified-since');
+    let newVisitor = 1;
+    let newSession = 1;
+
+    const minutesUntilSessionResets = 30;
+    if (ifModifiedSince) {
+        // check today is a new day vs ifModifiedSince
+        const today = new Date();
+        const ifModifiedSinceDate = new Date(ifModifiedSince);
+        if (
+            today.getFullYear() === ifModifiedSinceDate.getFullYear() &&
+            today.getMonth() === ifModifiedSinceDate.getMonth() &&
+            today.getDate() === ifModifiedSinceDate.getDate()
+        ) {
+            // if ifModifiedSince is today, this is not a new visitor
+            newVisitor = 0;
+        }
+
+        // check ifModifiedSince is less than 30 mins ago
+        if (Date.now() - new Date(ifModifiedSince).getTime() <
+            minutesUntilSessionResets * 60 * 1000
+        ) {
+            // this is a continuation of the same session
+            newSession = 0;
+        }
+    }
+
+    return { newVisitor, newSession };
+}
+
+
 export function collectRequestHandler(request: Request, env: Environment) {
     const params: any = {};
     const url = new URL(request.url)
@@ -15,15 +47,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
 
     parsedUserAgent.getBrowser().name;
 
-    const ifModifiedSince = request.headers.get('if-modified-since');
-    let newVisitor = 1;
-
-    const minutesUntilVisitResets = 30;
-    if (ifModifiedSince && (Date.now() - new Date(ifModifiedSince).getTime()) < minutesUntilVisitResets * 60 * 1000) {
-        // if ifModifiedSince occurred less than 30 mins ago, this is a 
-        // continuation of the same session/visit (ergo not a new visitor)
-        newVisitor = 0;
-    }
+    const { newVisitor, newSession } = checkVisitorSession(request);
 
     const data = {
         siteId: params.sid,
@@ -31,7 +55,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
         path: params.p,
         referrer: params.r,
         newVisitor: newVisitor,
-        newSession: Number(params.ns),
+        newSession: newSession,
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
