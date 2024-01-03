@@ -33,8 +33,8 @@ export default function Index() {
             </div>
 
             <div className="mb-8">
-                <h3 className="text-3xl mb-4">Don't break the bank</h3>
-                <p>Pay pennies to handle 100ks of requests on Cloudflare's infrastructure.</p>
+                <h3 className="text-3xl mb-4">Don&apos;t break the bank</h3>
+                <p>Pay pennies to handle 100ks of requests on Cloudflare&apos;s infrastructure.</p>
             </div>
 
             <div className="mb-8">
