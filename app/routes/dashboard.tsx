@@ -66,6 +66,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         sites: sitesByHits.map(([site,]: [string,]) => site),
         views: (await counts).views,
         visits: (await counts).visits,
+        visitors: (await counts).visitors,
         countByPath: await countByPath,
         countByBrowser: await countByBrowser,
         countByCountry: await countByCountry,
@@ -136,8 +137,12 @@ export default function Dashboard() {
                                 <div className="text-4xl">{data.views}</div>
                             </div>
                             <div>
-                                <div>Visitors</div>
+                                <div>Visits</div>
                                 <div className="text-4xl">{data.visits}</div>
+                            </div>
+                            <div>
+                                <div>Unique Visitors</div>
+                                <div className="text-4xl">{data.visitors}</div>
                             </div>
                         </div>
                     </CardContent>

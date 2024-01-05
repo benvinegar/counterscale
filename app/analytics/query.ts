@@ -17,7 +17,6 @@ const ColumnMappings: ColumnMappingsType = {
 };
 
 interface AnalyticsQueryResultRow {
-
     [key: string]: any
 }
 interface AnalyticsQueryResult {
@@ -29,7 +28,8 @@ interface AnalyticsQueryResult {
 
 interface AnalyticsCountResult {
     views: number,
-    visits: number
+    visits: number,
+    visitors: number
 }
 
 
@@ -72,13 +72,14 @@ export class AnalyticsEngineAPI {
         const siteIdColumn = ColumnMappings['siteId'];
 
         const query = `
-            SELECT SUM(_sample_interval) as count, double1 as isVisit
+            SELECT SUM(_sample_interval) as count, double1 as isVisitor, double2 as isVisit
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             AND ${siteIdColumn} = '${siteId}'
-            GROUP BY isVisit
-            ORDER BY isVisit ASC`;
+            GROUP BY isVisitor, isVisit
+            ORDER BY isVisitor, isVisit ASC`;
 
+        console.log(query);
         const returnPromise = new Promise<AnalyticsCountResult>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
                 method: 'POST',
@@ -93,21 +94,25 @@ export class AnalyticsEngineAPI {
             const responseData = await response.json() as AnalyticsQueryResult;
 
 
-            let visits = 0,
-                nonVisits = 0;
+            let counts: AnalyticsCountResult = {
+                views: 0,
+                visitors: 0,
+                visits: 0
+            }
 
             // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but
             //       no row where isVisit=0), so this code makes no assumption on number of results
             responseData.data.forEach((row) => {
                 if (row.isVisit === 1) {
-                    visits = Number(row.count);
-                } else {
-                    nonVisits = Number(row.count);
+                    counts.visits += Number(row.count);
                 }
+                if (row.isVisitor === 1) {
+                    counts.visitors += Number(row.count);
+                }
+                counts.views += Number(row.count);
             });
 
-            const views = nonVisits + visits;
-            resolve({ views: views, visits });
+            resolve(counts);
 
         })());
         return returnPromise;
