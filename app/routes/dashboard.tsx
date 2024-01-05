@@ -11,7 +11,7 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 
-import { AnalyticsEngineAPI } from "../analytics/query";
+import { AnalyticsEngineAPI, AnalyticsQueryResultRow } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
 
@@ -94,6 +94,12 @@ export default function Dashboard() {
         });
     }
 
+    // convert country codes to names
+    let regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    const countByCountryName = data.countByCountry.map((countByBrowserRow: AnalyticsQueryResultRow) => {
+        return [regionNames.of(countByBrowserRow[0]), countByBrowserRow[1]];  // "United States"
+    })
+
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
             <div className="w-full mb-4 items-stretch flex">
@@ -158,7 +164,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-3 gap-4">
                 <TableCard countByProperty={data.countByBrowser} columnHeaders={["Browser", "Page Views"]} />
 
-                <TableCard countByProperty={data.countByCountry} columnHeaders={["Country", "Page Views"]} />
+                <TableCard countByProperty={countByCountryName} columnHeaders={["Country", "Page Views"]} />
 
                 <TableCard countByProperty={data.countByDevice} columnHeaders={["Device", "Page Views"]}></TableCard>
             </div>
