@@ -95,7 +95,7 @@ export default function Dashboard() {
     }
 
     // convert country codes to names
-    let regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
     const countByCountryName = data.countByCountry.map((countByBrowserRow: AnalyticsQueryResultRow) => {
         return [regionNames.of(countByBrowserRow[0]), countByBrowserRow[1]];  // "United States"
     })

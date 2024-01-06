@@ -16,7 +16,7 @@ const ColumnMappings: ColumnMappingsType = {
     newSession: "double2",
 };
 
-interface AnalyticsQueryResultRow {
+export interface AnalyticsQueryResultRow {
     [key: string]: any
 }
 interface AnalyticsQueryResult {
@@ -94,7 +94,7 @@ export class AnalyticsEngineAPI {
             const responseData = await response.json() as AnalyticsQueryResult;
 
 
-            let counts: AnalyticsCountResult = {
+            const counts: AnalyticsCountResult = {
                 views: 0,
                 visitors: 0,
                 visits: 0
