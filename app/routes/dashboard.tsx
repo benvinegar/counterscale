@@ -14,6 +14,7 @@ import { useLoaderData, useSearchParams } from "@remix-run/react";
 import { AnalyticsEngineAPI, AnalyticsQueryResultRow } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
+import Chart from "~/components/Chart";
 
 export const meta: MetaFunction = () => {
     return [
@@ -150,6 +151,16 @@ export default function Dashboard() {
                                 <div>Unique Visitors</div>
                                 <div className="text-4xl">{data.visitors}</div>
                             </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="w-full mb-4">
+                <Card>
+                    <CardContent>
+                        <div className="h-80 pt-6">
+                            <Chart></Chart>
                         </div>
                     </CardContent>
                 </Card>
