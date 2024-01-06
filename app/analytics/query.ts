@@ -118,7 +118,7 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByColumn(siteId: string, column: string, sinceDays: number, limit?: number): Promise<any> {
+    async getVisitorCountByColumn(siteId: string, column: string, sinceDays: number, limit?: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;
@@ -129,6 +129,7 @@ export class AnalyticsEngineAPI {
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            AND double1 = 1
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY ${_column}
             ORDER BY count DESC
@@ -155,27 +156,27 @@ export class AnalyticsEngineAPI {
     }
 
     async getCountByUserAgent(siteId: string, sinceDays: number): Promise<any> {
-        return this.getCountByColumn(siteId, 'userAgent', sinceDays);
+        return this.getVisitorCountByColumn(siteId, 'userAgent', sinceDays);
     }
 
     async getCountByCountry(siteId: string, sinceDays: number): Promise<any> {
-        return this.getCountByColumn(siteId, 'country', sinceDays);
+        return this.getVisitorCountByColumn(siteId, 'country', sinceDays);
     }
 
     async getCountByReferrer(siteId: string, sinceDays: number): Promise<any> {
-        return this.getCountByColumn(siteId, 'referrer', sinceDays);
+        return this.getVisitorCountByColumn(siteId, 'referrer', sinceDays);
     }
 
     async getCountByPath(siteId: string, sinceDays: number): Promise<any> {
-        return this.getCountByColumn(siteId, 'path', sinceDays);
+        return this.getVisitorCountByColumn(siteId, 'path', sinceDays);
     }
 
     async getCountByBrowser(siteId: string, sinceDays: number): Promise<any> {
-        return this.getCountByColumn(siteId, 'browserName', sinceDays);
+        return this.getVisitorCountByColumn(siteId, 'browserName', sinceDays);
     }
 
     async getCountByDevice(siteId: string, sinceDays: number): Promise<any> {
-        return this.getCountByColumn(siteId, 'deviceModel', sinceDays);
+        return this.getVisitorCountByColumn(siteId, 'deviceModel', sinceDays);
     }
 
     async getSitesByHits(sinceDays: number, limit?: number): Promise<any> {

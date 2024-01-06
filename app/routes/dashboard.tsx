@@ -156,17 +156,17 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
-                <TableCard countByProperty={data.countByPath} columnHeaders={["Page", "Page Views"]} />
+                <TableCard countByProperty={data.countByPath} columnHeaders={["Page", "Visitors"]} />
 
-                <TableCard countByProperty={data.countByReferrer} columnHeaders={["Referrer", "Page Views"]} />
+                <TableCard countByProperty={data.countByReferrer} columnHeaders={["Referrer", "Visitors"]} />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-                <TableCard countByProperty={data.countByBrowser} columnHeaders={["Browser", "Page Views"]} />
+                <TableCard countByProperty={data.countByBrowser} columnHeaders={["Browser", "Visitors"]} />
 
-                <TableCard countByProperty={countByCountryName} columnHeaders={["Country", "Page Views"]} />
+                <TableCard countByProperty={countByCountryName} columnHeaders={["Country", "Visitors"]} />
 
-                <TableCard countByProperty={data.countByDevice} columnHeaders={["Device", "Page Views"]}></TableCard>
+                <TableCard countByProperty={data.countByDevice} columnHeaders={["Device", "Visitors"]}></TableCard>
             </div>
         </div>
     );
