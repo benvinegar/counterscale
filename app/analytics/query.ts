@@ -66,6 +66,45 @@ export class AnalyticsEngineAPI {
         }
     }
 
+    async getViewsGroupedByInterval(siteId: string, sinceDays: number): Promise<any> {
+        // defaults to 1 day if not specified
+        const interval = sinceDays || 1;
+        const siteIdColumn = ColumnMappings['siteId'];
+
+        // NOTE: when using toStartOfInterval, cannot group by other columns
+        //       like double1 (isVisitor) or double2 (isSession/isVisit). This
+        //       is just a limitation of Cloudflare Analytics Engine.
+        //       -- but you can filter on them (using WHERE)
+        const query = `
+            SELECT SUM(_sample_interval) as count,
+            toStartOfInterval(timestamp, INTERVAL '1' HOUR) as bucket
+            FROM metricsDataset
+            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            AND ${siteIdColumn} = '${siteId}'
+            AND double1 = 0
+            GROUP BY bucket
+            ORDER BY bucket ASC`;
+
+        console.log(query);
+        const returnPromise = new Promise<any>((resolve, reject) => (async () => {
+            const response = await fetch(this.defaultUrl, {
+                method: 'POST',
+                body: query,
+                headers: this.defaultHeaders,
+            });
+
+            if (!response.ok) {
+                reject(response.statusText);
+            }
+
+            const responseData = await response.json() as AnalyticsQueryResult;
+            resolve(responseData.data.map((row) => {
+                return [row['bucket'], row['count']];
+            }));
+        })());
+        return returnPromise;
+    }
+
     async getCounts(siteId: string, sinceDays: number): Promise<AnalyticsCountResult> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
@@ -79,7 +118,6 @@ export class AnalyticsEngineAPI {
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
 
-        console.log(query);
         const returnPromise = new Promise<AnalyticsCountResult>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
                 method: 'POST',

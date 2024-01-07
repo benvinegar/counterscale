@@ -14,7 +14,7 @@ import { useLoaderData, useSearchParams } from "@remix-run/react";
 import { AnalyticsEngineAPI, AnalyticsQueryResultRow } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
-import Chart from "~/components/Chart";
+import TimeSeriesChart from "~/components/TimeSeriesChart";
 
 export const meta: MetaFunction = () => {
     return [
@@ -62,6 +62,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, interval);
     const countByDevice = analyticsEngine.getCountByDevice(actualSiteId, interval);
 
+    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(actualSiteId, interval);
+
     return json({
         siteId: siteId || '@unknown',
         sites: sitesByHits.map(([site,]: [string,]) => site),
@@ -72,7 +74,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         countByBrowser: await countByBrowser,
         countByCountry: await countByCountry,
         countByReferrer: await countByReferrer,
-        countByDevice: await countByDevice
+        countByDevice: await countByDevice,
+        viewsGroupedByInterval: await viewsGroupedByInterval
     });
 };
 
@@ -94,6 +97,16 @@ export default function Dashboard() {
             return prev;
         });
     }
+
+    const chartData: any = [];
+    data.viewsGroupedByInterval.forEach((row: AnalyticsQueryResultRow) => {
+        chartData.push({
+            date: row[0],
+            views: row[1]
+        });
+    });
+
+    console.log(chartData);
 
     // convert country codes to names
     const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
@@ -160,7 +173,7 @@ export default function Dashboard() {
                 <Card>
                     <CardContent>
                         <div className="h-80 pt-6">
-                            <Chart></Chart>
+                            <TimeSeriesChart data={chartData}></TimeSeriesChart>
                         </div>
                     </CardContent>
                 </Card>
