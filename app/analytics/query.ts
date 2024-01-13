@@ -69,15 +69,14 @@ export class AnalyticsEngineAPI {
     getIntervalBucketSQLParams(sinceDays: number): [string, number] {
         let intervalType = 'DAY';
         let intervalCount = 1;
-        const desiredDataPoints = 12;
-        if (sinceDays < 10) {
-            intervalType = 'HOUR';
-            intervalCount = sinceDays * 24 / desiredDataPoints;
-        } else {
-            // TODO: more intervals (just havent gotten to this yet)
-            throw new Error("Not implemented");
-        }
 
+        if (sinceDays < 7) {
+            intervalType = 'HOUR';
+            intervalCount = 24;
+        } else if (sinceDays <= 30) {
+            intervalType = 'DAY';
+            intervalCount = 1;
+        }
         return [intervalType, intervalCount];
     }
 
@@ -92,16 +91,29 @@ export class AnalyticsEngineAPI {
      *   }
      *  
      * */
-    generateInitialRows(sinceDays: number, intervalCount: number): any {
+    generateInitialRows(intervalType: string, intervalCount: number): any {
         const startDateTime = new Date();
-        startDateTime.setDate(startDateTime.getDate() - sinceDays);
-        if (startDateTime.getHours() % 2 === 1) {
-            startDateTime.setHours(startDateTime.getHours() - 1);
+        let intervalMs = 0;
+
+        console.log("intervalType", intervalType);
+        console.log("intervalCount", intervalCount);
+
+        // get start date in the past by subtracting interval * type
+        if (intervalType === 'DAY') {
+            // get intervalCount days in the past
+            startDateTime.setDate(startDateTime.getDate() - intervalCount);
+            startDateTime.setHours(0);
+            intervalMs = 24 * 60 * 60 * 1000;
+
+        } else if (intervalType === 'HOUR') {
+            // get intervalCount hours in the past
+            startDateTime.setHours(startDateTime.getHours() - intervalCount);
+            intervalMs = 60 * 60 * 1000;
         }
+
         startDateTime.setMinutes(0, 0, 0);
 
         const initialRows: any = {};
-        const intervalMs = intervalCount * 60 * 60 * 1000;
         for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
             const rowDate = new Date(i);
             const key =
@@ -121,8 +133,11 @@ export class AnalyticsEngineAPI {
 
         const [intervalType, intervalCount] = this.getIntervalBucketSQLParams(sinceDays);
 
+        // get start date in the past by subtracting interval * type
+        const dataStartDate = new Date();
+
         // note interval count hard-coded to hours at the moment
-        const initialRows = this.generateInitialRows(sinceDays, intervalCount);
+        const initialRows = this.generateInitialRows(intervalType, intervalCount);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
@@ -137,7 +152,6 @@ export class AnalyticsEngineAPI {
             GROUP BY bucket
             ORDER BY bucket ASC`;
 
-        console.log(query);
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await fetch(this.defaultUrl, {
                 method: 'POST',
@@ -158,8 +172,14 @@ export class AnalyticsEngineAPI {
                 return accum;
             }, initialRows);
 
-            // return as array of tuples (i.e. [datetime, count])
-            resolve(Object.entries(rowsByDateTime));
+            // return as sorted array of tuples (i.e. [datetime, count])
+            const sortedRows = Object.entries(rowsByDateTime).sort((a: any, b: any) => {
+                if (a[0] < b[0]) return -1;
+                else if (a[0] > b[0]) return 1;
+                else return 0;
+            });
+
+            resolve(sortedRows);
         })());
         return returnPromise;
     }
