@@ -77,7 +77,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             intervalType = 'DAY';
             break;
     }
-    console.log(interval, intervalType);
 
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(actualSiteId, intervalType, interval);
 
@@ -123,8 +122,6 @@ export default function Dashboard() {
             views: row[1]
         });
     });
-
-    console.log(chartData);
 
     // convert country codes to names
     const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
