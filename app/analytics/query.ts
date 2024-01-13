@@ -66,41 +66,63 @@ export class AnalyticsEngineAPI {
         }
     }
 
-    async getViewsGroupedByInterval(siteId: string, sinceDays: number): Promise<any> {
-        // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
-        const siteIdColumn = ColumnMappings['siteId'];
-
-        let intervalType;
+    getIntervalBucketSQLParams(sinceDays: number): [string, number] {
+        let intervalType = 'DAY';
         let intervalCount = 1;
         const desiredDataPoints = 12;
         if (sinceDays < 10) {
             intervalType = 'HOUR';
             intervalCount = sinceDays * 24 / desiredDataPoints;
+        } else {
+            // TODO: more intervals (just havent gotten to this yet)
+            throw new Error("Not implemented");
         }
 
-        // get interval start time/date sinceDays in the past from now
+        return [intervalType, intervalCount];
+    }
+
+    /**
+     * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
+     * example:
+     *   {
+     *      "2021-01-01 00:00:00": 0,
+     *      "2021-01-01 02:00:00": 0,
+     *      "2021-01-01 04:00:00": 0,
+     *      ...
+     *   }
+     *  
+     * */
+    generateInitialRows(sinceDays: number, intervalCount: number): any {
         const startDateTime = new Date();
         startDateTime.setDate(startDateTime.getDate() - sinceDays);
-        // Cloudflare seems to group on even hour numbers, so try to emulate that behavior
         if (startDateTime.getHours() % 2 === 1) {
             startDateTime.setHours(startDateTime.getHours() - 1);
         }
         startDateTime.setMinutes(0, 0, 0);
 
         const initialRows: any = {};
-        // beginning from startDateTime, and adding every interval to startDateTime, add an entry to rows set to 0
         const intervalMs = intervalCount * 60 * 60 * 1000;
         for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
             const rowDate = new Date(i);
-            const key = rowDate.toISOString().split('T')[0] + ' '
-                + rowDate.toTimeString().split(' ')[0];
+            const key =
+                rowDate.toISOString().split("T")[0] +
+                " " +
+                rowDate.toTimeString().split(" ")[0];
             initialRows[key] = 0;
         }
 
-        console.log(initialRows);
+        return initialRows;
+    }
 
+    async getViewsGroupedByInterval(siteId: string, sinceDays: number): Promise<any> {
+        // defaults to 1 day if not specified
+        const interval = sinceDays || 1;
+        const siteIdColumn = ColumnMappings['siteId'];
 
+        const [intervalType, intervalCount] = this.getIntervalBucketSQLParams(sinceDays);
+
+        // note interval count hard-coded to hours at the moment
+        const initialRows = this.generateInitialRows(sinceDays, intervalCount);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
@@ -112,7 +134,6 @@ export class AnalyticsEngineAPI {
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             AND ${siteIdColumn} = '${siteId}'
-            AND double1 = 0
             GROUP BY bucket
             ORDER BY bucket ASC`;
 
