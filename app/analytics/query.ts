@@ -34,6 +34,53 @@ interface AnalyticsCountResult {
 
 
 /**
+ * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
+ * example:
+ *   {
+ *      "2021-01-01 00:00:00": 0,
+ *      "2021-01-01 02:00:00": 0,
+ *      "2021-01-01 04:00:00": 0,
+ *      ...
+ *   }
+ *  
+ * */
+function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): any {
+    const startDateTime = new Date();
+    let intervalMs = 0;
+
+    // get start date in the past by subtracting interval * type
+    if (intervalType === 'DAY') {
+        // get intervalCount days in the past
+        startDateTime.setDate(startDateTime.getDate() - daysAgo);
+        startDateTime.setHours(0);
+
+        // assumes interval is 24 hours
+        intervalMs = 24 * 60 * 60 * 1000;
+
+    } else if (intervalType === 'HOUR') {
+        // get intervalCount hours in the past
+        startDateTime.setHours(startDateTime.getHours() - daysAgo * 24);
+
+        // assumes interval is hourly
+        intervalMs = 60 * 60 * 1000;
+    }
+
+    startDateTime.setMinutes(0, 0, 0);
+
+    const initialRows: any = {};
+    for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
+        const rowDate = new Date(i);
+        const key =
+            rowDate.toISOString().split("T")[0] +
+            " " +
+            rowDate.toTimeString().split(" ")[0];
+        initialRows[key] = 0;
+    }
+
+    return initialRows;
+}
+
+/**
  * NOTE: There are a bunch of "unsafe" SQL-like queries in here, in the sense that
  *       they are unparameterized raw SQL-like strings sent over HTTP. Cloudflare Analytics Engine
  *       does NOT support parameterized queries, nor is there an easy SQL-escaping
@@ -66,59 +113,12 @@ export class AnalyticsEngineAPI {
         }
     }
 
-    /**
-     * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
-     * example:
-     *   {
-     *      "2021-01-01 00:00:00": 0,
-     *      "2021-01-01 02:00:00": 0,
-     *      "2021-01-01 04:00:00": 0,
-     *      ...
-     *   }
-     *  
-     * */
-    generateInitialRows(intervalType: string, daysAgo: number): any {
-        const startDateTime = new Date();
-        let intervalMs = 0;
-
-        // get start date in the past by subtracting interval * type
-        if (intervalType === 'DAY') {
-            // get intervalCount days in the past
-            startDateTime.setDate(startDateTime.getDate() - daysAgo);
-            startDateTime.setHours(0);
-
-            // assumes interval is 24 hours
-            intervalMs = 24 * 60 * 60 * 1000;
-
-        } else if (intervalType === 'HOUR') {
-            // get intervalCount hours in the past
-            startDateTime.setHours(startDateTime.getHours() - daysAgo * 24);
-
-            // assumes interval is hourly
-            intervalMs = 60 * 60 * 1000;
-        }
-
-        startDateTime.setMinutes(0, 0, 0);
-
-        const initialRows: any = {};
-        for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
-            const rowDate = new Date(i);
-            const key =
-                rowDate.toISOString().split("T")[0] +
-                " " +
-                rowDate.toTimeString().split(" ")[0];
-            initialRows[key] = 0;
-        }
-
-        return initialRows;
-    }
-
     async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
 
-        let intervalCount = 0;;
+        let intervalCount = 0;
         switch (intervalType) {
             case 'DAY':
                 intervalCount = 1;
@@ -129,7 +129,7 @@ export class AnalyticsEngineAPI {
         }
 
         // note interval count hard-coded to hours at the moment
-        const initialRows = this.generateInitialRows(intervalType, sinceDays);
+        const initialRows = generateEmptyRowsOverInterval(intervalType, sinceDays);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
@@ -202,7 +202,6 @@ export class AnalyticsEngineAPI {
 
             const responseData = await response.json() as AnalyticsQueryResult;
 
-
             const counts: AnalyticsCountResult = {
                 views: 0,
                 visitors: 0,
@@ -222,8 +221,8 @@ export class AnalyticsEngineAPI {
             });
 
             resolve(counts);
-
         })());
+
         return returnPromise;
     }
 

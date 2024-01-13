@@ -6,7 +6,7 @@ export default function TimeSeriesChart({ data, intervalType }: InferProps<typeo
     // get the max integer value of data views
     const maxViews = Math.max(...data.map((item: any) => item.views));
 
-    function dateFormatter(date: string, index: number): string {
+    function dateFormatter(date: string): string {
         const dateObj = new Date(date);
 
         switch (intervalType) {
