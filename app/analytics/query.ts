@@ -66,20 +66,6 @@ export class AnalyticsEngineAPI {
         }
     }
 
-    getIntervalBucketSQLParams(sinceDays: number): [string, number] {
-        let intervalType = 'DAY';
-        let intervalCount = 1;
-
-        if (sinceDays < 7) {
-            intervalType = 'HOUR';
-            intervalCount = 24;
-        } else if (sinceDays <= 30) {
-            intervalType = 'DAY';
-            intervalCount = 1;
-        }
-        return [intervalType, intervalCount];
-    }
-
     /**
      * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
      * example:
@@ -91,23 +77,24 @@ export class AnalyticsEngineAPI {
      *   }
      *  
      * */
-    generateInitialRows(intervalType: string, intervalCount: number): any {
+    generateInitialRows(intervalType: string, daysAgo: number): any {
         const startDateTime = new Date();
         let intervalMs = 0;
-
-        console.log("intervalType", intervalType);
-        console.log("intervalCount", intervalCount);
 
         // get start date in the past by subtracting interval * type
         if (intervalType === 'DAY') {
             // get intervalCount days in the past
-            startDateTime.setDate(startDateTime.getDate() - intervalCount);
+            startDateTime.setDate(startDateTime.getDate() - daysAgo);
             startDateTime.setHours(0);
+
+            // assumes interval is 24 hours
             intervalMs = 24 * 60 * 60 * 1000;
 
         } else if (intervalType === 'HOUR') {
             // get intervalCount hours in the past
-            startDateTime.setHours(startDateTime.getHours() - intervalCount);
+            startDateTime.setHours(startDateTime.getHours() - daysAgo * 24);
+
+            // assumes interval is hourly
             intervalMs = 60 * 60 * 1000;
         }
 
@@ -126,18 +113,23 @@ export class AnalyticsEngineAPI {
         return initialRows;
     }
 
-    async getViewsGroupedByInterval(siteId: string, sinceDays: number): Promise<any> {
+    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
 
-        const [intervalType, intervalCount] = this.getIntervalBucketSQLParams(sinceDays);
-
-        // get start date in the past by subtracting interval * type
-        const dataStartDate = new Date();
+        let intervalCount = 0;;
+        switch (intervalType) {
+            case 'DAY':
+                intervalCount = 1;
+                break;
+            case 'HOUR':
+                intervalCount = 24;
+                break;
+        }
 
         // note interval count hard-coded to hours at the moment
-        const initialRows = this.generateInitialRows(intervalType, intervalCount);
+        const initialRows = this.generateInitialRows(intervalType, sinceDays);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This

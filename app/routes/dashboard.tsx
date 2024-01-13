@@ -62,7 +62,24 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, interval);
     const countByDevice = analyticsEngine.getCountByDevice(actualSiteId, interval);
 
-    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(actualSiteId, interval);
+    let intervalType = 'DAY';
+    switch (interval) {
+        case 1:
+            intervalType = 'HOUR';
+            break;
+        case 7:
+            intervalType = 'DAY';
+            break;
+        case 30:
+            intervalType = 'DAY';
+            break;
+        case 90:
+            intervalType = 'DAY';
+            break;
+    }
+    console.log(interval, intervalType);
+
+    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(actualSiteId, intervalType, interval);
 
     return json({
         siteId: siteId || '@unknown',
@@ -75,7 +92,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         countByCountry: await countByCountry,
         countByReferrer: await countByReferrer,
         countByDevice: await countByDevice,
-        viewsGroupedByInterval: await viewsGroupedByInterval
+        viewsGroupedByInterval: await viewsGroupedByInterval,
+        intervalType
     });
 };
 
@@ -173,7 +191,7 @@ export default function Dashboard() {
                 <Card>
                     <CardContent>
                         <div className="h-80 pt-6">
-                            <TimeSeriesChart data={chartData}></TimeSeriesChart>
+                            <TimeSeriesChart data={chartData} intervalType={data.intervalType}></TimeSeriesChart>
                         </div>
                     </CardContent>
                 </Card>

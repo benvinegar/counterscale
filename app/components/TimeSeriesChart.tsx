@@ -2,14 +2,21 @@ import PropTypes, { InferProps } from 'prop-types';
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function TimeSeriesChart({ data }: InferProps<typeof TimeSeriesChart.propTypes>) {
+export default function TimeSeriesChart({ data, intervalType }: InferProps<typeof TimeSeriesChart.propTypes>) {
     // get the max integer value of data views
     const maxViews = Math.max(...data.map((item: any) => item.views));
 
     function dateFormatter(date: string, index: number): string {
         const dateObj = new Date(date);
 
-        return dateObj.toLocaleDateString('en-us', { weekday: "short", month: "short", day: "numeric" });
+        switch (intervalType) {
+            case 'DAY':
+                return dateObj.toLocaleDateString('en-us', { weekday: "short", month: "short", day: "numeric" });
+            case 'HOUR':
+                return dateObj.toLocaleTimeString('en-us', { hour: "numeric", minute: "numeric" });
+            default:
+                throw new Error('Invalid interval type');
+        }
     }
     return (
         <ResponsiveContainer width="100%" height="100%">
@@ -39,5 +46,5 @@ export default function TimeSeriesChart({ data }: InferProps<typeof TimeSeriesCh
 
 TimeSeriesChart.propTypes = {
     data: PropTypes.any,
-
+    intervalType: PropTypes.string
 }
