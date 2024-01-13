@@ -71,13 +71,44 @@ export class AnalyticsEngineAPI {
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
 
+        let intervalType;
+        let intervalCount = 1;
+        const desiredDataPoints = 12;
+        if (sinceDays < 10) {
+            intervalType = 'HOUR';
+            intervalCount = sinceDays * 24 / desiredDataPoints;
+        }
+
+        // get interval start time/date sinceDays in the past from now
+        const startDateTime = new Date();
+        startDateTime.setDate(startDateTime.getDate() - sinceDays);
+        // Cloudflare seems to group on even hour numbers, so try to emulate that behavior
+        if (startDateTime.getHours() % 2 === 1) {
+            startDateTime.setHours(startDateTime.getHours() - 1);
+        }
+        startDateTime.setMinutes(0, 0, 0);
+
+        const initialRows: any = {};
+        // beginning from startDateTime, and adding every interval to startDateTime, add an entry to rows set to 0
+        const intervalMs = intervalCount * 60 * 60 * 1000;
+        for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
+            const rowDate = new Date(i);
+            const key = rowDate.toISOString().split('T')[0] + ' '
+                + rowDate.toTimeString().split(' ')[0];
+            initialRows[key] = 0;
+        }
+
+        console.log(initialRows);
+
+
+
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
         //       is just a limitation of Cloudflare Analytics Engine.
         //       -- but you can filter on them (using WHERE)
         const query = `
             SELECT SUM(_sample_interval) as count,
-            toStartOfInterval(timestamp, INTERVAL '1' HOUR) as bucket
+            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}) as bucket
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             AND ${siteIdColumn} = '${siteId}'
@@ -98,9 +129,16 @@ export class AnalyticsEngineAPI {
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
-            resolve(responseData.data.map((row) => {
-                return [row['bucket'], row['count']];
-            }));
+
+            // note this query will return sparse data (i.e. only rows where count > 0)
+            // merge returnedRows with initial rows to fill in any gaps
+            const rowsByDateTime = responseData.data.reduce((accum, row) => {
+                accum[row['bucket']] = row['count'];
+                return accum;
+            }, initialRows);
+
+            // return as array of tuples (i.e. [datetime, count])
+            resolve(Object.entries(rowsByDateTime));
         })());
         return returnPromise;
     }
