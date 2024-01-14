@@ -12,7 +12,7 @@ function createFetchResponse(data: any) {
 }
 
 describe("AnalyticsEngineAPI", () => {
-    const api = new AnalyticsEngineAPI("abc123", "def456");
+    const api = new AnalyticsEngineAPI("test_account_id_abc123", "test_api_token_def456");
     const fetch = global.fetch as any;
 
     beforeEach(() => {
@@ -21,6 +21,27 @@ describe("AnalyticsEngineAPI", () => {
 
     afterEach(() => {
         vi.useRealTimers()
+    });
+
+    describe("query", () => {
+        test("forms a valid HTTP request query for CF analytics engine", () => {
+            fetch.mockResolvedValue(new Promise(resolve => {
+                resolve(createFetchResponse({}))
+            }));
+
+            api.query("SELECT * FROM web_counter");
+
+            expect(fetch).toHaveBeenCalledWith("https://api.cloudflare.com/client/v4/accounts/test_account_id_abc123/analytics_engine/sql",
+                {
+                    "body": "SELECT * FROM web_counter",
+                    "headers": {
+                        "Authorization": "Bearer test_api_token_def456",
+                        "X-Source": "Cloudflare-Workers",
+                        "content-type": "application/json;charset=UTF-8",
+                    },
+                    "method": "POST",
+                });
+        });
     });
 
     describe("getViewsGroupedByInterval", () => {

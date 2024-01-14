@@ -116,6 +116,14 @@ export class AnalyticsEngineAPI {
         }
     }
 
+    async query(query: string): Promise<Response> {
+        return fetch(this.defaultUrl, {
+            method: 'POST',
+            body: query,
+            headers: this.defaultHeaders,
+        });
+    }
+
     async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
@@ -148,11 +156,7 @@ export class AnalyticsEngineAPI {
             ORDER BY bucket ASC`;
 
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
-            const response = await fetch(this.defaultUrl, {
-                method: 'POST',
-                body: query,
-                headers: this.defaultHeaders,
-            });
+            const response = await this.query(query);
 
             if (!response.ok) {
                 reject(response.statusText);
@@ -193,11 +197,7 @@ export class AnalyticsEngineAPI {
             ORDER BY isVisitor, isVisit ASC`;
 
         const returnPromise = new Promise<AnalyticsCountResult>((resolve, reject) => (async () => {
-            const response = await fetch(this.defaultUrl, {
-                method: 'POST',
-                body: query,
-                headers: this.defaultHeaders,
-            });
+            const response = await this.query(query);
 
             if (!response.ok) {
                 reject(response.statusText);
@@ -247,11 +247,7 @@ export class AnalyticsEngineAPI {
             LIMIT ${limit}`;
 
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
-            const response = await fetch(this.defaultUrl, {
-                method: 'POST',
-                body: query,
-                headers: this.defaultHeaders,
-            });
+            const response = await this.query(query);
 
             if (!response.ok) {
                 reject(response.statusText);
@@ -304,11 +300,7 @@ export class AnalyticsEngineAPI {
             LIMIT ${limit}
         `;
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
-            const response = await fetch(this.defaultUrl, {
-                method: 'POST',
-                body: query,
-                headers: this.defaultHeaders,
-            });
+            const response = await this.query(query);
 
             if (!response.ok) {
                 reject(response.statusText);
