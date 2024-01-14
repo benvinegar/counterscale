@@ -45,7 +45,7 @@ describe("AnalyticsEngineAPI", () => {
                 }))
             }));
 
-            vi.setSystemTime(new Date("2024-01-18T05:33:02-00:00").getTime());
+            vi.setSystemTime(new Date("2024-01-18T05:33:02-05:00").getTime());
 
             const result1 = await api.getViewsGroupedByInterval("example.com", "DAY", 7);
 
@@ -95,7 +95,7 @@ describe("AnalyticsEngineAPI", () => {
             }))
         }));
 
-        vi.setSystemTime(new Date("2024-01-18T05:33:02-00:00").getTime());
+        vi.setSystemTime(new Date("2024-01-18T05:33:02-05:00").getTime());
 
         const result1 = await api.getViewsGroupedByInterval("example.com", "HOUR", 1);
 

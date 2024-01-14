@@ -52,7 +52,7 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): a
     if (intervalType === 'DAY') {
         // get intervalCount days in the past
         startDateTime.setDate(startDateTime.getDate() - daysAgo);
-        startDateTime.setUTCHours(0);
+        startDateTime.setHours(0);
 
         // assumes interval is 24 hours
         intervalMs = 24 * 60 * 60 * 1000;
@@ -71,10 +71,11 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): a
 
     for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
         const rowDate = new Date(i);
+        const isoStringInLocalTZ = new Date(rowDate.getTime() - new Date().getTimezoneOffset() * 60 * 1000).toISOString()
         const key =
-            rowDate.toISOString().split("T")[0] +
+            isoStringInLocalTZ.split("T")[0] +
             " " +
-            rowDate.toISOString().split("T")[1].split('.')[0];
+            isoStringInLocalTZ.split("T")[1].split('.')[0];
         initialRows[key] = 0;
     }
 
