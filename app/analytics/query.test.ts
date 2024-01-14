@@ -160,4 +160,34 @@ describe("AnalyticsEngineAPI", () => {
             });
         });
     });
+
+    describe("getVisitorCountByColumn", () => {
+        test("it should map logical columns to schema columns and return an array of [column, count] tuples", async () => {
+            fetch.mockResolvedValue(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        {
+                            blob4: "CA",
+                            count: 3,
+                        },
+                        {
+                            blob4: "US",
+                            count: 2,
+                        },
+                        {
+                            blob4: "GB",
+                            count: 1,
+                        }
+                    ]
+                }))
+            }));
+
+            const result = await api.getVisitorCountByColumn("example.com", "country", 7);
+            expect(result).toEqual([
+                ["CA", 3],
+                ["US", 2],
+                ["GB", 1],
+            ]);
+        });
+    });
 });
