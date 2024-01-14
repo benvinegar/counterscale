@@ -290,7 +290,7 @@ export class AnalyticsEngineAPI {
         return this.getVisitorCountByColumn(siteId, 'deviceModel', sinceDays);
     }
 
-    async getSitesByHits(sinceDays: number, limit?: number): Promise<any> {
+    async getSitesOrderedByHits(sinceDays: number, limit?: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;

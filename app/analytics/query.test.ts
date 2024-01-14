@@ -190,4 +190,37 @@ describe("AnalyticsEngineAPI", () => {
             ]);
         });
     });
+
+    describe("getSitesOrderedByHits", () => {
+        test("it should return an array of [siteId, count] tuples", async () => {
+
+            // note: getSitesByHits orders by count descending in SQL; since we're mocking
+            //       the HTTP/SQL response, the mocked results are pre-sorted
+            fetch.mockResolvedValue(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        {
+                            siteId: "example.com",
+                            count: 130,
+                        },
+                        {
+                            siteId: "foo.com",
+                            count: 100,
+                        },
+                        {
+                            siteId: "test.dev",
+                            count: 90,
+                        }
+                    ]
+                }))
+            }));
+
+            const result = await api.getSitesOrderedByHits(7);
+            expect(result).toEqual([
+                ["example.com", 130],
+                ["foo.com", 100],
+                ["test.dev", 90],
+            ]);
+        });
+    });
 });

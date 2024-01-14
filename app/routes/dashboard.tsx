@@ -46,7 +46,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         interval = 7;
     }
 
-    const sitesByHits = (await analyticsEngine.getSitesByHits(interval));
+    const sitesByHits = (await analyticsEngine.getSitesOrderedByHits(interval));
 
     if (!siteId) {
         // pick first non-empty site
