@@ -12,6 +12,8 @@ function createFetchResponse(data: any) {
 }
 
 describe("AnalyticsEngineAPI", () => {
+    const api = new AnalyticsEngineAPI("abc123", "def456");
+    const fetch = global.fetch as any;
 
     beforeEach(() => {
         vi.useFakeTimers()
@@ -22,11 +24,7 @@ describe("AnalyticsEngineAPI", () => {
     });
 
     describe("getViewsGroupedByInterval", () => {
-        test("should return an array of tuples representing [timestamp, count]", async () => {
-            const api = new AnalyticsEngineAPI("abc123", "def456");
-
-
-            const fetch = global.fetch as any;
+        test("should return an array of [timestamp, count] tuples grouped by day", async () => {
             fetch.mockResolvedValue(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [
@@ -47,7 +45,7 @@ describe("AnalyticsEngineAPI", () => {
                 }))
             }));
 
-            vi.setSystemTime(new Date("2024-01-18 00:00:00").getTime());
+            vi.setSystemTime(new Date("2024-01-18T05:33:02-00:00").getTime());
 
             const result1 = await api.getViewsGroupedByInterval("example.com", "DAY", 7);
 
@@ -59,6 +57,7 @@ describe("AnalyticsEngineAPI", () => {
                 ["2024-01-15 00:00:00", 0],
                 ["2024-01-16 00:00:00", 2],
                 ["2024-01-17 00:00:00", 1],
+                ["2024-01-18 00:00:00", 0],
             ]);
 
             expect(await api.getViewsGroupedByInterval("example.com", "DAY", 5))
@@ -70,16 +69,67 @@ describe("AnalyticsEngineAPI", () => {
                 ["2024-01-15 00:00:00", 0],
                 ["2024-01-16 00:00:00", 2],
                 ["2024-01-17 00:00:00", 1],
+                ["2024-01-18 00:00:00", 0],
             ]);
-
         });
+    });
+
+    test("should return an array of [timestamp, count] tuples grouped by hour", async () => {
+        fetch.mockResolvedValue(new Promise(resolve => {
+            resolve(createFetchResponse({
+                data: [
+                    {
+                        count: 3,
+                        // note: intentionally sparse data (data for some timestamps missing)
+                        bucket: "2024-01-17 11:00:00",
+                    },
+                    {
+                        count: 2,
+                        bucket: "2024-01-17 14:00:00"
+                    },
+                    {
+                        count: 1,
+                        bucket: "2024-01-17 16:00:00"
+                    }
+                ]
+            }))
+        }));
+
+        vi.setSystemTime(new Date("2024-01-18T05:33:02-00:00").getTime());
+
+        const result1 = await api.getViewsGroupedByInterval("example.com", "HOUR", 1);
+
+        expect(result1).toEqual([
+            ['2024-01-17 05:00:00', 0],
+            ['2024-01-17 06:00:00', 0],
+            ['2024-01-17 07:00:00', 0],
+            ['2024-01-17 08:00:00', 0],
+            ['2024-01-17 09:00:00', 0],
+            ['2024-01-17 10:00:00', 0],
+            ['2024-01-17 11:00:00', 3],
+            ['2024-01-17 12:00:00', 0],
+            ['2024-01-17 13:00:00', 0],
+            ['2024-01-17 14:00:00', 2],
+            ['2024-01-17 15:00:00', 0],
+            ['2024-01-17 16:00:00', 1],
+            ['2024-01-17 17:00:00', 0],
+            ['2024-01-17 18:00:00', 0],
+            ['2024-01-17 19:00:00', 0],
+            ['2024-01-17 20:00:00', 0],
+            ['2024-01-17 21:00:00', 0],
+            ['2024-01-17 22:00:00', 0],
+            ['2024-01-17 23:00:00', 0],
+            ['2024-01-18 00:00:00', 0],
+            ['2024-01-18 01:00:00', 0],
+            ['2024-01-18 02:00:00', 0],
+            ['2024-01-18 03:00:00', 0],
+            ['2024-01-18 04:00:00', 0],
+            ['2024-01-18 05:00:00', 0]
+        ]);
     });
 
     describe("getCounts", () => {
         test("should return an object with view, visit, and visitor counts", async () => {
-            const api = new AnalyticsEngineAPI("abc123", "def456");
-
-            const fetch = global.fetch as any;
             fetch.mockResolvedValue(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [

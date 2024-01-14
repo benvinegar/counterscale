@@ -52,14 +52,14 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): a
     if (intervalType === 'DAY') {
         // get intervalCount days in the past
         startDateTime.setDate(startDateTime.getDate() - daysAgo);
-        startDateTime.setHours(0);
+        startDateTime.setUTCHours(0);
 
         // assumes interval is 24 hours
         intervalMs = 24 * 60 * 60 * 1000;
 
     } else if (intervalType === 'HOUR') {
         // get intervalCount hours in the past
-        startDateTime.setHours(startDateTime.getHours() - daysAgo * 24);
+        startDateTime.setUTCHours(startDateTime.getUTCHours() - daysAgo * 24);
 
         // assumes interval is hourly
         intervalMs = 60 * 60 * 1000;
@@ -68,14 +68,16 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): a
     startDateTime.setMinutes(0, 0, 0);
 
     const initialRows: any = {};
+
     for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
         const rowDate = new Date(i);
         const key =
             rowDate.toISOString().split("T")[0] +
             " " +
-            rowDate.toTimeString().split(" ")[0];
+            rowDate.toISOString().split("T")[1].split('.')[0];
         initialRows[key] = 0;
     }
+
 
     return initialRows;
 }
