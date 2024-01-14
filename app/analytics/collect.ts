@@ -1,5 +1,7 @@
 import { UAParser } from 'ua-parser-js';
 
+import type { RequestInit } from "@cloudflare/workers-types";
+
 function checkVisitorSession(ifModifiedSince: string | null): {
     newVisitor: boolean,
     newSession: boolean
@@ -33,11 +35,11 @@ function checkVisitorSession(ifModifiedSince: string | null): {
     return { newVisitor, newSession };
 }
 
-function extractParamsFromQueryString(requestUrl: string): any {
-    const url = new URL(requestUrl)
+function extractParamsFromQueryString(requestUrl: string): { [key: string]: string } {
+    const url = new URL(requestUrl);
     const queryString = url.search.slice(1).split('&')
 
-    const params: any = {};
+    const params: { [key: string]: string } = {};
 
     queryString.forEach(item => {
         const kv = item.split('=')
@@ -56,7 +58,7 @@ export function collectRequestHandler(request: Request, env: Environment) {
 
     const { newVisitor, newSession } = checkVisitorSession(request.headers.get('if-modified-since'));
 
-    const data = {
+    const data: DataPoint = {
         siteId: params.sid,
         host: params.h,
         path: params.p,
@@ -66,12 +68,17 @@ export function collectRequestHandler(request: Request, env: Environment) {
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
-        deviceModel: parsedUserAgent.getDevice().model,
-        // location
-        country: (request as any).cf?.country,
+        deviceModel: parsedUserAgent.getDevice().model
     }
 
-    processLogEntry(env.WEB_COUNTER_AE, data);
+    // NOTE: location is derived from Cloudflare-specific request properties
+    // see: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
+    const country = (request as RequestInit).cf?.country;
+    if (typeof country === 'string') {
+        data.country = country;
+    }
+
+    writeDataPoint(env.WEB_COUNTER_AE, data);
 
     // encode 1x1 transparent gif
     const gif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
@@ -97,9 +104,31 @@ export function collectRequestHandler(request: Request, env: Environment) {
     });
 }
 
-export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
+
+interface DataPoint {
+    // index
+    siteId?: string,
+
+    // blobs
+    host?: string | undefined,
+    userAgent?: string,
+    path?: string,
+    country?: string,
+    referrer?: string,
+    browserName?: string,
+    deviceModel?: string,
+
+    // doubles
+    newVisitor: number,
+    newSession: number,
+}
+
+// NOTE: Cloudflare Analytics Engine has limits on total number of bytes, number of fields, etc.
+// More here: https://developers.cloudflare.com/analytics/analytics-engine/get-started/#limits
+
+export function writeDataPoint(analyticsEngine: CFAnalyticsEngine, data: DataPoint) {
     const datapoint = {
-        indexes: [data.ClientRequestHost || ""], // Supply one index
+        indexes: [data.siteId || ""], // Supply one index
         blobs: [
             data.host || "", // blob1
             data.userAgent || "", // blob2
@@ -109,23 +138,15 @@ export function processLogEntry(analyticsEngine: CFAnalyticsEngine, data: any) {
             data.browserName || "", // blob6
             data.deviceModel || "", // blob7
             data.siteId || "", // blob8
-            // data.RayID || "",
-            // data.ClientIP || "",
-            // data.ClientRequestMethod || "",
-            // data.ClientRequestURI || "",
         ],
         doubles: [
             data.newVisitor || 0,
             data.newSession || 0,
-            // // Supply a maximum of 20 doubles
-            // data.EdgeStartTimestamp || 0,
-            // data.EdgeEndTimestamp || 0,
-            // data.EdgeResponseStatus || 0,
-            // data.EdgeResponseBytes || 0,
         ],
     }
 
     if (!analyticsEngine) {
+        // no-op
         console.log("Can't save datapoint: Analytics unavailable");
         return;
     }

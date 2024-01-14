@@ -63,7 +63,7 @@ describe("collectRequestHandler", () => {
                 1, // new session
             ],
             "indexes": [
-                "",
+                "example", // site id is index
             ],
 
         });
