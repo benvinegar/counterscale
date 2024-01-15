@@ -14,7 +14,7 @@ export default function Index() {
         <div className="flex items-center justify-center border-b-2 pb-12 mb-8">
             <div>
                 <h2 className="font-bold text-6xl mb-6">
-                    Scalable web analytics you run yourself on Cloudflare
+                    Testing Codecov atm
                 </h2>
                 <Button>
                     <a href="https://github.com/benvinegar/counterscale">Get Started with GitHub</a>
