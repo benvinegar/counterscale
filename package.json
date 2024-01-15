@@ -10,6 +10,7 @@
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "wrangler dev ./build/index.js",
     "test": "vitest run",
+    "test-ci": "vitest run --coverage",
     "typecheck": "tsc",
     "prepare": "husky install"
   },
@@ -40,6 +41,8 @@
     "@types/recharts": "^1.8.29",
     "@types/ua-parser-js": "^0.7.39",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@vitest/coverage-istanbul": "^1.2.0",
+    "@vitest/coverage-v8": "^1.2.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.38.0",
     "eslint-config-prettier": "^9.0.0",
