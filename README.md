@@ -2,6 +2,8 @@
 
 ![](/public/counterscale-logo-300x300.webp)
 
+![ci status](https://github.com/benvinegar/counterscale/actions/workflows/ci.yaml/badge.svg) [![codecov](https://codecov.io/gh/benvinegar/counterscale/graph/badge.svg?token=NUHURNB682)](https://codecov.io/gh/benvinegar/counterscale)
+
 Counterscale is a simple web analytics tracker and dashboard that you self-host on Cloudflare.
 
 It's designed to be easy to deploy and maintain, and should cost you near-zero to operate – even at high levels of traffic (Cloudflare's [free tier](https://developers.cloudflare.com/workers/platform/pricing/#workers) could hypothetically support up to 100k hits/day).
