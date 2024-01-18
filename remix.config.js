@@ -1,6 +1,6 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 export default {
-    ignoredRouteFiles: ["**/.*"],
+    ignoredRouteFiles: ["**/.*", "**/*.test.{ts,tsx}"],
     server: "./server.ts",
     serverConditions: ["workerd", "worker", "browser"],
     serverDependenciesToBundle: [

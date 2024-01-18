@@ -1,3 +1,4 @@
+console.log("GOT HERE");
 import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 import type { AppLoadContext } from "@remix-run/cloudflare";
 import { createRequestHandler, logDevReady } from "@remix-run/cloudflare";
