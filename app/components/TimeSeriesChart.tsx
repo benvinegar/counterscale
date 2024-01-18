@@ -3,6 +3,11 @@ import PropTypes, { InferProps } from 'prop-types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function TimeSeriesChart({ data, intervalType }: InferProps<typeof TimeSeriesChart.propTypes>) {
+    // chart doesn't really work no data points, so just bail out
+    if (data.length === 0) {
+        return null;
+    }
+
     // get the max integer value of data views
     const maxViews = Math.max(...data.map((item: any) => item.views));
 
