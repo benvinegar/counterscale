@@ -97,7 +97,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 };
 
 export default function Dashboard() {
-    console.log("LOL");
     const [, setSearchParams] = useSearchParams();
 
     const data = useLoaderData<typeof loader>();
