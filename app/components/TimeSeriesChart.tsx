@@ -23,6 +23,7 @@ export default function TimeSeriesChart({ data, intervalType }: InferProps<typeo
                 throw new Error('Invalid interval type');
         }
     }
+
     return (
         <ResponsiveContainer width="100%" height="100%">
             <AreaChart
