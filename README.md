@@ -25,6 +25,34 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
     1. Create a new Analytics Engine dataset, called `metricsDataset`
 1. It should now be live. Visit `https://counterscale.{yoursubdomain}.workers.dev`.
 
+NOTE: The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
+
+## Installing the Tracker
+
+When Counterscale is deployed, it makes `tracker.js` available at the URL you deployed to:
+
+```
+https://counterscale.{yoursubdomain}.workers.dev/tracker.js
+```
+
+To start tracking website traffic on your web property, copy/paste the following snippet into your website HTML:
+
+```html
+<script>
+(function () {
+    window.counterscale = {
+        q: [
+            ["set", "siteId", "your-unique-site-id"],
+            ["trackPageview"],
+        ],
+    };
+})();
+</script>
+<script id="counterscale-script" src="https://counterscale.{yoursubdomain}.workers.dev/tracker.js" defer></script>
+```
+
+Be sure to replace `your-unique-site-id` with a unique string/slug representing your web property. Use a unique site ID for each property you place the tracking script on.
+
 ## Development
 
 ### Config
