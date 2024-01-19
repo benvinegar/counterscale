@@ -166,17 +166,17 @@ export default function Dashboard() {
             <div className="w-full mb-4">
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="grid grid-cols-3 gap-10">
+                        <div className="grid grid-cols-3 gap-10 items-end">
                             <div>
-                                <div>Page Views</div>
+                                <div className="text-sm sm:text-lg">Views</div>
                                 <div className="text-4xl">{data.views}</div>
                             </div>
                             <div>
-                                <div>Visits</div>
+                                <div className="text-sm sm:text-lg">Visits</div>
                                 <div className="text-4xl">{data.visits}</div>
                             </div>
                             <div>
-                                <div>Unique Visitors</div>
+                                <div className="text-sm sm:text-lg">Visitors</div>
                                 <div className="text-4xl">{data.visitors}</div>
                             </div>
                         </div>
