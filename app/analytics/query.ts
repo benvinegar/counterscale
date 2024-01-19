@@ -32,7 +32,21 @@ interface AnalyticsCountResult {
     visitors: number
 }
 
+/**
+ * Convert a Date object to YY-MM-DD HH:MM:SS
+ */
+function formatDateString(d: Date) {
+    function pad(n: number) { return n < 10 ? "0" + n : n }
+    const dash = "-";
+    const colon = ":";
+    return d.getFullYear() + dash +
+        pad(d.getMonth() + 1) + dash +
+        pad(d.getDate()) + " " +
+        pad(d.getHours()) + colon +
+        pad(d.getMinutes()) + colon +
+        pad(d.getSeconds())
 
+}
 /**
  * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
  * example:
@@ -70,15 +84,16 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): a
     const initialRows: any = {};
 
     for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
+        // get date as utc
         const rowDate = new Date(i);
-        const isoStringInLocalTZ = new Date(rowDate.getTime() - new Date().getTimezoneOffset() * 60 * 1000).toISOString()
-        const key =
-            isoStringInLocalTZ.split("T")[0] +
-            " " +
-            isoStringInLocalTZ.split("T")[1].split('.')[0];
+        // convert to UTC
+        const utcDateTime = new Date(rowDate.getTime() + rowDate.getTimezoneOffset() * 60_000);
+
+        const key = formatDateString(utcDateTime);
         initialRows[key] = 0;
     }
 
+    console.log(initialRows);
 
     return initialRows;
 }
@@ -154,6 +169,7 @@ export class AnalyticsEngineAPI {
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY bucket
             ORDER BY bucket ASC`;
+
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
@@ -166,10 +182,14 @@ export class AnalyticsEngineAPI {
             // note this query will return sparse data (i.e. only rows where count > 0)
             // merge returnedRows with initial rows to fill in any gaps
             const rowsByDateTime = responseData.data.reduce((accum, row) => {
-                accum[row['bucket']] = row['count'];
+
+                const utcDateTime = new Date(row['bucket']);
+                const key = formatDateString(utcDateTime);
+                accum[key] = row['count'];
                 return accum;
             }, initialRows);
 
+            console.log(rowsByDateTime);
             // return as sorted array of tuples (i.e. [datetime, count])
             const sortedRows = Object.entries(rowsByDateTime).sort((a: any, b: any) => {
                 if (a[0] < b[0]) return -1;
