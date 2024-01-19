@@ -194,13 +194,13 @@ export default function Dashboard() {
                 </Card>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <TableCard countByProperty={data.countByPath} columnHeaders={["Page", "Visitors"]} />
 
                 <TableCard countByProperty={data.countByReferrer} columnHeaders={["Referrer", "Visitors"]} />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
                 <TableCard countByProperty={data.countByBrowser} columnHeaders={["Browser", "Visitors"]} />
 
                 <TableCard countByProperty={countByCountryName} columnHeaders={["Country", "Visitors"]} />
