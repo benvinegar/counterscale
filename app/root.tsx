@@ -32,13 +32,13 @@ export default function App() {
                     <header className="border-b-2 mb-12 py-4">
                         <nav className="flex justify-between items-center">
                             <div className="flex items-center">
-                                <a href="/" className="text-2xl font-bold">Counterscale</a>
-                                <img className="ml-1" src="/favicon.png" alt="Counterscale Icon" />
+                                <a href="/" className="text-xl sm:text-2xl font-bold">Counterscale</a>
+                                <img className="w-6 sm:w-8 ml-1" src="/favicon.png" alt="Counterscale Icon" />
                             </div>
-                            <div className="flex items-center">
-                                <a href="/dashboard" className="text-lg font-medium">Dashboard</a>
-                                <a href="/admin-redirect" target="_blank" className="text-lg font-medium ml-4">Admin</a>
-                                <a href="https://github.com/benvinegar/counterscale" className="w-8 ml-4">
+                            <div className="flex items-center font-small font-medium text-md sm:text-lg">
+                                <a href="/dashboard">Dashboard</a>
+                                <a href="/admin-redirect" target="_blank" className="ml-2 sm:ml-4">Admin</a>
+                                <a href="https://github.com/benvinegar/counterscale" className="w-8 ml-2 sm:ml-4">
                                     <img src="/github-mark.svg" alt="GitHub Logo" style={{ filter: "invert(21%) sepia(27%) saturate(271%) hue-rotate(113deg) brightness(97%) contrast(97%)" }} />
                                 </a>
                             </div>
