@@ -131,11 +131,11 @@ export default function Dashboard() {
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-            <div className="w-full mb-4 items-stretch flex">
+            <div className="w-full mb-4 flex gap-4">
 
-                <div className="flex-none w-1/6 mr-4">
+                <div className="w-1/2 sm:w-1/3 md:w-1/5">
                     <Select defaultValue={data.siteId} onValueChange={(site) => changeSite(site)}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -147,10 +147,10 @@ export default function Dashboard() {
                     </Select>
                 </div>
 
-                <div className="flex-none w-1/6">
+                <div className="w-1/2 sm:w-1/3 md:w-1/5">
 
                     <Select defaultValue="7" onValueChange={(interval) => changeInterval(interval)}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
