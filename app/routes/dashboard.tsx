@@ -187,7 +187,7 @@ export default function Dashboard() {
             <div className="w-full mb-4">
                 <Card>
                     <CardContent>
-                        <div className="h-80 pt-6">
+                        <div className="h-80 pt-6 -m-4 -ml-8 sm:m-0">
                             <TimeSeriesChart data={chartData} intervalType={data.intervalType}></TimeSeriesChart>
                         </div>
                     </CardContent>
