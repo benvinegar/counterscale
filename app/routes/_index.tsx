@@ -17,7 +17,7 @@ export default function Index() {
                     Scalable web analytics you run yourself on Cloudflare
                 </h2>
                 <Button>
-                    <a href="https://github.com/benvinegar/counterscale">Get Started with GitHub</a>
+                    <a className="capitalize" href="https://github.com/benvinegar/counterscale">Get Started<span className="hidden sm:inline"> with GitHub</span></a>
                 </Button>
                 <span className="ml-4">
                     or

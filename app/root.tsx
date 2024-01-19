@@ -37,7 +37,7 @@ export default function App() {
                             </div>
                             <div className="flex items-center font-small font-medium text-md sm:text-lg">
                                 <a href="/dashboard">Dashboard</a>
-                                <a href="/admin-redirect" target="_blank" className="ml-2 sm:ml-4">Admin</a>
+                                <a href="/admin-redirect" target="_blank" className="hidden sm:inline-block ml-2 sm:ml-4">Admin</a>
                                 <a href="https://github.com/benvinegar/counterscale" className="w-8 ml-2 sm:ml-4">
                                     <img src="/github-mark.svg" alt="GitHub Logo" style={{ filter: "invert(21%) sepia(27%) saturate(271%) hue-rotate(113deg) brightness(97%) contrast(97%)" }} />
                                 </a>
