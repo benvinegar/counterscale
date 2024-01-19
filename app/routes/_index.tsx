@@ -47,7 +47,7 @@ export default function Index() {
 
             <div className="md:basis-1/2 mb-8">
                 <h3 className="text-3xl mb-4">Privacy focused</h3>
-                <p>You control your data end-to-end. Data is retained for only 90 days.</p>
+                <p>Doesn&apos;t set any cookies, and you control your data end-to-end. Data is retained for only 90 days.</p>
             </div>
         </div>
     </ div>
