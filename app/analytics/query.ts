@@ -129,13 +129,13 @@ export class AnalyticsEngineAPI {
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
 
-        let intervalCount = 0;
+        let intervalCount = 1;
+
+        // keeping this code here once we start allowing bigger intervals (e.g. intervals of 2 hours)
         switch (intervalType) {
             case 'DAY':
-                intervalCount = 1;
-                break;
             case 'HOUR':
-                intervalCount = 24;
+                intervalCount = 1;
                 break;
         }
 
@@ -154,7 +154,6 @@ export class AnalyticsEngineAPI {
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY bucket
             ORDER BY bucket ASC`;
-
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
