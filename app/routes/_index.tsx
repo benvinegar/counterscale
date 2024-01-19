@@ -11,9 +11,9 @@ export const meta: MetaFunction = () => {
 export default function Index() {
     return <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
 
-        <div className="flex items-center justify-center border-b-2 pb-12 mb-8">
+        <div className="flex flex-wrap sm:flex-nowrap flex-row items-center justify-center border-b-2 pb-12 mb-8">
             <div>
-                <h2 className="font-bold text-6xl mb-6">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6">
                     Scalable web analytics you run yourself on Cloudflare
                 </h2>
                 <Button>
@@ -29,23 +29,23 @@ export default function Index() {
             </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-12">
-            <div className="mb-8">
+        <div className="flex flex-wrap">
+            <div className="md:basis-1/2 mb-8">
                 <h3 className="text-3xl mb-4">Free and open source</h3>
                 <p>Counterscale is MIT licensed. You run it yourself on your own Cloudflare account.</p>
             </div>
 
-            <div className="mb-8">
+            <div className="md:basis-1/2 mb-8">
                 <h3 className="text-3xl mb-4">Simple to deploy and maintain</h3>
                 <p>Counterscale is deployed as a single Cloudflare Worker, with event data stored using Cloudflare Analytics Engine (beta).</p>
             </div>
 
-            <div className="mb-8">
+            <div className="md:basis-1/2 mb-8">
                 <h3 className="text-3xl mb-4">Don&apos;t break the bank</h3>
                 <p>Pay pennies to handle 100ks of requests on Cloudflare&apos;s infrastructure.</p>
             </div>
 
-            <div className="mb-8">
+            <div className="md:basis-1/2 mb-8">
                 <h3 className="text-3xl mb-4">Privacy focused</h3>
                 <p>You control your data end-to-end. Data is retained for only 90 days.</p>
             </div>
