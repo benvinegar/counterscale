@@ -45,8 +45,8 @@ function formatDateString(d: Date) {
         pad(d.getHours()) + colon +
         pad(d.getMinutes()) + colon +
         pad(d.getSeconds())
-
 }
+
 /**
  * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
  * example:
@@ -58,7 +58,7 @@ function formatDateString(d: Date) {
  *   }
  *  
  * */
-function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): any {
+function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): [Date, any] {
     const startDateTime = new Date();
     let intervalMs = 0;
 
@@ -93,9 +93,8 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): a
         initialRows[key] = 0;
     }
 
-    console.log(initialRows);
 
-    return initialRows;
+    return [startDateTime, initialRows];
 }
 
 /**
@@ -139,7 +138,7 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number): Promise<any> {
+    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz?: string): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
@@ -155,7 +154,7 @@ export class AnalyticsEngineAPI {
         }
 
         // note interval count hard-coded to hours at the moment
-        const initialRows = generateEmptyRowsOverInterval(intervalType, sinceDays);
+        const [startDateTime, initialRows] = generateEmptyRowsOverInterval(intervalType, sinceDays);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
@@ -163,12 +162,18 @@ export class AnalyticsEngineAPI {
         //       -- but you can filter on them (using WHERE)
         const query = `
             SELECT SUM(_sample_interval) as count,
-            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}) as bucket
+
+            /* interval start needs local timezone, e.g. 00:00 in America/New York means start of day in NYC */
+            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}, '${tz}') as _bucket,
+
+            /* format output date as UTC (otherwise will be users local TZ) */
+            toDateTime(_bucket, 'Etc/UTC') as bucket
+
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > toDateTime('${formatDateString(startDateTime)}')
             AND ${siteIdColumn} = '${siteId}'
-            GROUP BY bucket
-            ORDER BY bucket ASC`;
+            GROUP BY _bucket
+            ORDER BY _bucket ASC`;
 
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await this.query(query);
@@ -189,7 +194,6 @@ export class AnalyticsEngineAPI {
                 return accum;
             }, initialRows);
 
-            console.log(rowsByDateTime);
             // return as sorted array of tuples (i.e. [datetime, count])
             const sortedRows = Object.entries(rowsByDateTime).sort((a: any, b: any) => {
                 if (a[0] < b[0]) return -1;

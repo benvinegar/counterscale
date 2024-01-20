@@ -1,3 +1,5 @@
+import type { RequestInit } from "@cloudflare/workers-types";
+
 import { Card, CardContent } from "~/components/ui/card"
 import {
     Select,
@@ -78,7 +80,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             break;
     }
 
-    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(actualSiteId, intervalType, interval);
+    const tz = context.requestTimezone as string;
+
+    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(actualSiteId, intervalType, interval, tz);
 
     return json({
         siteId: siteId || '@unknown',
