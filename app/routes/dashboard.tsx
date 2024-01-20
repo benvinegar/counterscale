@@ -1,5 +1,3 @@
-import type { RequestInit } from "@cloudflare/workers-types";
-
 import { Card, CardContent } from "~/components/ui/card"
 import {
     Select,

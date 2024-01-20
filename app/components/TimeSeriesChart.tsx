@@ -1,10 +1,6 @@
 import PropTypes, { InferProps } from 'prop-types';
 
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts';
-import {
-    ValueType,
-    NameType,
-} from 'recharts/types/component/DefaultTooltipContent';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function TimeSeriesChart({ data, intervalType }: InferProps<typeof TimeSeriesChart.propTypes>) {
     // chart doesn't really work no data points, so just bail out

@@ -139,8 +139,6 @@ export class AnalyticsEngineAPI {
     }
 
     async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz?: string): Promise<any> {
-        // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
 
         let intervalCount = 1;
