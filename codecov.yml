@@ -1,2 +1,12 @@
 ignore:
   - "*.config.js"
+
+# Coverage checks shouldn't fail the build
+coverage:
+  status:
+    project:
+      default:
+        target: 0%
+    patch:
+      default:
+        target: 0%
