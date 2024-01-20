@@ -9,8 +9,8 @@
     "dev": "remix dev --manual -c \"npm start\"",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "wrangler dev ./build/index.js",
-    "test": "vitest run",
-    "test-ci": "vitest run --coverage",
+    "test": "TZ=EST vitest run",
+    "test-ci": "TZ=EST vitest run --coverage",
     "typecheck": "tsc",
     "prepare": "husky install"
   },

@@ -46,56 +46,62 @@ describe("AnalyticsEngineAPI", () => {
 
     describe("getViewsGroupedByInterval", () => {
         test("should return an array of [timestamp, count] tuples grouped by day", async () => {
+            expect(process.env.TZ).toBe("EST");
+
             fetch.mockResolvedValue(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [
                         {
                             count: 3,
                             // note: intentionally sparse data (data for some timestamps missing)
-                            bucket: "2024-01-13 00:00:00",
+                            bucket: "2024-01-13 05:00:00",
                         },
                         {
                             count: 2,
-                            bucket: "2024-01-16 00:00:00"
+                            bucket: "2024-01-16 05:00:00"
                         },
                         {
                             count: 1,
-                            bucket: "2024-01-17 00:00:00"
+                            bucket: "2024-01-17 05:00:00"
                         }
                     ]
                 }))
             }));
 
-            vi.setSystemTime(new Date("2024-01-18T05:33:02").getTime());
+            vi.setSystemTime(new Date("2024-01-18T09:33:02").getTime());
 
             const result1 = await api.getViewsGroupedByInterval("example.com", "DAY", 7);
 
+            // results should all be at 05:00:00 because local timezone is UTC-5 --
+            // this set of results represents "start of day" in local tz, which is 5 AM UTC
             expect(result1).toEqual([
-                ["2024-01-11 00:00:00", 0],
-                ["2024-01-12 00:00:00", 0],
-                ["2024-01-13 00:00:00", 3],
-                ["2024-01-14 00:00:00", 0],
-                ["2024-01-15 00:00:00", 0],
-                ["2024-01-16 00:00:00", 2],
-                ["2024-01-17 00:00:00", 1],
-                ["2024-01-18 00:00:00", 0],
+                ["2024-01-11 05:00:00", 0],
+                ["2024-01-12 05:00:00", 0],
+                ["2024-01-13 05:00:00", 3],
+                ["2024-01-14 05:00:00", 0],
+                ["2024-01-15 05:00:00", 0],
+                ["2024-01-16 05:00:00", 2],
+                ["2024-01-17 05:00:00", 1],
+                ["2024-01-18 05:00:00", 0],
             ]);
 
             expect(await api.getViewsGroupedByInterval("example.com", "DAY", 5))
 
             const result2 = await api.getViewsGroupedByInterval("example.com", "DAY", 5);
             expect(result2).toEqual([
-                ["2024-01-13 00:00:00", 3],
-                ["2024-01-14 00:00:00", 0],
-                ["2024-01-15 00:00:00", 0],
-                ["2024-01-16 00:00:00", 2],
-                ["2024-01-17 00:00:00", 1],
-                ["2024-01-18 00:00:00", 0],
+                ["2024-01-13 05:00:00", 3],
+                ["2024-01-14 05:00:00", 0],
+                ["2024-01-15 05:00:00", 0],
+                ["2024-01-16 05:00:00", 2],
+                ["2024-01-17 05:00:00", 1],
+                ["2024-01-18 05:00:00", 0],
             ]);
         });
     });
 
     test("should return an array of [timestamp, count] tuples grouped by hour", async () => {
+        expect(process.env.TZ).toBe("EST");
+
         fetch.mockResolvedValue(new Promise(resolve => {
             resolve(createFetchResponse({
                 data: [
@@ -120,12 +126,10 @@ describe("AnalyticsEngineAPI", () => {
 
         const result1 = await api.getViewsGroupedByInterval("example.com", "HOUR", 1);
 
+        // reminder results are expressed as UTC
+        // so if we want the last 24 hours from 05:00:00 in local time (EST), the actual
+        // time range in UTC starts and ends at 10:00:00 (+5 hours)
         expect(result1).toEqual([
-            ['2024-01-17 05:00:00', 0],
-            ['2024-01-17 06:00:00', 0],
-            ['2024-01-17 07:00:00', 0],
-            ['2024-01-17 08:00:00', 0],
-            ['2024-01-17 09:00:00', 0],
             ['2024-01-17 10:00:00', 0],
             ['2024-01-17 11:00:00', 3],
             ['2024-01-17 12:00:00', 0],
@@ -145,7 +149,12 @@ describe("AnalyticsEngineAPI", () => {
             ['2024-01-18 02:00:00', 0],
             ['2024-01-18 03:00:00', 0],
             ['2024-01-18 04:00:00', 0],
-            ['2024-01-18 05:00:00', 0]
+            ['2024-01-18 05:00:00', 0],
+            ['2024-01-18 06:00:00', 0],
+            ['2024-01-18 07:00:00', 0],
+            ['2024-01-18 08:00:00', 0],
+            ['2024-01-18 09:00:00', 0],
+            ['2024-01-18 10:00:00', 0]
         ]);
     });
 
