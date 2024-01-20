@@ -32,6 +32,20 @@ interface AnalyticsCountResult {
     visitors: number
 }
 
+/**
+ * Convert a Date object to YY-MM-DD HH:MM:SS
+ */
+function formatDateString(d: Date) {
+    function pad(n: number) { return n < 10 ? "0" + n : n }
+    const dash = "-";
+    const colon = ":";
+    return d.getFullYear() + dash +
+        pad(d.getMonth() + 1) + dash +
+        pad(d.getDate()) + " " +
+        pad(d.getHours()) + colon +
+        pad(d.getMinutes()) + colon +
+        pad(d.getSeconds())
+}
 
 /**
  * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
@@ -44,7 +58,7 @@ interface AnalyticsCountResult {
  *   }
  *  
  * */
-function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): any {
+function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): [Date, any] {
     const startDateTime = new Date();
     let intervalMs = 0;
 
@@ -70,17 +84,17 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): a
     const initialRows: any = {};
 
     for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
+        // get date as utc
         const rowDate = new Date(i);
-        const isoStringInLocalTZ = new Date(rowDate.getTime() - new Date().getTimezoneOffset() * 60 * 1000).toISOString()
-        const key =
-            isoStringInLocalTZ.split("T")[0] +
-            " " +
-            isoStringInLocalTZ.split("T")[1].split('.')[0];
+        // convert to UTC
+        const utcDateTime = new Date(rowDate.getTime() + rowDate.getTimezoneOffset() * 60_000);
+
+        const key = formatDateString(utcDateTime);
         initialRows[key] = 0;
     }
 
 
-    return initialRows;
+    return [startDateTime, initialRows];
 }
 
 /**
@@ -124,9 +138,7 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number): Promise<any> {
-        // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
+    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz?: string): Promise<any> {
         const siteIdColumn = ColumnMappings['siteId'];
 
         let intervalCount = 1;
@@ -140,7 +152,7 @@ export class AnalyticsEngineAPI {
         }
 
         // note interval count hard-coded to hours at the moment
-        const initialRows = generateEmptyRowsOverInterval(intervalType, sinceDays);
+        const [startDateTime, initialRows] = generateEmptyRowsOverInterval(intervalType, sinceDays);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
@@ -148,12 +160,19 @@ export class AnalyticsEngineAPI {
         //       -- but you can filter on them (using WHERE)
         const query = `
             SELECT SUM(_sample_interval) as count,
-            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}) as bucket
+
+            /* interval start needs local timezone, e.g. 00:00 in America/New York means start of day in NYC */
+            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}, '${tz}') as _bucket,
+
+            /* format output date as UTC (otherwise will be users local TZ) */
+            toDateTime(_bucket, 'Etc/UTC') as bucket
+
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > toDateTime('${formatDateString(startDateTime)}')
             AND ${siteIdColumn} = '${siteId}'
-            GROUP BY bucket
-            ORDER BY bucket ASC`;
+            GROUP BY _bucket
+            ORDER BY _bucket ASC`;
+
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
@@ -166,7 +185,10 @@ export class AnalyticsEngineAPI {
             // note this query will return sparse data (i.e. only rows where count > 0)
             // merge returnedRows with initial rows to fill in any gaps
             const rowsByDateTime = responseData.data.reduce((accum, row) => {
-                accum[row['bucket']] = row['count'];
+
+                const utcDateTime = new Date(row['bucket']);
+                const key = formatDateString(utcDateTime);
+                accum[key] = row['count'];
                 return accum;
             }, initialRows);
 
