@@ -70,7 +70,7 @@ describe("AnalyticsEngineAPI", () => {
 
             vi.setSystemTime(new Date("2024-01-18T09:33:02").getTime());
 
-            const result1 = await api.getViewsGroupedByInterval("example.com", "DAY", 7);
+            const result1 = await api.getViewsGroupedByInterval("example.com", "DAY", 7, 'America/New_York');
 
             // results should all be at 05:00:00 because local timezone is UTC-5 --
             // this set of results represents "start of day" in local tz, which is 5 AM UTC
@@ -85,9 +85,7 @@ describe("AnalyticsEngineAPI", () => {
                 ["2024-01-18 05:00:00", 0],
             ]);
 
-            expect(await api.getViewsGroupedByInterval("example.com", "DAY", 5))
-
-            const result2 = await api.getViewsGroupedByInterval("example.com", "DAY", 5);
+            const result2 = await api.getViewsGroupedByInterval("example.com", "DAY", 5, 'America/New_York');
             expect(result2).toEqual([
                 ["2024-01-13 05:00:00", 3],
                 ["2024-01-14 05:00:00", 0],

@@ -23,6 +23,7 @@
     "@remix-run/react": "^2.4.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "dayjs": "^1.11.10",
     "isbot": "^3.6.8",
     "lucide-react": "^0.302.0",
     "react": "^18.2.0",

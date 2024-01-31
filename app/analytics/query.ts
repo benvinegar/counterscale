@@ -1,3 +1,10 @@
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
 interface ColumnMappingsType {
     [key: string]: any
 }
@@ -58,28 +65,38 @@ function formatDateString(d: Date) {
  *   }
  *  
  * */
-function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): [Date, any] {
-    const startDateTime = new Date();
+function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number, tz?: string): [Date, any] {
+
+    if (!tz) {
+        tz = 'Etc/UTC';
+    }
+
+    let localDateTime = dayjs();
     let intervalMs = 0;
 
     // get start date in the past by subtracting interval * type
     if (intervalType === 'DAY') {
-        // get intervalCount days in the past
-        startDateTime.setDate(startDateTime.getDate() - daysAgo);
-        startDateTime.setHours(0);
+        localDateTime = dayjs()
+            .utc()
+            .subtract(daysAgo, 'day')
+            .tz(tz)
+            .startOf('day');
 
         // assumes interval is 24 hours
         intervalMs = 24 * 60 * 60 * 1000;
 
     } else if (intervalType === 'HOUR') {
-        // get intervalCount hours in the past
-        startDateTime.setUTCHours(startDateTime.getUTCHours() - daysAgo * 24);
+        localDateTime = dayjs()
+            .utc()
+            .subtract(daysAgo, 'day')
+            .startOf('hour');
 
         // assumes interval is hourly
         intervalMs = 60 * 60 * 1000;
     }
 
-    startDateTime.setMinutes(0, 0, 0);
+
+    const startDateTime = localDateTime.toDate();
 
     const initialRows: any = {};
 
@@ -92,7 +109,6 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number): [
         const key = formatDateString(utcDateTime);
         initialRows[key] = 0;
     }
-
 
     return [startDateTime, initialRows];
 }
@@ -138,7 +154,7 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz?: string): Promise<any> {
+    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz: string): Promise<any> {
         const siteIdColumn = ColumnMappings['siteId'];
 
         let intervalCount = 1;
@@ -152,7 +168,7 @@ export class AnalyticsEngineAPI {
         }
 
         // note interval count hard-coded to hours at the moment
-        const [startDateTime, initialRows] = generateEmptyRowsOverInterval(intervalType, sinceDays);
+        const [startDateTime, initialRows] = generateEmptyRowsOverInterval(intervalType, sinceDays, tz);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
