@@ -1,27 +1,11 @@
+import { ColumnMappings } from './schema';
+
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
-
-interface ColumnMappingsType {
-    [key: string]: any
-}
-
-const ColumnMappings: ColumnMappingsType = {
-    host: "blob1",
-    userAgent: "blob2",
-    path: "blob3",
-    country: "blob4",
-    referrer: "blob5",
-    browserName: "blob6",
-    deviceModel: "blob7",
-    siteId: "blob8",
-
-    newVisitor: "double1",
-    newSession: "double2",
-};
 
 export interface AnalyticsQueryResultRow {
     [key: string]: any
@@ -155,8 +139,6 @@ export class AnalyticsEngineAPI {
     }
 
     async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz: string): Promise<any> {
-        const siteIdColumn = ColumnMappings['siteId'];
-
         let intervalCount = 1;
 
         // keeping this code here once we start allowing bigger intervals (e.g. intervals of 2 hours)
@@ -185,7 +167,7 @@ export class AnalyticsEngineAPI {
 
             FROM metricsDataset
             WHERE timestamp > toDateTime('${formatDateString(startDateTime)}')
-            AND ${siteIdColumn} = '${siteId}'
+                AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
 
@@ -226,7 +208,9 @@ export class AnalyticsEngineAPI {
         const siteIdColumn = ColumnMappings['siteId'];
 
         const query = `
-            SELECT SUM(_sample_interval) as count, double1 as isVisitor, double2 as isVisit
+            SELECT SUM(_sample_interval) as count, 
+                ${ColumnMappings.newVisitor} as isVisitor, 
+                ${ColumnMappings.newSession} as isVisit
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             AND ${siteIdColumn} = '${siteId}'
@@ -270,15 +254,14 @@ export class AnalyticsEngineAPI {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;
-        const siteIdColumn = ColumnMappings['siteId'];
 
         const _column: string = ColumnMappings[column];
         const query = `
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
-            AND double1 = 1
-            AND ${siteIdColumn} = '${siteId}'
+                AND ${ColumnMappings.newVisitor} = 1
+                AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}
             ORDER BY count DESC
             LIMIT ${limit}`;
@@ -329,7 +312,8 @@ export class AnalyticsEngineAPI {
         limit = limit || 10;
 
         const query = `
-            SELECT SUM(_sample_interval) as count, blob8 as siteId
+            SELECT SUM(_sample_interval) as count, 
+                ${ColumnMappings.siteId} as siteId
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
             GROUP BY siteId
