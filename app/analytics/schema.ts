@@ -1,7 +1,10 @@
 export interface ColumnMappingsType {
-    [key: string]: any
+    [key: string]: string
 }
 
+/**
+ * This maps logical column names to the actual column names in the data store.
+ */
 export const ColumnMappings: ColumnMappingsType = {
     host: "blob1",
     userAgent: "blob2",
