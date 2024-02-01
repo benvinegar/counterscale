@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { json } from "@remix-run/node";
-import { test, describe, beforeAll } from "vitest";
+import { test, describe, beforeAll, expect } from "vitest";
 import 'vitest-dom/extend-expect';
 
 import { createRemixStub } from "@remix-run/testing";
 import {
-    render
+    render,
+    screen,
+    waitFor
 } from "@testing-library/react";
 
 import Dashboard from "./dashboard";
@@ -44,6 +46,10 @@ describe("Dashboard route", () => {
         ]);
 
         render(<RemixStub />);
+
+        // wait until the rows render in the document
+        await waitFor(() => screen.findByText("Country"));
+        expect(screen.getByText('Country')).toBeInTheDocument();
     });
 
     test("renders with data", async () => {
@@ -54,7 +60,7 @@ describe("Dashboard route", () => {
                 sites: ['example'],
                 views: 100,
                 visits: 80,
-                visitors: 60,
+                visitors: 33, // made intentionally unique for test assertions
                 countByPath: [
                     ['/', 100],
                     ['/about', 80],
@@ -66,9 +72,9 @@ describe("Dashboard route", () => {
                     ['Firefox', 60],
                 ],
                 countByCountry: [
-                    ['United States', 100],
-                    ['Canada', 80],
-                    ['United Kingdom', 60],
+                    ['US', 100],
+                    ['CA', 80],
+                    ['UK', 60],
                 ],
                 countByReferrer: [
                     ['google.com', 100],
@@ -104,5 +110,16 @@ describe("Dashboard route", () => {
         ]);
 
         render(<RemixStub />);
+
+        // wait until the rows render in the document
+        await waitFor(() => screen.findByText("Chrome"));
+
+        // assert some of the data we mocked actually rendered into the document
+        expect(screen.getByText('33')).toBeInTheDocument();
+        expect(screen.getByText('/about')).toBeInTheDocument();
+        expect(screen.getByText('Chrome')).toBeInTheDocument();
+        expect(screen.getByText('google.com')).toBeInTheDocument();
+        expect(screen.getByText('Canada')).toBeInTheDocument(); // assert converted CA -> Canada
+        expect(screen.getByText('Mobile')).toBeInTheDocument();
     });
 });
