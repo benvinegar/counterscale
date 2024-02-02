@@ -98,6 +98,23 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     });
 };
 
+function convertCountryCodesToNames(countByCountry: AnalyticsQueryResultRow[]): AnalyticsQueryResultRow[] {
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    return countByCountry.map((countByBrowserRow: AnalyticsQueryResultRow) => {
+        let countryName;
+        try {
+            // throws an exception if country code isn't valid
+            //   use try/catch to be defensive and not explode if an invalid
+            //   country code gets insrted into Analytics Engine
+            countryName = regionNames.of(countByBrowserRow[0]);  // "United States"
+        } catch (err) {
+            countryName = '(unknown)'
+        }
+        const count = countByBrowserRow[1];
+        return [countryName, count];
+    })
+}
+
 export default function Dashboard() {
     const [, setSearchParams] = useSearchParams();
 
@@ -125,11 +142,7 @@ export default function Dashboard() {
         });
     });
 
-    // convert country codes to names
-    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-    const countByCountryName = data.countByCountry.map((countByBrowserRow: AnalyticsQueryResultRow) => {
-        return [regionNames.of(countByBrowserRow[0]), countByBrowserRow[1]];  // "United States"
-    })
+    const countByCountryName = convertCountryCodesToNames(data.countByCountry);
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>

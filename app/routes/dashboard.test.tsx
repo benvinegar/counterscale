@@ -52,53 +52,54 @@ describe("Dashboard route", () => {
         expect(screen.getByText('Country')).toBeInTheDocument();
     });
 
-    test("renders with data", async () => {
+    const defaultMockedLoaderJson = {
+        siteId: 'example',
+        sites: ['example'],
+        views: 100,
+        visits: 80,
+        visitors: 33,
+        countByPath: [
+            ['/', 100],
+            ['/about', 80],
+            ['/contact', 60],
+        ],
+        countByBrowser: [
+            ['Chrome', 100],
+            ['Safari', 80],
+            ['Firefox', 60],
+        ],
+        countByCountry: [
+            ['US', 100],
+            ['CA', 80],
+            ['UK', 60],
+        ],
+        countByReferrer: [
+            ['google.com', 100],
+            ['facebook.com', 80],
+            ['twitter.com', 60],
+        ],
+        countByDevice: [
+            ['Desktop', 100],
+            ['Mobile', 80],
+            ['Tablet', 60],
+        ],
+        viewsGroupedByInterval: [
+            ["2024-01-11 00:00:00", 0],
+            ["2024-01-12 00:00:00", 0],
+            ["2024-01-13 00:00:00", 3],
+            ["2024-01-14 00:00:00", 0],
+            ["2024-01-15 00:00:00", 0],
+            ["2024-01-16 00:00:00", 2],
+            ["2024-01-17 00:00:00", 1],
+            ["2024-01-18 00:00:00", 0],
+        ],
+        intervalType: 'day'
+    };
+
+    test("renders with valid data", async () => {
 
         function loader() {
-            return json({
-                siteId: 'example',
-                sites: ['example'],
-                views: 100,
-                visits: 80,
-                visitors: 33, // made intentionally unique for test assertions
-                countByPath: [
-                    ['/', 100],
-                    ['/about', 80],
-                    ['/contact', 60],
-                ],
-                countByBrowser: [
-                    ['Chrome', 100],
-                    ['Safari', 80],
-                    ['Firefox', 60],
-                ],
-                countByCountry: [
-                    ['US', 100],
-                    ['CA', 80],
-                    ['UK', 60],
-                ],
-                countByReferrer: [
-                    ['google.com', 100],
-                    ['facebook.com', 80],
-                    ['twitter.com', 60],
-                ],
-                countByDevice: [
-                    ['Desktop', 100],
-                    ['Mobile', 80],
-                    ['Tablet', 60],
-                ],
-                viewsGroupedByInterval: [
-                    ["2024-01-11 00:00:00", 0],
-                    ["2024-01-12 00:00:00", 0],
-                    ["2024-01-13 00:00:00", 3],
-                    ["2024-01-14 00:00:00", 0],
-                    ["2024-01-15 00:00:00", 0],
-                    ["2024-01-16 00:00:00", 2],
-                    ["2024-01-17 00:00:00", 1],
-                    ["2024-01-18 00:00:00", 0],
-
-                ],
-                intervalType: 'day'
-            });
+            return json({ ...defaultMockedLoaderJson });
         }
 
         const RemixStub = createRemixStub([
@@ -121,5 +122,34 @@ describe("Dashboard route", () => {
         expect(screen.getByText('google.com')).toBeInTheDocument();
         expect(screen.getByText('Canada')).toBeInTheDocument(); // assert converted CA -> Canada
         expect(screen.getByText('Mobile')).toBeInTheDocument();
+    });
+
+    test("renders with invalid country code", async () => {
+        function loader() {
+            return json({
+                ...defaultMockedLoaderJson,
+                countByCountry: [
+                    ['US', 100],
+                    ['CA', 80],
+                    ['not_a_valid_country_code', 60],
+                ]
+            });
+        }
+
+        const RemixStub = createRemixStub([
+            {
+                path: "/",
+                Component: Dashboard,
+                loader
+            },
+        ]);
+
+        render(<RemixStub />);
+
+        // wait until the rows render in the document
+        await waitFor(() => screen.findByText("Chrome"));
+
+        // assert the invalid country code was converted to "(unknown)"
+        expect(screen.getByText('(unknown)')).toBeInTheDocument();
     });
 });
