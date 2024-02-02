@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { json } from "@remix-run/node";
-import { test, describe, beforeAll, expect } from "vitest";
+import { vi, test, describe, beforeAll, expect } from "vitest";
 import 'vitest-dom/extend-expect';
 
 import { createRemixStub } from "@remix-run/testing";
@@ -10,12 +10,141 @@ import {
     waitFor
 } from "@testing-library/react";
 
-import Dashboard from "./dashboard";
+import Dashboard, { loader } from "./dashboard";
+
+global.fetch = vi.fn();
+function createFetchResponse(data: any) {
+    return {
+        ok: true,
+        json: () => new Promise((resolve) => resolve(data))
+    }
+}
 
 describe("Dashboard route", () => {
+    const fetch = global.fetch as any;
+
     beforeAll(() => {
         // polyfill needed for recharts (used by TimeSeriesChart)
         global.ResizeObserver = require('resize-observer-polyfill')
+    });
+
+    describe("loader", () => {
+        test("assembles data returned from CF API", async () => {
+            // response for getSitesByOrderedHits
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { siteId: 'test-siteid', count: 1 }
+                    ]
+                }))
+            }));
+
+            // response for get counts
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { isVisit: 1, isVisitor: 1, count: 1 },
+                        { isVisit: 1, isVisitor: 0, count: 2 },
+                        { isVisit: 0, isVisitor: 0, count: 3 }
+                    ]
+                }))
+            }));
+
+            // response for getCountByPath
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { blob3: "/", count: 1 }
+                    ]
+                }))
+            }));
+
+            // response for getCountByCountry
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { blob4: "US", count: 1 }
+                    ]
+                }))
+            }));
+
+            // response for getCountByReferrer
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { blob5: "google.com", count: 1 }
+                    ]
+                }))
+            }));
+
+            // response for getCountByBrowser
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { blob6: "Chrome", count: 2 }
+                    ]
+                }))
+            }));
+
+            // response for getCountByDevice
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { blob7: "Desktop", count: 3 }
+                    ]
+                }))
+            }));
+
+            // response for getViewsGroupedByInterval
+            fetch.mockResolvedValueOnce(new Promise(resolve => {
+                resolve(createFetchResponse({
+                    data: [
+                        { bucket: "2024-01-11 00:00:00", count: 4 }
+                    ]
+                }))
+            }));
+
+
+            const response = await loader({
+                context: {
+                    env: {
+                        CF_BEARER_TOKEN: 'fake',
+                        CF_ACCOUNT_ID: 'fake',
+                    }
+                },
+                // @ts-expect-error we don't need to provide all the properties of the request object
+                request: {
+                    url: 'http://localhost:3000/dashboard'
+                }
+            });
+
+            const json = await response.json();
+
+            expect(json).toEqual({
+                siteId: 'test-siteid',
+                sites: ['test-siteid'],
+                views: 6,
+                visits: 3,
+                visitors: 1,
+                countByPath: [['/', 1]],
+                countByCountry: [['US', 1]],
+                countByReferrer: [['google.com', 1]],
+                countByBrowser: [['Chrome', 2]],
+                countByDevice: [['Desktop', 3]],
+                viewsGroupedByInterval: [
+                    ['2024-01-11 00:00:00', 4],
+                    ['2024-01-26 00:00:00', 0],
+                    ['2024-01-27 00:00:00', 0],
+                    ['2024-01-28 00:00:00', 0],
+                    ['2024-01-29 00:00:00', 0],
+                    ['2024-01-30 00:00:00', 0],
+                    ['2024-01-31 00:00:00', 0],
+                    ['2024-02-01 00:00:00', 0],
+                    ['2024-02-02 00:00:00', 0]
+                ],
+                intervalType: 'DAY'
+            });
+        });
     });
 
     test("renders when no data", async () => {
