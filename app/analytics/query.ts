@@ -203,6 +203,7 @@ export class AnalyticsEngineAPI {
     }
 
     async getCounts(siteId: string, sinceDays: number): Promise<AnalyticsCountResult> {
+
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings['siteId'];
@@ -216,7 +217,6 @@ export class AnalyticsEngineAPI {
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
-
         const returnPromise = new Promise<AnalyticsCountResult>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
@@ -325,6 +325,7 @@ export class AnalyticsEngineAPI {
 
             if (!response.ok) {
                 reject(response.statusText);
+                return;
             }
 
             const responseData = await response.json() as AnalyticsQueryResult;
