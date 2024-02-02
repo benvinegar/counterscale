@@ -43,7 +43,9 @@ describe("Dashboard route", () => {
             fetch.mockResolvedValueOnce(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [
-                        { isVisit: "1", isVisitor: "1", count: 1 }
+                        { isVisit: 1, isVisitor: 1, count: 1 },
+                        { isVisit: 1, isVisitor: 0, count: 2 },
+                        { isVisit: 0, isVisitor: 0, count: 3 }
                     ]
                 }))
             }));
@@ -79,7 +81,7 @@ describe("Dashboard route", () => {
             fetch.mockResolvedValueOnce(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [
-                        { blob6: "Chrome", count: 1 }
+                        { blob6: "Chrome", count: 2 }
                     ]
                 }))
             }));
@@ -88,7 +90,7 @@ describe("Dashboard route", () => {
             fetch.mockResolvedValueOnce(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [
-                        { blob7: "Desktop", count: 1 }
+                        { blob7: "Desktop", count: 3 }
                     ]
                 }))
             }));
@@ -97,13 +99,13 @@ describe("Dashboard route", () => {
             fetch.mockResolvedValueOnce(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [
-                        { bucket: "2024-01-11 00:00:00", count: 1 }
+                        { bucket: "2024-01-11 00:00:00", count: 4 }
                     ]
                 }))
             }));
 
 
-            await loader({
+            const response = await loader({
                 context: {
                     env: {
                         CF_BEARER_TOKEN: 'fake',
@@ -114,6 +116,33 @@ describe("Dashboard route", () => {
                 request: {
                     url: 'http://localhost:3000/dashboard'
                 }
+            });
+
+            const json = await response.json();
+
+            expect(json).toEqual({
+                siteId: 'test-siteid',
+                sites: ['test-siteid'],
+                views: 6,
+                visits: 3,
+                visitors: 1,
+                countByPath: [['/', 1]],
+                countByCountry: [['US', 1]],
+                countByReferrer: [['google.com', 1]],
+                countByBrowser: [['Chrome', 2]],
+                countByDevice: [['Desktop', 3]],
+                viewsGroupedByInterval: [
+                    ['2024-01-11 00:00:00', 4],
+                    ['2024-01-26 00:00:00', 0],
+                    ['2024-01-27 00:00:00', 0],
+                    ['2024-01-28 00:00:00', 0],
+                    ['2024-01-29 00:00:00', 0],
+                    ['2024-01-30 00:00:00', 0],
+                    ['2024-01-31 00:00:00', 0],
+                    ['2024-02-01 00:00:00', 0],
+                    ['2024-02-02 00:00:00', 0]
+                ],
+                intervalType: 'DAY'
             });
         });
     });

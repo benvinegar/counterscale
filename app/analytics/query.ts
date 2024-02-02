@@ -235,15 +235,14 @@ export class AnalyticsEngineAPI {
             // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but
             //       no row where isVisit=0), so this code makes no assumption on number of results
             responseData.data.forEach((row) => {
-                if (row.isVisit === 1) {
+                if (row.isVisit == 1) {
                     counts.visits += Number(row.count);
                 }
-                if (row.isVisitor === 1) {
+                if (row.isVisitor == 1) {
                     counts.visitors += Number(row.count);
                 }
                 counts.views += Number(row.count);
             });
-
             resolve(counts);
         })());
 
