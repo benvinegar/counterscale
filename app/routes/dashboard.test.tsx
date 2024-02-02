@@ -110,7 +110,7 @@ describe("Dashboard route", () => {
                         CF_ACCOUNT_ID: 'fake',
                     }
                 },
-                // @ts-expect-error
+                // @ts-expect-error we don't need to provide all the properties of the request object
                 request: {
                     url: 'http://localhost:3000/dashboard'
                 }
