@@ -25,7 +25,14 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
     1. Create a new Analytics Engine dataset, called `metricsDataset`
 1. It should now be live. Visit `https://counterscale.{yoursubdomain}.workers.dev`.
 
-NOTE: The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
+### Troubleshooting
+
+If the website is not immediately available (e.g. "Secure Connection Failed"), it could be because Cloudflare has not yet activated your subdomain (yoursubdomain.workers.dev). This process can take a minute; you can check in on the progress by visiting the newly created worker in your Cloudflare dashboard (Workers & Pages → counterscale).
+
+### Custom Domains
+
+
+The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
 ## Installing the Tracker
 
