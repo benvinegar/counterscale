@@ -97,7 +97,7 @@ describe("Dashboard route", () => {
             fetch.mockResolvedValueOnce(new Promise(resolve => {
                 resolve(createFetchResponse({
                     data: [
-                        ["2024-01-11 00:00:00", 1],
+                        { bucket: "2024-01-11 00:00:00", count: 1 }
                     ]
                 }))
             }));
