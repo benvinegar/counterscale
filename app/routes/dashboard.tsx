@@ -84,7 +84,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     return json({
         siteId: siteId || '@unknown',
-        sites: sitesByHits.map(([site,]: [string,]) => site),
+        sites: sitesByHits.map(([site,]) => site),
         views: (await counts).views,
         visits: (await counts).visits,
         visitors: (await counts).visitors,
@@ -135,7 +135,7 @@ export default function Dashboard() {
     }
 
     const chartData: any = [];
-    data.viewsGroupedByInterval.forEach((row: AnalyticsQueryResultRow) => {
+    data.viewsGroupedByInterval.forEach((row) => {
         chartData.push({
             date: row[0],
             views: row[1]
