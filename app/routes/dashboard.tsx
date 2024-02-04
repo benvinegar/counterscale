@@ -57,15 +57,13 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             await analyticsEngine.getSitesOrderedByHits(interval);
 
         // if at least one result
-        if (sitesByHits.length > 0 && sitesByHits[0].length > 0) {
-            const redirectUrl = new URL(request.url);
-            redirectUrl.searchParams.set("site", sitesByHits[0][0]);
-            return redirect(redirectUrl.toString());
-        }
+        const redirectSite = sitesByHits[0]?.[0] || "";
+        const redirectUrl = new URL(request.url);
+        redirectUrl.searchParams.set("site", redirectSite);
+        return redirect(redirectUrl.toString());
     }
-
-    // treat "@unknown" as a magic string to identify AE records where no siteId was set
     const siteId = url.searchParams.get("site") || "";
+
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
     // initiate requests to AE in parallel
@@ -114,11 +112,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         tz,
     );
 
-    console.log("got here");
-
     // await all requests to AE then return the results
     return json({
-        siteId: siteId || "@unknown",
+        siteId: siteId,
         sites: (await sitesByHits).map(([site]: [string]) => site),
         views: (await counts).views,
         visits: (await counts).visits,
