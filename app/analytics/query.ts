@@ -1,9 +1,8 @@
-import { ColumnMappingToType, ColumnMappings } from './schema';
+import { ColumnMappings } from './schema';
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import invariant from '~/lib/utils';
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -11,9 +10,9 @@ dayjs.extend(timezone)
 export interface AnalyticsQueryResultRow {
     [key: string]: any
 }
-interface AnalyticsQueryResult<SelectionSet extends AnalyticsQueryResultRow> {
+interface AnalyticsQueryResult {
     meta: string,
-    data: SelectionSet[],
+    data: AnalyticsQueryResultRow[],
     rows: number,
     rows_before_limit_at_least: number
 }
@@ -22,24 +21,6 @@ interface AnalyticsCountResult {
     views: number,
     visits: number,
     visitors: number
-}
-
-function testAnalyticsQueryResult<T extends Record<string, any>>(
-    result: any,
-    testRow: (row: any) => row is T
-): result is AnalyticsQueryResult<T> {
-    return (
-        result.meta &&
-        typeof result.meta === 'string' &&
-        result.data &&
-        Array.isArray(result.data) &&
-        // Empty result set always passes, otherwise test the first row and be optimistic that the rest is fine
-        (result.data.length === 0 || testRow(result.data[0])) &&
-        result.rows &&
-        typeof result.rows === 'number' &&
-        result.rows_before_limit_at_least &&
-        typeof result.rows_before_limit_at_least === 'number'
-    );
 }
 
 /**
@@ -66,9 +47,10 @@ function formatDateString(d: Date) {
  *      "2021-01-01 04:00:00": 0,
  *      ...
  *   }
- *
+ *  
  * */
-function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number, tz?: string): [Date, { [key: string]: number }] {
+function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number, tz?: string): [Date, any] {
+
     if (!tz) {
         tz = 'Etc/UTC';
     }
@@ -100,7 +82,7 @@ function generateEmptyRowsOverInterval(intervalType: string, daysAgo: number, tz
 
     const startDateTime = localDateTime.toDate();
 
-    const initialRows: { [key: string]: number } = {};
+    const initialRows: any = {};
 
     for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
         // get date as utc
@@ -148,7 +130,7 @@ export class AnalyticsEngineAPI {
         }
     }
 
-    async query(query: string) {
+    async query(query: string): Promise<Response> {
         return fetch(this.defaultUrl, {
             method: 'POST',
             body: query,
@@ -156,7 +138,7 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz?: string) {
+    async getViewsGroupedByInterval(siteId: string, intervalType: string, sinceDays: number, tz: string): Promise<any> {
         let intervalCount = 1;
 
         // keeping this code here once we start allowing bigger intervals (e.g. intervals of 2 hours)
@@ -189,38 +171,14 @@ export class AnalyticsEngineAPI {
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
 
-        type SelectionSet = {
-            count: number;
-            _bucket: string;
-            bucket: string;
-        };
-
-        const returnPromise = new Promise<[string, number][]>((resolve, reject) => (async () => {
+        const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
             if (!response.ok) {
                 reject(response.statusText);
             }
 
-            const responseData = await response.json();
-
-            invariant(
-                testAnalyticsQueryResult(
-                    responseData,
-                    (
-                        row
-                    ): row is AnalyticsQueryResult<SelectionSet>['data'][number] => {
-                        return (
-                            row &&
-                            typeof row === 'object' &&
-                            typeof row.count === 'number' &&
-                            typeof row._bucket === 'string' &&
-                            typeof row.bucket === 'string'
-                        );
-                    }
-                ),
-                'getViewsGroupedByInterval response did not match expected result'
-            );
+            const responseData = await response.json() as AnalyticsQueryResult;
 
             // note this query will return sparse data (i.e. only rows where count > 0)
             // merge returnedRows with initial rows to fill in any gaps
@@ -233,7 +191,7 @@ export class AnalyticsEngineAPI {
             }, initialRows);
 
             // return as sorted array of tuples (i.e. [datetime, count])
-            const sortedRows = Object.entries(rowsByDateTime).sort((a, b) => {
+            const sortedRows = Object.entries(rowsByDateTime).sort((a: any, b: any) => {
                 if (a[0] < b[0]) return -1;
                 else if (a[0] > b[0]) return 1;
                 else return 0;
@@ -259,13 +217,6 @@ export class AnalyticsEngineAPI {
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
-
-        type SelectionSet = {
-            count: number;
-            isVisitor: ColumnMappingToType<typeof ColumnMappings.newVisitor>;
-            isVisit: ColumnMappingToType<typeof ColumnMappings.newSession>;
-        };
-
         const returnPromise = new Promise<AnalyticsCountResult>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
@@ -273,25 +224,7 @@ export class AnalyticsEngineAPI {
                 reject(response.statusText);
             }
 
-            const responseData = await response.json();
-            
-            invariant(
-                testAnalyticsQueryResult(
-                    responseData,
-                    (
-                        row
-                    ): row is AnalyticsQueryResult<SelectionSet>['data'][number] => {
-                        return (
-                            row &&
-                            typeof row === 'object' &&
-                            typeof row.count === 'number' &&
-                            typeof row.isVisitor === 'number' &&
-                            typeof row.isVisit === 'number'
-                        );
-                    }
-                ),
-                'getCounts response did not match expected result'
-            );
+            const responseData = await response.json() as AnalyticsQueryResult;
 
             const counts: AnalyticsCountResult = {
                 views: 0,
@@ -302,10 +235,10 @@ export class AnalyticsEngineAPI {
             // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but
             //       no row where isVisit=0), so this code makes no assumption on number of results
             responseData.data.forEach((row) => {
-                if (row.isVisit === 1) {
+                if (row.isVisit == 1) {
                     counts.visits += Number(row.count);
                 }
-                if (row.isVisitor === 1) {
+                if (row.isVisitor == 1) {
                     counts.visitors += Number(row.count);
                 }
                 counts.views += Number(row.count);
@@ -316,12 +249,12 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getVisitorCountByColumn(siteId: string, column: keyof typeof ColumnMappings, sinceDays: number, limit?: number) {
+    async getVisitorCountByColumn(siteId: string, column: string, sinceDays: number, limit?: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;
 
-        const _column = ColumnMappings[column];
+        const _column: string = ColumnMappings[column];
         const query = `
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
@@ -332,70 +265,47 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit}`;
 
-        type SelectionSet = {
-            count: number;
-            [key: string]: ColumnMappingToType<typeof _column>;
-        };
-
-        return new Promise<[string | number, number][]>((resolve, reject) => (async () => {
+        const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
             if (!response.ok) {
                 reject(response.statusText);
             }
 
-            const responseData = await response.json();
-            invariant(
-                testAnalyticsQueryResult(
-                    responseData,
-                    (
-                        row
-                    ): row is AnalyticsQueryResult<SelectionSet>['data'][number] => {
-                        return (
-                            row &&
-                            typeof row === 'object' &&
-                            typeof row.count === 'number'
-                        );
-                    }
-                ),
-                'getVisitorCountByColumn response did not match expected result'
-            );
-
-            resolve(
-                responseData.data.map((row) => {
-                    const key =
-                        row[_column] === '' ? '(none)' : row[_column];
-                    return [key, row['count'] as number];
-                })
-            );
+            const responseData = await response.json() as AnalyticsQueryResult;
+            resolve(responseData.data.map((row) => {
+                const key = row[_column] === '' ? '(none)' : row[_column];
+                return [key, row['count']];
+            }));
         })());
+        return returnPromise;
     }
 
-    async getCountByUserAgent(siteId: string, sinceDays: number) {
+    async getCountByUserAgent(siteId: string, sinceDays: number): Promise<any> {
         return this.getVisitorCountByColumn(siteId, 'userAgent', sinceDays);
     }
 
-    async getCountByCountry(siteId: string, sinceDays: number) {
+    async getCountByCountry(siteId: string, sinceDays: number): Promise<any> {
         return this.getVisitorCountByColumn(siteId, 'country', sinceDays);
     }
 
-    async getCountByReferrer(siteId: string, sinceDays: number) {
+    async getCountByReferrer(siteId: string, sinceDays: number): Promise<any> {
         return this.getVisitorCountByColumn(siteId, 'referrer', sinceDays);
     }
 
-    async getCountByPath(siteId: string, sinceDays: number) {
+    async getCountByPath(siteId: string, sinceDays: number): Promise<any> {
         return this.getVisitorCountByColumn(siteId, 'path', sinceDays);
     }
 
-    async getCountByBrowser(siteId: string, sinceDays: number) {
+    async getCountByBrowser(siteId: string, sinceDays: number): Promise<any> {
         return this.getVisitorCountByColumn(siteId, 'browserName', sinceDays);
     }
 
-    async getCountByDevice(siteId: string, sinceDays: number) {
+    async getCountByDevice(siteId: string, sinceDays: number): Promise<any> {
         return this.getVisitorCountByColumn(siteId, 'deviceModel', sinceDays);
     }
 
-    async getSitesOrderedByHits(sinceDays: number, limit?: number) {
+    async getSitesOrderedByHits(sinceDays: number, limit?: number): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;
@@ -409,41 +319,19 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit}
         `;
-
-        type SelectionSet = {
-            count: number;
-            siteId: ColumnMappingToType<typeof ColumnMappings.siteId>;
-        };
-        const returnPromise = new Promise<[string, number][]>((resolve, reject) => (async () => {
+        const returnPromise = new Promise<any>((resolve, reject) => (async () => {
             const response = await this.query(query);
 
             if (!response.ok) {
                 reject(response.statusText);
+                return;
             }
 
-            const responseData = await response.json();
-
-            invariant(
-                testAnalyticsQueryResult(
-                    responseData,
-                    (
-                        row
-                    ): row is AnalyticsQueryResult<SelectionSet>['data'][number] => {
-                        return (
-                            row &&
-                            typeof row === 'object' &&
-                            typeof row.count === 'number' &&
-                            typeof row.siteId === 'string'
-                        );
-                    }
-                ),
-                'getSitesOrderedByHits response did not match expected result'
-            );
-
+            const responseData = await response.json() as AnalyticsQueryResult;
             const result = responseData.data.reduce((acc, cur) => {
                 acc.push([cur['siteId'], cur['count']]);
                 return acc;
-            }, [] as [string, number][]);
+            }, []);
 
             resolve(result);
         })());
