@@ -1,5 +1,5 @@
 export interface ColumnMappingsType {
-    [key: string]: string
+    [key: string]: string;
 }
 
 /**

@@ -1,10 +1,10 @@
-import { UAParser } from 'ua-parser-js';
+import { UAParser } from "ua-parser-js";
 
 import type { RequestInit } from "@cloudflare/workers-types";
 
 function checkVisitorSession(ifModifiedSince: string | null): {
-    newVisitor: boolean,
-    newSession: boolean
+    newVisitor: boolean;
+    newSession: boolean;
 } {
     let newVisitor = true;
     let newSession = true;
@@ -24,7 +24,8 @@ function checkVisitorSession(ifModifiedSince: string | null): {
         }
 
         // check ifModifiedSince is less than 30 mins ago
-        if (Date.now() - new Date(ifModifiedSince).getTime() <
+        if (
+            Date.now() - new Date(ifModifiedSince).getTime() <
             minutesUntilSessionResets * 60 * 1000
         ) {
             // this is a continuation of the same session
@@ -35,15 +36,17 @@ function checkVisitorSession(ifModifiedSince: string | null): {
     return { newVisitor, newSession };
 }
 
-function extractParamsFromQueryString(requestUrl: string): { [key: string]: string } {
+function extractParamsFromQueryString(requestUrl: string): {
+    [key: string]: string;
+} {
     const url = new URL(requestUrl);
-    const queryString = url.search.slice(1).split('&')
+    const queryString = url.search.slice(1).split("&");
 
     const params: { [key: string]: string } = {};
 
-    queryString.forEach(item => {
-        const kv = item.split('=')
-        if (kv[0]) params[kv[0]] = decodeURIComponent(kv[1])
+    queryString.forEach((item) => {
+        const kv = item.split("=");
+        if (kv[0]) params[kv[0]] = decodeURIComponent(kv[1]);
     });
     return params;
 }
@@ -51,12 +54,14 @@ function extractParamsFromQueryString(requestUrl: string): { [key: string]: stri
 export function collectRequestHandler(request: Request, env: Environment) {
     const params = extractParamsFromQueryString(request.url);
 
-    const userAgent = request.headers.get('user-agent') || undefined;
+    const userAgent = request.headers.get("user-agent") || undefined;
     const parsedUserAgent = new UAParser(userAgent);
 
     parsedUserAgent.getBrowser().name;
 
-    const { newVisitor, newSession } = checkVisitorSession(request.headers.get('if-modified-since'));
+    const { newVisitor, newSession } = checkVisitorSession(
+        request.headers.get("if-modified-since"),
+    );
 
     const data: DataPoint = {
         siteId: params.sid,
@@ -68,13 +73,13 @@ export function collectRequestHandler(request: Request, env: Environment) {
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
-        deviceModel: parsedUserAgent.getDevice().model
-    }
+        deviceModel: parsedUserAgent.getDevice().model,
+    };
 
     // NOTE: location is derived from Cloudflare-specific request properties
     // see: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
     const country = (request as RequestInit).cf?.country;
-    if (typeof country === 'string') {
+    if (typeof country === "string") {
         data.country = country;
     }
 
@@ -90,43 +95,44 @@ export function collectRequestHandler(request: Request, env: Environment) {
         uintArray[i] = gifData.charCodeAt(i);
     }
 
-
     return new Response(arrayBuffer, {
         headers: {
             "Content-Type": "image/gif",
-            "Expires": "Mon, 01 Jan 1990 00:00:00 GMT",
+            Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
-            "Pragma": "no-cache",
+            Pragma: "no-cache",
             "Last-Modified": new Date().toUTCString(),
-            "Tk": "N", // not tracking
+            Tk: "N", // not tracking
         },
-        status: 200
+        status: 200,
     });
 }
 
-
 interface DataPoint {
     // index
-    siteId?: string,
+    siteId?: string;
 
     // blobs
-    host?: string | undefined,
-    userAgent?: string,
-    path?: string,
-    country?: string,
-    referrer?: string,
-    browserName?: string,
-    deviceModel?: string,
+    host?: string | undefined;
+    userAgent?: string;
+    path?: string;
+    country?: string;
+    referrer?: string;
+    browserName?: string;
+    deviceModel?: string;
 
     // doubles
-    newVisitor: number,
-    newSession: number,
+    newVisitor: number;
+    newSession: number;
 }
 
 // NOTE: Cloudflare Analytics Engine has limits on total number of bytes, number of fields, etc.
 // More here: https://developers.cloudflare.com/analytics/analytics-engine/get-started/#limits
 
-export function writeDataPoint(analyticsEngine: CFAnalyticsEngine, data: DataPoint) {
+export function writeDataPoint(
+    analyticsEngine: CFAnalyticsEngine,
+    data: DataPoint,
+) {
     const datapoint = {
         indexes: [data.siteId || ""], // Supply one index
         blobs: [
@@ -139,11 +145,8 @@ export function writeDataPoint(analyticsEngine: CFAnalyticsEngine, data: DataPoi
             data.deviceModel || "", // blob7
             data.siteId || "", // blob8
         ],
-        doubles: [
-            data.newVisitor || 0,
-            data.newSession || 0,
-        ],
-    }
+        doubles: [data.newVisitor || 0, data.newSession || 0],
+    };
 
     if (!analyticsEngine) {
         // no-op

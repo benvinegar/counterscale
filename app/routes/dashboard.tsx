@@ -1,17 +1,20 @@
-import { Card, CardContent } from "~/components/ui/card"
+import { Card, CardContent } from "~/components/ui/card";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "~/components/ui/select"
+} from "~/components/ui/select";
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 
-import { AnalyticsEngineAPI, AnalyticsQueryResultRow } from "../analytics/query";
+import {
+    AnalyticsEngineAPI,
+    AnalyticsQueryResultRow,
+} from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
 import TimeSeriesChart from "~/components/TimeSeriesChart";
@@ -26,65 +29,84 @@ export const meta: MetaFunction = () => {
 declare module "@remix-run/server-runtime" {
     export interface AppLoadContext {
         env: {
-            CF_BEARER_TOKEN: string,
-            CF_ACCOUNT_ID: string
+            CF_BEARER_TOKEN: string;
+            CF_ACCOUNT_ID: string;
         };
     }
 }
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
-    const analyticsEngine = new AnalyticsEngineAPI(context.env.CF_ACCOUNT_ID, context.env.CF_BEARER_TOKEN);
-
+    const analyticsEngine = new AnalyticsEngineAPI(
+        context.env.CF_ACCOUNT_ID,
+        context.env.CF_BEARER_TOKEN,
+    );
 
     const url = new URL(request.url);
-    let siteId = url.searchParams.get("site") || '';
+    let siteId = url.searchParams.get("site") || "";
     let interval;
     try {
-        interval = url.searchParams.get("interval") || '7';
+        interval = url.searchParams.get("interval") || "7";
         interval = Number(interval);
     } catch (err) {
         interval = 7;
     }
 
-    const sitesByHits = (await analyticsEngine.getSitesOrderedByHits(interval));
+    const sitesByHits = await analyticsEngine.getSitesOrderedByHits(interval);
 
     if (!siteId) {
         // pick first non-empty site
         siteId = sitesByHits[0][0];
     }
 
-    const actualSiteId = siteId == '@unknown' ? '' : siteId;
+    const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
     const counts = analyticsEngine.getCounts(actualSiteId, interval);
     const countByPath = analyticsEngine.getCountByPath(actualSiteId, interval);
-    const countByCountry = analyticsEngine.getCountByCountry(actualSiteId, interval);
-    const countByReferrer = analyticsEngine.getCountByReferrer(actualSiteId, interval);
-    const countByBrowser = analyticsEngine.getCountByBrowser(actualSiteId, interval);
-    const countByDevice = analyticsEngine.getCountByDevice(actualSiteId, interval);
+    const countByCountry = analyticsEngine.getCountByCountry(
+        actualSiteId,
+        interval,
+    );
+    const countByReferrer = analyticsEngine.getCountByReferrer(
+        actualSiteId,
+        interval,
+    );
+    const countByBrowser = analyticsEngine.getCountByBrowser(
+        actualSiteId,
+        interval,
+    );
+    const countByDevice = analyticsEngine.getCountByDevice(
+        actualSiteId,
+        interval,
+    );
 
-    let intervalType = 'DAY';
+    let intervalType = "DAY";
     switch (interval) {
         case 1:
-            intervalType = 'HOUR';
+            intervalType = "HOUR";
             break;
         case 7:
-            intervalType = 'DAY';
+            intervalType = "DAY";
             break;
         case 30:
-            intervalType = 'DAY';
+            intervalType = "DAY";
             break;
         case 90:
-            intervalType = 'DAY';
+            intervalType = "DAY";
             break;
     }
 
     const tz = context.requestTimezone as string;
 
-    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(actualSiteId, intervalType, interval, tz);
+    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
+        actualSiteId,
+        intervalType,
+        interval,
+        tz,
+    );
 
     return json({
-        siteId: siteId || '@unknown',
-        sites: sitesByHits.map(([site,]: [string,]) => site),
+        siteId: siteId || "@unknown",
+        sites: sitesByHits.map(([site]: [string]) => site),
         views: (await counts).views,
         visits: (await counts).visits,
         visitors: (await counts).visitors,
@@ -94,25 +116,27 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         countByReferrer: await countByReferrer,
         countByDevice: await countByDevice,
         viewsGroupedByInterval: await viewsGroupedByInterval,
-        intervalType
+        intervalType,
     });
 };
 
-function convertCountryCodesToNames(countByCountry: AnalyticsQueryResultRow[]): AnalyticsQueryResultRow[] {
-    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+function convertCountryCodesToNames(
+    countByCountry: AnalyticsQueryResultRow[],
+): AnalyticsQueryResultRow[] {
+    const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
     return countByCountry.map((countByBrowserRow: AnalyticsQueryResultRow) => {
         let countryName;
         try {
             // throws an exception if country code isn't valid
             //   use try/catch to be defensive and not explode if an invalid
             //   country code gets insrted into Analytics Engine
-            countryName = regionNames.of(countByBrowserRow[0]);  // "United States"
+            countryName = regionNames.of(countByBrowserRow[0]); // "United States"
         } catch (err) {
-            countryName = '(unknown)'
+            countryName = "(unknown)";
         }
         const count = countByBrowserRow[1];
         return [countryName, count];
-    })
+    });
 }
 
 export default function Dashboard() {
@@ -138,7 +162,7 @@ export default function Dashboard() {
     data.viewsGroupedByInterval.forEach((row: AnalyticsQueryResultRow) => {
         chartData.push({
             date: row[0],
-            views: row[1]
+            views: row[1],
         });
     });
 
@@ -147,24 +171,33 @@ export default function Dashboard() {
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
             <div className="w-full mb-4 flex gap-4">
-
                 <div className="w-1/2 sm:w-1/3 md:w-1/5">
-                    <Select defaultValue={data.siteId} onValueChange={(site) => changeSite(site)}>
+                    <Select
+                        defaultValue={data.siteId}
+                        onValueChange={(site) => changeSite(site)}
+                    >
                         <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             {/* SelectItem explodes if given an empty string for `value` so coerce to @unknown */}
-                            {data.sites.map((siteId: string) =>
-                                <SelectItem key={`k-${siteId}`} value={siteId || '@unknown'}>{siteId || '(unknown)'}</SelectItem>
-                            )}
+                            {data.sites.map((siteId: string) => (
+                                <SelectItem
+                                    key={`k-${siteId}`}
+                                    value={siteId || "@unknown"}
+                                >
+                                    {siteId || "(unknown)"}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
 
                 <div className="w-1/2 sm:w-1/3 md:w-1/5">
-
-                    <Select defaultValue="7" onValueChange={(interval) => changeInterval(interval)}>
+                    <Select
+                        defaultValue="7"
+                        onValueChange={(interval) => changeInterval(interval)}
+                    >
                         <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
@@ -191,7 +224,9 @@ export default function Dashboard() {
                                 <div className="text-4xl">{data.visits}</div>
                             </div>
                             <div>
-                                <div className="text-sm sm:text-lg">Visitors</div>
+                                <div className="text-sm sm:text-lg">
+                                    Visitors
+                                </div>
                                 <div className="text-4xl">{data.visitors}</div>
                             </div>
                         </div>
@@ -203,24 +238,42 @@ export default function Dashboard() {
                 <Card>
                     <CardContent>
                         <div className="h-80 pt-6 -m-4 -ml-8 sm:m-0">
-                            <TimeSeriesChart data={chartData} intervalType={data.intervalType}></TimeSeriesChart>
+                            <TimeSeriesChart
+                                data={chartData}
+                                intervalType={data.intervalType}
+                            ></TimeSeriesChart>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4 mb-4">
-                <TableCard countByProperty={data.countByPath} columnHeaders={["Page", "Visitors"]} />
+                <TableCard
+                    countByProperty={data.countByPath}
+                    columnHeaders={["Page", "Visitors"]}
+                />
 
-                <TableCard countByProperty={data.countByReferrer} columnHeaders={["Referrer", "Visitors"]} />
+                <TableCard
+                    countByProperty={data.countByReferrer}
+                    columnHeaders={["Referrer", "Visitors"]}
+                />
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
-                <TableCard countByProperty={data.countByBrowser} columnHeaders={["Browser", "Visitors"]} />
+                <TableCard
+                    countByProperty={data.countByBrowser}
+                    columnHeaders={["Browser", "Visitors"]}
+                />
 
-                <TableCard countByProperty={countByCountryName} columnHeaders={["Country", "Visitors"]} />
+                <TableCard
+                    countByProperty={countByCountryName}
+                    columnHeaders={["Country", "Visitors"]}
+                />
 
-                <TableCard countByProperty={data.countByDevice} columnHeaders={["Device", "Visitors"]}></TableCard>
+                <TableCard
+                    countByProperty={data.countByDevice}
+                    columnHeaders={["Device", "Visitors"]}
+                ></TableCard>
             </div>
         </div>
     );
