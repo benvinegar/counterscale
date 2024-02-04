@@ -171,8 +171,9 @@ export class AnalyticsEngineAPI {
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
 
+        const queryResult = this.query(query);
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
-            const response = await this.query(query);
+            const response = await queryResult;
 
             if (!response.ok) {
                 reject(response.statusText);
@@ -217,8 +218,10 @@ export class AnalyticsEngineAPI {
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
+
+        const queryResult = this.query(query);
         const returnPromise = new Promise<AnalyticsCountResult>((resolve, reject) => (async () => {
-            const response = await this.query(query);
+            const response = await queryResult;
 
             if (!response.ok) {
                 reject(response.statusText);
@@ -265,8 +268,9 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit}`;
 
+        const queryResult = this.query(query);
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
-            const response = await this.query(query);
+            const response = await queryResult;
 
             if (!response.ok) {
                 reject(response.statusText);
@@ -319,8 +323,10 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit}
         `;
+
+        const queryResult = this.query(query);
         const returnPromise = new Promise<any>((resolve, reject) => (async () => {
-            const response = await this.query(query);
+            const response = await queryResult;
 
             if (!response.ok) {
                 reject(response.statusText);

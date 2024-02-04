@@ -2,8 +2,6 @@ import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
 
 import { AnalyticsEngineAPI } from "./query";
 
-// mock out fetch
-global.fetch = vi.fn();
 function createFetchResponse(data: any) {
     return {
         ok: true,
@@ -13,14 +11,16 @@ function createFetchResponse(data: any) {
 
 describe("AnalyticsEngineAPI", () => {
     const api = new AnalyticsEngineAPI("test_account_id_abc123", "test_api_token_def456");
-    const fetch = global.fetch as any;
+    let fetch: any; // todo: figure out how to type this mocked fetch
 
     beforeEach(() => {
+        fetch = global.fetch = vi.fn();
         vi.useFakeTimers()
     });
 
     afterEach(() => {
-        vi.useRealTimers()
+        vi.useRealTimers();
+        vi.restoreAllMocks();
     });
 
     describe("query", () => {
@@ -180,8 +180,11 @@ describe("AnalyticsEngineAPI", () => {
                 }))
             }));
 
-            const result = await api.getCounts("example.com", 7);
-            expect(result).toEqual({
+            const result = api.getCounts("example.com", 7);
+
+            // verify fetch was invoked before awaiting result
+            expect(fetch).toHaveBeenCalled();
+            expect(await result).toEqual({
                 views: 6,
                 visits: 3,
                 visitors: 1,
@@ -210,8 +213,11 @@ describe("AnalyticsEngineAPI", () => {
                 }))
             }));
 
-            const result = await api.getVisitorCountByColumn("example.com", "country", 7);
-            expect(result).toEqual([
+            const result = api.getVisitorCountByColumn("example.com", "country", 7);
+
+            // verify fetch was invoked before awaiting result
+            expect(fetch).toHaveBeenCalled();
+            expect(await result).toEqual([
                 ["CA", 3],
                 ["US", 2],
                 ["GB", 1],
@@ -243,8 +249,11 @@ describe("AnalyticsEngineAPI", () => {
                 }))
             }));
 
-            const result = await api.getSitesOrderedByHits(7);
-            expect(result).toEqual([
+
+            const result = api.getSitesOrderedByHits(7);
+            // verify fetch was invoked before awaiting result
+            expect(fetch).toHaveBeenCalled();
+            expect(await result).toEqual([
                 ["example.com", 130],
                 ["foo.com", 100],
                 ["test.dev", 90],
