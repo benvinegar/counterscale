@@ -8,7 +8,7 @@ import {
 } from "~/components/ui/select";
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
+import { json, redirect } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 
 import {
@@ -42,7 +42,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     );
 
     const url = new URL(request.url);
-    let siteId = url.searchParams.get("site") || "";
+
     let interval;
     try {
         interval = url.searchParams.get("interval") || "7";
@@ -51,15 +51,25 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         interval = 7;
     }
 
-    const sitesByHits = await analyticsEngine.getSitesOrderedByHits(interval);
+    // if no siteId is set, redirect to the site with the most hits
+    if (url.searchParams.has("site") === false) {
+        const sitesByHits =
+            await analyticsEngine.getSitesOrderedByHits(interval);
 
-    if (!siteId) {
-        // pick first non-empty site
-        siteId = sitesByHits[0][0];
+        // if at least one result
+        if (sitesByHits.length > 0 && sitesByHits[0].length > 0) {
+            const redirectUrl = new URL(request.url);
+            redirectUrl.searchParams.set("site", sitesByHits[0][0]);
+            return redirect(redirectUrl.toString());
+        }
     }
 
+    // treat "@unknown" as a magic string to identify AE records where no siteId was set
+    const siteId = url.searchParams.get("site") || "";
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
+    // initiate requests to AE in parallel
+    const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval);
     const counts = analyticsEngine.getCounts(actualSiteId, interval);
     const countByPath = analyticsEngine.getCountByPath(actualSiteId, interval);
     const countByCountry = analyticsEngine.getCountByCountry(
@@ -104,9 +114,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         tz,
     );
 
+    console.log("got here");
+
+    // await all requests to AE then return the results
     return json({
         siteId: siteId || "@unknown",
-        sites: sitesByHits.map(([site]: [string]) => site),
+        sites: (await sitesByHits).map(([site]: [string]) => site),
         views: (await counts).views,
         visits: (await counts).visits,
         visitors: (await counts).visitors,
