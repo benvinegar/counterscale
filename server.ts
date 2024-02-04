@@ -21,7 +21,7 @@ export default {
     async fetch(
         request: Request,
         env: Environment,
-        ctx: ExecutionContext
+        ctx: ExecutionContext,
     ): Promise<Response> {
         try {
             const url = new URL(request.url);
@@ -46,7 +46,7 @@ export default {
                         browserTTL: ttl,
                         edgeTTL: ttl,
                     },
-                }
+                },
             );
         } catch (error) {
             // No-op
@@ -55,12 +55,15 @@ export default {
         try {
             const loadContext: AppLoadContext = {
                 env,
-                requestTimezone: (request as RequestInit).cf?.timezone as string
+                requestTimezone: (request as RequestInit).cf
+                    ?.timezone as string,
             };
             return await handleRemixRequest(request, loadContext);
         } catch (error) {
             console.log(error);
-            return new Response("An unexpected error occurred", { status: 500 });
+            return new Response("An unexpected error occurred", {
+                status: 500,
+            });
         }
     },
 };

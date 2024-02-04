@@ -1,8 +1,19 @@
-import PropTypes, { InferProps } from 'prop-types';
+import PropTypes, { InferProps } from "prop-types";
 
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from "recharts";
 
-export default function TimeSeriesChart({ data, intervalType }: InferProps<typeof TimeSeriesChart.propTypes>) {
+export default function TimeSeriesChart({
+    data,
+    intervalType,
+}: InferProps<typeof TimeSeriesChart.propTypes>) {
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {
         return null;
@@ -12,30 +23,41 @@ export default function TimeSeriesChart({ data, intervalType }: InferProps<typeo
     const maxViews = Math.max(...data.map((item: any) => item.views));
 
     function xAxisDateFormatter(date: string): string {
-
         const dateObj = new Date(date);
 
         // convert from utc to local time
         dateObj.setMinutes(dateObj.getMinutes() - dateObj.getTimezoneOffset());
 
         switch (intervalType) {
-            case 'DAY':
-                return dateObj.toLocaleDateString('en-us', { weekday: "short", month: "short", day: "numeric" });
-            case 'HOUR':
-                return dateObj.toLocaleTimeString('en-us', { hour: "numeric", minute: "numeric" });
+            case "DAY":
+                return dateObj.toLocaleDateString("en-us", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                });
+            case "HOUR":
+                return dateObj.toLocaleTimeString("en-us", {
+                    hour: "numeric",
+                    minute: "numeric",
+                });
             default:
-                throw new Error('Invalid interval type');
+                throw new Error("Invalid interval type");
         }
     }
 
     function tooltipDateFormatter(date: string): string {
-
         const dateObj = new Date(date);
 
         // convert from utc to local time
         dateObj.setMinutes(dateObj.getMinutes() - dateObj.getTimezoneOffset());
 
-        return dateObj.toLocaleString('en-us', { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "numeric" });
+        return dateObj.toLocaleString("en-us", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+        });
     }
 
     return (
@@ -57,14 +79,18 @@ export default function TimeSeriesChart({ data, intervalType }: InferProps<typeo
                 {/* manually setting maxViews vs using recharts "dataMax" key cause it doesnt seem to work */}
                 <YAxis dataKey="views" domain={[0, maxViews]} />
                 <Tooltip labelFormatter={tooltipDateFormatter} />
-                <Area dataKey="views" stroke="#F46A3D" strokeWidth="2" fill="#F99C35" />
+                <Area
+                    dataKey="views"
+                    stroke="#F46A3D"
+                    strokeWidth="2"
+                    fill="#F99C35"
+                />
             </AreaChart>
-        </ResponsiveContainer >
+        </ResponsiveContainer>
     );
-
 }
 
 TimeSeriesChart.propTypes = {
     data: PropTypes.any,
-    intervalType: PropTypes.string
-}
+    intervalType: PropTypes.string,
+};

@@ -21,7 +21,7 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. Run `npx wrangler secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
 1. Run `npx wrangler secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
 1. Run `npm run deploy` – this will do two things:
-    1. Create a new worker, `counterscale`, now visible under *Workers and Pages* in Cloudflare
+    1. Create a new worker, `counterscale`, now visible under _Workers and Pages_ in Cloudflare
     1. Create a new Analytics Engine dataset, called `metricsDataset`
 1. It should now be live. Visit `https://counterscale.{yoursubdomain}.workers.dev`.
 
@@ -30,7 +30,6 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 If the website is not immediately available (e.g. "Secure Connection Failed"), it could be because Cloudflare has not yet activated your subdomain (yoursubdomain.workers.dev). This process can take a minute; you can check in on the progress by visiting the newly created worker in your Cloudflare dashboard (Workers & Pages → counterscale).
 
 ### Custom Domains
-
 
 The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
@@ -46,16 +45,17 @@ To start tracking website traffic on your web property, copy/paste the following
 
 ```html
 <script>
-(function () {
-    window.counterscale = {
-        q: [
-            ["set", "siteId", "your-unique-site-id"],
-            ["trackPageview"],
-        ],
-    };
-})();
+    (function () {
+        window.counterscale = {
+            q: [["set", "siteId", "your-unique-site-id"], ["trackPageview"]],
+        };
+    })();
 </script>
-<script id="counterscale-script" src="https://counterscale.{yoursubdomain}.workers.dev/tracker.js" defer></script>
+<script
+    id="counterscale-script"
+    src="https://counterscale.{yoursubdomain}.workers.dev/tracker.js"
+    defer
+></script>
 ```
 
 Be sure to replace `your-unique-site-id` with a unique string/slug representing your web property. Use a unique site ID for each property you place the tracking script on.
@@ -72,8 +72,8 @@ Open `.dev.vars` and enter the same values for `CF_BEARER_TOKEN` and `CF_ACCOUNT
 
 Counterscale is built on Remix and Cloudflare Workers. In development, you'll run two servers:
 
-- The Remix development server
-- The Miniflare server (local environment for Cloudflare Workers)
+-   The Remix development server
+-   The Miniflare server (local environment for Cloudflare Workers)
 
 You run both using:
 
@@ -100,6 +100,5 @@ There is only one "database": the Cloudflare Analytics Engine dataset, which is 
 
 Right now there is no local "test" database. This means in local development:
 
-* Writes will no-op (no hits will be recorded)
-* Reads will be read from the production Analaytics Engine dataset (local development shows production data)
- 
+-   Writes will no-op (no hits will be recorded)
+-   Reads will be read from the production Analaytics Engine dataset (local development shows production data)

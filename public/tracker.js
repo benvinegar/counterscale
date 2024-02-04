@@ -32,17 +32,17 @@ SOFTWARE.
 */
 
 (function () {
-    'use strict';
+    "use strict";
 
     let queue = (window.counterscale && window.counterscale.q) || [];
     let config = {
-        'siteId': '',
-        'trackerUrl': '',
+        siteId: "",
+        trackerUrl: "",
     };
     const commands = {
-        "set": set,
-        "trackPageview": trackPageview,
-        "setTrackerUrl": setTrackerUrl,
+        set: set,
+        trackPageview: trackPageview,
+        setTrackerUrl: setTrackerUrl,
     };
 
     function set(key, value) {
@@ -57,15 +57,21 @@ SOFTWARE.
     function stringifyObject(obj) {
         var keys = Object.keys(obj);
 
-        return '?' +
-            keys.map(function (k) {
-                return encodeURIComponent(k) + '=' + encodeURIComponent(obj[k]);
-            }).join('&');
+        return (
+            "?" +
+            keys
+                .map(function (k) {
+                    return (
+                        encodeURIComponent(k) + "=" + encodeURIComponent(obj[k])
+                    );
+                })
+                .join("&")
+        );
     }
 
     function findTrackerUrl() {
-        const el = document.getElementById('counterscale-script')
-        return el ? el.src.replace('tracker.js', 'collect') : '';
+        const el = document.getElementById("counterscale-script");
+        return el ? el.src.replace("tracker.js", "collect") : "";
     }
 
     function trackPageview(vars) {
@@ -77,7 +83,10 @@ SOFTWARE.
         // }
 
         // ignore prerendered pages
-        if ('visibilityState' in document && document.visibilityState === 'prerender') {
+        if (
+            "visibilityState" in document &&
+            document.visibilityState === "prerender"
+        ) {
             return;
         }
 
@@ -85,7 +94,7 @@ SOFTWARE.
         if (document.body === null) {
             document.addEventListener("DOMContentLoaded", () => {
                 trackPageview(vars);
-            })
+            });
             return;
         }
 
@@ -93,30 +102,30 @@ SOFTWARE.
         let req = window.location;
 
         // do not track if not served over HTTP or HTTPS (eg from local filesystem) and we're not in an Electron app
-        if (req.host === '' && navigator.userAgent.indexOf("Electron") < 0) {
+        if (req.host === "" && navigator.userAgent.indexOf("Electron") < 0) {
             return;
         }
 
         // find canonical URL
         let canonical = document.querySelector('link[rel="canonical"][href]');
         if (canonical) {
-            let a = document.createElement('a');
+            let a = document.createElement("a");
             a.href = canonical.href;
 
             // use parsed canonical as location object
             req = a;
         }
 
-        let path = vars.path || (req.pathname + req.search);
+        let path = vars.path || req.pathname + req.search;
         if (!path) {
-            path = '/';
+            path = "/";
         }
 
         // determine hostname
-        let hostname = vars.hostname || (req.protocol + "//" + req.hostname);
+        let hostname = vars.hostname || req.protocol + "//" + req.hostname;
 
         // only set referrer if not internal
-        let referrer = vars.referrer || '';
+        let referrer = vars.referrer || "";
         if (document.referrer.indexOf(hostname) < 0) {
             referrer = document.referrer;
         }
@@ -128,15 +137,15 @@ SOFTWARE.
             sid: config.siteId,
         };
 
-        let url = config.trackerUrl || findTrackerUrl()
-        let img = document.createElement('img');
-        img.setAttribute('alt', '');
-        img.setAttribute('aria-hidden', 'true');
-        img.setAttribute('style', 'position:absolute');
+        let url = config.trackerUrl || findTrackerUrl();
+        let img = document.createElement("img");
+        img.setAttribute("alt", "");
+        img.setAttribute("aria-hidden", "true");
+        img.setAttribute("style", "position:absolute");
         img.src = url + stringifyObject(d);
-        img.addEventListener('load', function () {
+        img.addEventListener("load", function () {
             // remove tracking img from DOM
-            document.body.removeChild(img)
+            document.body.removeChild(img);
         });
 
         // in case img.onload never fires, remove img after 1s & reset src attribute to cancel request
@@ -145,8 +154,8 @@ SOFTWARE.
                 return;
             }
 
-            img.src = '';
-            document.body.removeChild(img)
+            img.src = "";
+            document.body.removeChild(img);
         }, 1000);
 
         // add to DOM to fire request
@@ -162,4 +171,4 @@ SOFTWARE.
 
     // process existing queue
     queue.forEach((i) => counterscale.apply(this, i));
-})()
+})();
