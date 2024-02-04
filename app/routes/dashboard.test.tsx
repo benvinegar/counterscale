@@ -43,12 +43,8 @@ describe("Dashboard route", () => {
         test("redirects to ?site=siteId if no siteId is provided via query string", async () => {
             // response for getSitesByOrderedHits
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ siteId: "test-siteid", count: 1 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ siteId: "test-siteid", count: 1 }],
                 }),
             );
 
@@ -69,6 +65,34 @@ describe("Dashboard route", () => {
             expect(response.status).toBe(302);
             expect(response.headers.get("Location")).toBe(
                 "http://localhost:3000/dashboard?site=test-siteid",
+            );
+        });
+
+        test("redirects to ?site= if no siteId is provided via query string / no site data", async () => {
+            // response for getSitesByOrderedHits
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    data: [],
+                }),
+            );
+
+            const response = await loader({
+                context: {
+                    env: {
+                        CF_BEARER_TOKEN: "fake",
+                        CF_ACCOUNT_ID: "fake",
+                    },
+                },
+                // @ts-expect-error we don't need to provide all the properties of the request object
+                request: {
+                    url: "http://localhost:3000/dashboard", // no site query param
+                },
+            });
+
+            // expect redirect
+            expect(response.status).toBe(302);
+            expect(response.headers.get("Location")).toBe(
+                "http://localhost:3000/dashboard?site=",
             );
         });
 
