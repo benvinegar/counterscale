@@ -37,6 +37,7 @@ export default function TableCard({
             <Table>
                 <TableHeader>
                     <TableRow>
+                        {/* empty header required other column for the bar chart doesnt fill up */}
                         <th />
                         {(columnHeaders || []).map((header: string, index) => (
                             <TableHead
@@ -54,9 +55,9 @@ export default function TableCard({
                     {(countByProperty || []).map((item: any, key) => (
                         <TableRow
                             key={item[0]}
-                            className="relative group [&_div]:last:rounded-b-md"
+                            className="relative group [&_td]:last:rounded-b-md"
                         >
-                            <div
+                            <td
                                 className="bg-orange-200 absolute h-full after:content-[''] group-hover:opacity-50"
                                 style={{
                                     width: barChartPercentages[key],
