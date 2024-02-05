@@ -8,7 +8,7 @@ import {
 } from "~/components/ui/select";
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
+import { json, redirect } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 
 import {
@@ -38,11 +38,11 @@ declare module "@remix-run/server-runtime" {
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const analyticsEngine = new AnalyticsEngineAPI(
         context.env.CF_ACCOUNT_ID,
-        context.env.CF_BEARER_TOKEN,
+        context.env.CF_BEARER_TOKEN
     );
 
     const url = new URL(request.url);
-    let siteId = url.searchParams.get("site") || "";
+
     let interval;
     try {
         interval = url.searchParams.get("interval") || "7";
@@ -51,15 +51,23 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         interval = 7;
     }
 
-    const sitesByHits = await analyticsEngine.getSitesOrderedByHits(interval);
+    // if no siteId is set, redirect to the site with the most hits
+    if (url.searchParams.has("site") === false) {
+        const sitesByHits =
+            await analyticsEngine.getSitesOrderedByHits(interval);
 
-    if (!siteId) {
-        // pick first non-empty site
-        siteId = sitesByHits[0][0];
+        // if at least one result
+        const redirectSite = sitesByHits[0]?.[0] || "";
+        const redirectUrl = new URL(request.url);
+        redirectUrl.searchParams.set("site", redirectSite);
+        return redirect(redirectUrl.toString());
     }
+    const siteId = url.searchParams.get("site") || "";
 
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
+    // initiate requests to AE in parallel
+    const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval);
     const counts = analyticsEngine.getCounts(actualSiteId, interval);
     const countByPath = analyticsEngine.getCountByPath(actualSiteId, interval);
     const countByCountry = analyticsEngine.getCountByCountry(
@@ -104,9 +112,10 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         tz,
     );
 
+    // await all requests to AE then return the results
     return json({
-        siteId: siteId || "@unknown",
-        sites: sitesByHits.map(([site]: [string]) => site),
+        siteId: siteId,
+        sites: (await sitesByHits).map(([site]: [string]) => site),
         views: (await counts).views,
         visits: (await counts).visits,
         visitors: (await counts).visitors,
@@ -121,7 +130,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 };
 
 function convertCountryCodesToNames(
-    countByCountry: AnalyticsQueryResultRow[],
+    countByCountry: AnalyticsQueryResultRow[]
 ): AnalyticsQueryResultRow[] {
     const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
     return countByCountry.map((countByBrowserRow: AnalyticsQueryResultRow) => {
@@ -158,7 +167,7 @@ export default function Dashboard() {
         });
     }
 
-    const chartData: any = [];
+    const chartData: { date: string; views: number }[] = [];
     data.viewsGroupedByInterval.forEach((row: AnalyticsQueryResultRow) => {
         chartData.push({
             date: row[0],

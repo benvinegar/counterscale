@@ -1,4 +1,4 @@
-import { ColumnMappings } from "./schema";
+import { ColumnMappingToType, ColumnMappings } from "./schema";
 
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -10,9 +10,9 @@ dayjs.extend(timezone);
 export interface AnalyticsQueryResultRow {
     [key: string]: any;
 }
-interface AnalyticsQueryResult {
+interface AnalyticsQueryResult<SelectionSet extends AnalyticsQueryResultRow> {
     meta: string;
-    data: AnalyticsQueryResultRow[];
+    data: SelectionSet[];
     rows: number;
     rows_before_limit_at_least: number;
 }
@@ -62,7 +62,7 @@ function generateEmptyRowsOverInterval(
     intervalType: string,
     daysAgo: number,
     tz?: string
-): [Date, any] {
+): [Date, { [key: string]: number }] {
     if (!tz) {
         tz = "Etc/UTC";
     }
@@ -89,7 +89,7 @@ function generateEmptyRowsOverInterval(
 
     const startDateTime = localDateTime.toDate();
 
-    const initialRows: any = {};
+    const initialRows: { [key: string]: number } = {};
 
     for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
         // get date as utc
@@ -139,7 +139,7 @@ export class AnalyticsEngineAPI {
         };
     }
 
-    async query(query: string): Promise<Response> {
+    async query(query: string) {
         return fetch(this.defaultUrl, {
             method: "POST",
             body: query,
@@ -151,8 +151,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         intervalType: string,
         sinceDays: number,
-        tz?: string
-    ): Promise<any> {
+        tz?: string {
         let intervalCount = 1;
 
         // keeping this code here once we start allowing bigger intervals (e.g. intervals of 2 hours)
@@ -189,49 +188,53 @@ export class AnalyticsEngineAPI {
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
 
+        type SelectionSet = {
+            count: number;
+            _bucket: string;
+            bucket: string;
+        };
+
         const queryResult = this.query(query);
-        const returnPromise = new Promise<any>((resolve, reject) =>
-            (async () => {
-                const response = await queryResult;
+        const returnPromise = new Promise<[string, number][]>(
+            (resolve, reject) =>
+                (async () => {
+                    const response = await queryResult;
 
-                if (!response.ok) {
-                    reject(response.statusText);
-                }
-
-                const responseData =
-                    (await response.json()) as AnalyticsQueryResult;
-
-                // note this query will return sparse data (i.e. only rows where count > 0)
-                // merge returnedRows with initial rows to fill in any gaps
-                const rowsByDateTime = responseData.data.reduce(
-                    (accum, row) => {
-                        const utcDateTime = new Date(row["bucket"]);
-                        const key = formatDateString(utcDateTime);
-                        accum[key] = row["count"];
-                        return accum;
-                    },
-                    initialRows
-                );
-
-                // return as sorted array of tuples (i.e. [datetime, count])
-                const sortedRows = Object.entries(rowsByDateTime).sort(
-                    (a: any, b: any) => {
-                        if (a[0] < b[0]) return -1;
-                        else if (a[0] > b[0]) return 1;
-                        else return 0;
+                    if (!response.ok) {
+                        reject(response.statusText);
                     }
-                );
 
-                resolve(sortedRows);
-            })()
+                    const responseData =
+                        (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+                    // note this query will return sparse data (i.e. only rows where count > 0)
+                    // merge returnedRows with initial rows to fill in any gaps
+                    const rowsByDateTime = responseData.data.reduce(
+                        (accum, row) => {
+                            const utcDateTime = new Date(row["bucket"]);
+                            const key = formatDateString(utcDateTime);
+                            accum[key] = row["count"];
+                            return accum;
+                        },
+                        initialRows
+                    );
+
+                    // return as sorted array of tuples (i.e. [datetime, count])
+                    const sortedRows = Object.entries(rowsByDateTime).sort(
+                        (a, b) => {
+                            if (a[0] < b[0]) return -1;
+                            else if (a[0] > b[0]) return 1;
+                            else return 0;
+                        }
+                    );
+
+                    resolve(sortedRows);
+                })()
         );
         return returnPromise;
     }
 
-    async getCounts(
-        siteId: string,
-        sinceDays: number
-    ): Promise<AnalyticsCountResult> {
+    async getCounts(siteId: string, sinceDays: number) {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings["siteId"];
@@ -246,6 +249,12 @@ export class AnalyticsEngineAPI {
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
 
+        type SelectionSet = {
+            count: number;
+            isVisitor: number;
+            isVisit: number;
+        };
+
         const queryResult = this.query(query);
         const returnPromise = new Promise<AnalyticsCountResult>(
             (resolve, reject) =>
@@ -257,7 +266,7 @@ export class AnalyticsEngineAPI {
                     }
 
                     const responseData =
-                        (await response.json()) as AnalyticsQueryResult;
+                        (await response.json()) as AnalyticsQueryResult<SelectionSet>;
 
                     const counts: AnalyticsCountResult = {
                         views: 0,
@@ -283,17 +292,17 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getVisitorCountByColumn(
+    async getVisitorCountByColumn<T extends keyof typeof ColumnMappings>(
         siteId: string,
-        column: string,
+        column: T,
         sinceDays: number,
         limit?: number
-    ): Promise<any> {
+    ) {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;
 
-        const _column: string = ColumnMappings[column];
+        const _column = ColumnMappings[column];
         const query = `
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
@@ -304,8 +313,17 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit}`;
 
+        type SelectionSet = {
+            count: number;
+        } & Record<
+            (typeof ColumnMappings)[T],
+            ColumnMappingToType<(typeof ColumnMappings)[T]>
+        >;
+
         const queryResult = this.query(query);
-        const returnPromise = new Promise<any>((resolve, reject) =>
+        const returnPromise = new Promise<
+            [ColumnMappingToType<typeof _column> | "(none)", number][]
+        >((resolve, reject) =>
             (async () => {
                 const response = await queryResult;
 
@@ -314,12 +332,12 @@ export class AnalyticsEngineAPI {
                 }
 
                 const responseData =
-                    (await response.json()) as AnalyticsQueryResult;
+                    (await response.json()) as AnalyticsQueryResult<SelectionSet>;
                 resolve(
                     responseData.data.map((row) => {
                         const key =
                             row[_column] === "" ? "(none)" : row[_column];
-                        return [key, row["count"]];
+                        return [key, row["count"]] as const;
                     })
                 );
             })()
@@ -327,7 +345,7 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByUserAgent(siteId: string, sinceDays: number): Promise<any> {
+    async getCountByUserAgent(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "userAgent", sinceDays);
     }
 
@@ -351,10 +369,8 @@ export class AnalyticsEngineAPI {
         return this.getVisitorCountByColumn(siteId, "deviceModel", sinceDays);
     }
 
-    async getSitesOrderedByHits(
-        sinceDays: number,
-        limit?: number
-    ): Promise<any> {
+
+    async getSitesOrderedByHits(sinceDays: number, limit?: number) {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
         limit = limit || 10;
@@ -369,25 +385,31 @@ export class AnalyticsEngineAPI {
             LIMIT ${limit}
         `;
 
+        type SelectionSet = {
+            count: number;
+            siteId: string;
+        };
+
         const queryResult = this.query(query);
-        const returnPromise = new Promise<any>((resolve, reject) =>
-            (async () => {
-                const response = await queryResult;
+        const returnPromise = new Promise<[string, number][]>(
+            (resolve, reject) =>
+                (async () => {
+                    const response = await queryResult;
 
-                if (!response.ok) {
-                    reject(response.statusText);
-                    return;
-                }
+                    if (!response.ok) {
+                        reject(response.statusText);
+                        return;
+                    }
 
-                const responseData =
-                    (await response.json()) as AnalyticsQueryResult;
-                const result = responseData.data.reduce((acc, cur) => {
-                    acc.push([cur["siteId"], cur["count"]]);
-                    return acc;
-                }, []);
+                    const responseData =
+                        (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+                    const result = responseData.data.reduce((acc, cur) => {
+                        acc.push([cur["siteId"], cur["count"]]);
+                        return acc;
+                    }, [] as [string, number][]);
 
-                resolve(result);
-            })()
+                    resolve(result);
+                })()
         );
         return returnPromise;
     }
