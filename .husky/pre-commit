@@ -13,5 +13,6 @@ echo "$FILES" | xargs git add
 
 npm test
 npm run lint
+npm run typecheck
 
 exit 0
