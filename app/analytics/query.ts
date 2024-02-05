@@ -151,7 +151,8 @@ export class AnalyticsEngineAPI {
         siteId: string,
         intervalType: string,
         sinceDays: number,
-        tz?: string {
+        tz?: string
+    ) {
         let intervalCount = 1;
 
         // keeping this code here once we start allowing bigger intervals (e.g. intervals of 2 hours)
