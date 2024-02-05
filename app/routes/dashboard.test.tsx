@@ -1,6 +1,14 @@
 // @vitest-environment jsdom
 import { json } from "@remix-run/node";
-import { vi, test, describe, beforeAll, expect } from "vitest";
+import {
+    vi,
+    test,
+    describe,
+    beforeAll,
+    beforeEach,
+    afterEach,
+    expect,
+} from "vitest";
 import "vitest-dom/extend-expect";
 
 import { createRemixStub } from "@remix-run/testing";
@@ -8,7 +16,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import Dashboard, { loader } from "./dashboard";
 
-global.fetch = vi.fn();
 function createFetchResponse(data: any) {
     return {
         ok: true,
@@ -17,104 +24,136 @@ function createFetchResponse(data: any) {
 }
 
 describe("Dashboard route", () => {
-    const fetch = global.fetch as any;
+    let fetch: any;
 
     beforeAll(() => {
         // polyfill needed for recharts (used by TimeSeriesChart)
         global.ResizeObserver = require("resize-observer-polyfill");
     });
 
+    beforeEach(() => {
+        fetch = global.fetch = vi.fn();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     describe("loader", () => {
+        test("redirects to ?site=siteId if no siteId is provided via query string", async () => {
+            // response for getSitesByOrderedHits
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    data: [{ siteId: "test-siteid", count: 1 }],
+                }),
+            );
+
+            const response = await loader({
+                context: {
+                    env: {
+                        CF_BEARER_TOKEN: "fake",
+                        CF_ACCOUNT_ID: "fake",
+                    },
+                },
+                // @ts-expect-error we don't need to provide all the properties of the request object
+                request: {
+                    url: "http://localhost:3000/dashboard", // no site query param
+                },
+            });
+
+            // expect redirect
+            expect(response.status).toBe(302);
+            expect(response.headers.get("Location")).toBe(
+                "http://localhost:3000/dashboard?site=test-siteid",
+            );
+        });
+
+        test("redirects to ?site= if no siteId is provided via query string / no site data", async () => {
+            // response for getSitesByOrderedHits
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    data: [],
+                }),
+            );
+
+            const response = await loader({
+                context: {
+                    env: {
+                        CF_BEARER_TOKEN: "fake",
+                        CF_ACCOUNT_ID: "fake",
+                    },
+                },
+                // @ts-expect-error we don't need to provide all the properties of the request object
+                request: {
+                    url: "http://localhost:3000/dashboard", // no site query param
+                },
+            });
+
+            // expect redirect
+            expect(response.status).toBe(302);
+            expect(response.headers.get("Location")).toBe(
+                "http://localhost:3000/dashboard?site=",
+            );
+        });
+
         test("assembles data returned from CF API", async () => {
             // response for getSitesByOrderedHits
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ siteId: "test-siteid", count: 1 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ siteId: "test-siteid", count: 1 }],
                 }),
             );
 
             // response for get counts
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [
-                                { isVisit: 1, isVisitor: 1, count: 1 },
-                                { isVisit: 1, isVisitor: 0, count: 2 },
-                                { isVisit: 0, isVisitor: 0, count: 3 },
-                            ],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [
+                        { isVisit: 1, isVisitor: 1, count: 1 },
+                        { isVisit: 1, isVisitor: 0, count: 2 },
+                        { isVisit: 0, isVisitor: 0, count: 3 },
+                    ],
                 }),
             );
 
             // response for getCountByPath
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ blob3: "/", count: 1 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ blob3: "/", count: 1 }],
                 }),
             );
 
             // response for getCountByCountry
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ blob4: "US", count: 1 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ blob4: "US", count: 1 }],
                 }),
             );
 
             // response for getCountByReferrer
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ blob5: "google.com", count: 1 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ blob5: "google.com", count: 1 }],
                 }),
             );
 
             // response for getCountByBrowser
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ blob6: "Chrome", count: 2 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ blob6: "Chrome", count: 2 }],
                 }),
             );
 
             // response for getCountByDevice
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ blob7: "Desktop", count: 3 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ blob7: "Desktop", count: 3 }],
                 }),
             );
 
             // response for getViewsGroupedByInterval
             fetch.mockResolvedValueOnce(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [{ bucket: "2024-01-11 00:00:00", count: 4 }],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [{ bucket: "2024-01-11 00:00:00", count: 4 }],
                 }),
             );
 
@@ -129,7 +168,7 @@ describe("Dashboard route", () => {
                 },
                 // @ts-expect-error we don't need to provide all the properties of the request object
                 request: {
-                    url: "http://localhost:3000/dashboard",
+                    url: "http://localhost:3000/dashboard?site=test-siteid",
                 },
             });
 
@@ -148,6 +187,58 @@ describe("Dashboard route", () => {
                 countByDevice: [["Desktop", 3]],
                 viewsGroupedByInterval: [
                     ["2024-01-11 00:00:00", 4],
+                    ["2024-01-12 00:00:00", 0],
+                    ["2024-01-13 00:00:00", 0],
+                    ["2024-01-14 00:00:00", 0],
+                    ["2024-01-15 00:00:00", 0],
+                    ["2024-01-16 00:00:00", 0],
+                    ["2024-01-17 00:00:00", 0],
+                    ["2024-01-18 00:00:00", 0],
+                ],
+                intervalType: "DAY",
+            });
+        });
+
+        test("returns a valid empty result set when no data (no sites, no anything)", async () => {
+            vi.setSystemTime(new Date("2024-01-18T09:33:02").getTime());
+
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getSitesOrderedByHits
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // get counts
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByPath
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByCountry
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByReferrer
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByBrowser
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByDevice
+            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getViewsGroupedByInterval
+
+            const response = await loader({
+                context: {
+                    env: {
+                        CF_BEARER_TOKEN: "fake",
+                        CF_ACCOUNT_ID: "fake",
+                    },
+                },
+                // @ts-expect-error we don't need to provide all the properties of the request object
+                request: {
+                    url: "http://localhost:3000/dashboard?site=", // intentionally empty
+                },
+            });
+
+            const json = await response.json();
+
+            expect(json).toEqual({
+                siteId: "",
+                sites: [],
+                views: 0,
+                visits: 0,
+                visitors: 0,
+                countByPath: [],
+                countByCountry: [],
+                countByReferrer: [],
+                countByBrowser: [],
+                countByDevice: [],
+                viewsGroupedByInterval: [
+                    ["2024-01-11 00:00:00", 0],
                     ["2024-01-12 00:00:00", 0],
                     ["2024-01-13 00:00:00", 0],
                     ["2024-01-14 00:00:00", 0],
