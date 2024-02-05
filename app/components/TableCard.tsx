@@ -37,7 +37,7 @@ export default function TableCard({
             <Table>
                 <TableHeader>
                     <TableRow>
-                        {/* empty header required other column for the bar chart doesnt fill up */}
+                        {/* empty header required otherwise column for the bar chart wont render */}
                         <th />
                         {(columnHeaders || []).map((header: string, index) => (
                             <TableHead
@@ -57,6 +57,7 @@ export default function TableCard({
                             key={item[0]}
                             className="relative group [&_td]:last:rounded-b-md"
                         >
+                            {/* element _must_ be a `td` otherwise we get hydration errors */}
                             <td
                                 className="bg-orange-200 absolute h-full after:content-[''] group-hover:opacity-50"
                                 style={{
