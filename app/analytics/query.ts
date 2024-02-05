@@ -61,7 +61,7 @@ function formatDateString(d: Date) {
 function generateEmptyRowsOverInterval(
     intervalType: string,
     daysAgo: number,
-    tz?: string,
+    tz?: string
 ): [Date, any] {
     if (!tz) {
         tz = "Etc/UTC";
@@ -96,7 +96,7 @@ function generateEmptyRowsOverInterval(
         const rowDate = new Date(i);
         // convert to UTC
         const utcDateTime = new Date(
-            rowDate.getTime() + rowDate.getTimezoneOffset() * 60_000,
+            rowDate.getTime() + rowDate.getTimezoneOffset() * 60_000
         );
 
         const key = formatDateString(utcDateTime);
@@ -151,7 +151,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         intervalType: string,
         sinceDays: number,
-        tz: string,
+        tz?: string
     ): Promise<any> {
         let intervalCount = 1;
 
@@ -167,7 +167,7 @@ export class AnalyticsEngineAPI {
         const [startDateTime, initialRows] = generateEmptyRowsOverInterval(
             intervalType,
             sinceDays,
-            tz,
+            tz
         );
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
@@ -210,7 +210,7 @@ export class AnalyticsEngineAPI {
                         accum[key] = row["count"];
                         return accum;
                     },
-                    initialRows,
+                    initialRows
                 );
 
                 // return as sorted array of tuples (i.e. [datetime, count])
@@ -219,18 +219,18 @@ export class AnalyticsEngineAPI {
                         if (a[0] < b[0]) return -1;
                         else if (a[0] > b[0]) return 1;
                         else return 0;
-                    },
+                    }
                 );
 
                 resolve(sortedRows);
-            })(),
+            })()
         );
         return returnPromise;
     }
 
     async getCounts(
         siteId: string,
-        sinceDays: number,
+        sinceDays: number
     ): Promise<AnalyticsCountResult> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
@@ -277,7 +277,7 @@ export class AnalyticsEngineAPI {
                         counts.views += Number(row.count);
                     });
                     resolve(counts);
-                })(),
+                })()
         );
 
         return returnPromise;
@@ -287,7 +287,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         column: string,
         sinceDays: number,
-        limit?: number,
+        limit?: number
     ): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
@@ -320,9 +320,9 @@ export class AnalyticsEngineAPI {
                         const key =
                             row[_column] === "" ? "(none)" : row[_column];
                         return [key, row["count"]];
-                    }),
+                    })
                 );
-            })(),
+            })()
         );
         return returnPromise;
     }
@@ -353,7 +353,7 @@ export class AnalyticsEngineAPI {
 
     async getSitesOrderedByHits(
         sinceDays: number,
-        limit?: number,
+        limit?: number
     ): Promise<any> {
         // defaults to 1 day if not specified
         const interval = sinceDays || 1;
@@ -387,7 +387,7 @@ export class AnalyticsEngineAPI {
                 }, []);
 
                 resolve(result);
-            })(),
+            })()
         );
         return returnPromise;
     }
