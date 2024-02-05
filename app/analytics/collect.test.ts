@@ -89,7 +89,7 @@ describe("collectRequestHandler", () => {
             [
                 1, // new visitor
                 1, // new session
-            ]
+            ],
         );
     });
 
@@ -104,9 +104,9 @@ describe("collectRequestHandler", () => {
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
                 "if-modified-since": new Date(
-                    Date.now() - 5 * 60 * 1000
+                    Date.now() - 5 * 60 * 1000,
                 ).toUTCString(),
-            })
+            }),
         );
 
         collectRequestHandler(request, env);
@@ -117,7 +117,7 @@ describe("collectRequestHandler", () => {
             [
                 0, // new visitor
                 0, // new session
-            ]
+            ],
         );
     });
 
@@ -132,9 +132,9 @@ describe("collectRequestHandler", () => {
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
                 "if-modified-since": new Date(
-                    Date.now() - 31 * 60 * 1000
+                    Date.now() - 31 * 60 * 1000,
                 ).toUTCString(),
-            })
+            }),
         );
 
         collectRequestHandler(request, env);
@@ -145,7 +145,7 @@ describe("collectRequestHandler", () => {
             [
                 0, // new visitor
                 1, // new session
-            ]
+            ],
         );
     });
 
@@ -160,9 +160,9 @@ describe("collectRequestHandler", () => {
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
                 "if-modified-since": new Date(
-                    Date.now() - 60 * 24 * 60 * 1000
+                    Date.now() - 60 * 24 * 60 * 1000,
                 ).toUTCString(),
-            })
+            }),
         );
 
         collectRequestHandler(request, env);
@@ -173,7 +173,7 @@ describe("collectRequestHandler", () => {
             [
                 1, // new visitor
                 1, // new session
-            ]
+            ],
         );
     });
 });

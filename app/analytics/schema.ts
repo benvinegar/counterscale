@@ -1,10 +1,10 @@
 export type ColumnMappingToType<
-    T extends (typeof ColumnMappings)[keyof typeof ColumnMappings]
+    T extends (typeof ColumnMappings)[keyof typeof ColumnMappings],
 > = T extends `blob${number}`
     ? string
     : T extends `double${number}`
-    ? number
-    : never;
+      ? number
+      : never;
 
 /**
  * This maps logical column names to the actual column names in the data store.

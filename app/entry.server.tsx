@@ -19,7 +19,7 @@ export default async function handleRequest(
     // free to delete this parameter in your app if you're not using it!
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    loadContext: AppLoadContext
+    loadContext: AppLoadContext,
 ) {
     const body = await renderToReadableStream(
         // @ts-expect-error This is a mistake in the package types, resolved in @remix-run/react@2.5.1
@@ -31,7 +31,7 @@ export default async function handleRequest(
                 console.error(error);
                 responseStatusCode = 500;
             },
-        }
+        },
     );
 
     if (isbot(request.headers.get("user-agent"))) {
