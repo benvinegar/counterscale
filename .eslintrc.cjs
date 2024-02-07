@@ -69,7 +69,7 @@ module.exports = {
             },
             rules: {
                 // we're cool with explicit any (for now)
-                "@typescript-eslint/no-explicit-any": 0,
+                "@typescript-eslint/no-explicit-any": 1,
 
                 // https://stackoverflow.com/questions/68802881/get-rid-of-is-defined-but-never-used-in-function-parameter
                 "no-unused-vars": 0,
