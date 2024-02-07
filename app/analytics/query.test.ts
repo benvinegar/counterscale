@@ -1,11 +1,19 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import {
+    describe,
+    expect,
+    test,
+    vi,
+    beforeEach,
+    afterEach,
+    Mock,
+} from "vitest";
 
 import { AnalyticsEngineAPI } from "./query";
 
-function createFetchResponse(data: any) {
+function createFetchResponse<T>(data: T) {
     return {
         ok: true,
-        json: () => new Promise((resolve) => resolve(data)),
+        json: () => new Promise<T>((resolve) => resolve(data)),
     };
 }
 
@@ -14,7 +22,7 @@ describe("AnalyticsEngineAPI", () => {
         "test_account_id_abc123",
         "test_api_token_def456",
     );
-    let fetch: any; // todo: figure out how to type this mocked fetch
+    let fetch: Mock; // todo: figure out how to type this mocked fetch
 
     beforeEach(() => {
         fetch = global.fetch = vi.fn();

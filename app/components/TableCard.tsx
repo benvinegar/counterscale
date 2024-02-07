@@ -33,7 +33,7 @@ export default function TableCard({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {(countByProperty || []).map((item: any) => (
+                    {(countByProperty || []).map((item) => (
                         <TableRow key={item[0]}>
                             <TableCell className="font-medium">
                                 {item[0]}
@@ -51,6 +51,13 @@ export default function TableCard({
 
 TableCard.propTypes = {
     propertyName: PropTypes.string,
-    countByProperty: PropTypes.array,
+    countByProperty: PropTypes.arrayOf(
+        PropTypes.arrayOf(
+            PropTypes.oneOfType([
+                PropTypes.string.isRequired,
+                PropTypes.number.isRequired,
+            ]).isRequired,
+        ).isRequired,
+    ).isRequired,
     columnHeaders: PropTypes.array,
 };

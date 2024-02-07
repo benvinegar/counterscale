@@ -8,6 +8,7 @@ import {
     beforeEach,
     afterEach,
     expect,
+    Mock,
 } from "vitest";
 import "vitest-dom/extend-expect";
 
@@ -16,15 +17,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import Dashboard, { loader } from "./dashboard";
 
-function createFetchResponse(data: any) {
+function createFetchResponse<T>(data: T) {
     return {
         ok: true,
-        json: () => new Promise((resolve) => resolve(data)),
+        json: () => new Promise<T>((resolve) => resolve(data)),
     };
 }
 
 describe("Dashboard route", () => {
-    let fetch: any;
+    let fetch: Mock;
 
     beforeAll(() => {
         // polyfill needed for recharts (used by TimeSeriesChart)

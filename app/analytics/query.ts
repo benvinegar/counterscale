@@ -6,11 +6,9 @@ import timezone from "dayjs/plugin/timezone";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-export interface AnalyticsQueryResultRow {
-    [key: string]: any;
-}
-interface AnalyticsQueryResult<SelectionSet extends AnalyticsQueryResultRow> {
+interface AnalyticsQueryResult<
+    SelectionSet extends Record<string, string | number>,
+> {
     meta: string;
     data: SelectionSet[];
     rows: number;
@@ -350,23 +348,23 @@ export class AnalyticsEngineAPI {
         return this.getVisitorCountByColumn(siteId, "userAgent", sinceDays);
     }
 
-    async getCountByCountry(siteId: string, sinceDays: number): Promise<any> {
+    async getCountByCountry(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "country", sinceDays);
     }
 
-    async getCountByReferrer(siteId: string, sinceDays: number): Promise<any> {
+    async getCountByReferrer(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "referrer", sinceDays);
     }
 
-    async getCountByPath(siteId: string, sinceDays: number): Promise<any> {
+    async getCountByPath(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "path", sinceDays);
     }
 
-    async getCountByBrowser(siteId: string, sinceDays: number): Promise<any> {
+    async getCountByBrowser(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "browserName", sinceDays);
     }
 
-    async getCountByDevice(siteId: string, sinceDays: number): Promise<any> {
+    async getCountByDevice(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "deviceModel", sinceDays);
     }
 
