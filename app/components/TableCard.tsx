@@ -22,7 +22,7 @@ function calculateCountPercentages(countByProperty: CountByProperty) {
     return countByProperty.map((row) => {
         const count = parseInt(row[1]);
         const percentage = ((count / totalCount) * 100).toFixed(2);
-        return `${percentage}%`;
+        return percentage;
     });
 }
 export default function TableCard({
@@ -37,8 +37,6 @@ export default function TableCard({
             <Table>
                 <TableHeader>
                     <TableRow>
-                        {/* empty header required otherwise column for the bar chart wont render */}
-                        <th />
                         {(columnHeaders || []).map((header: string, index) => (
                             <TableHead
                                 key={header}
@@ -56,18 +54,15 @@ export default function TableCard({
                         <TableRow
                             key={item[0]}
                             className="relative group [&_td]:last:rounded-b-md"
+                            width={barChartPercentages[key]}
                         >
-                            {/* element _must_ be a `td` otherwise we get hydration errors */}
-                            <td
-                                className="bg-orange-200 absolute h-full after:content-[''] group-hover:opacity-50"
-                                style={{
-                                    width: barChartPercentages[key],
-                                }}
-                            />
-                            <TableCell className="font-medium relative">
+                            <TableCell
+                                className="font-medium relative w-3/4"
+                                width={barChartPercentages[key]}
+                            >
                                 {item[0]}
                             </TableCell>
-                            <TableCell className="text-right relative">
+                            <TableCell className="text-right relative w-1/4">
                                 {item[1]}
                             </TableCell>
                         </TableRow>
