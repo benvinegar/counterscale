@@ -22,6 +22,7 @@ export default async function handleRequest(
     loadContext: AppLoadContext,
 ) {
     const body = await renderToReadableStream(
+        // @ts-expect-error This is a mistake in the package types, resolved in @remix-run/react@2.5.1
         <RemixServer context={remixContext} url={request.url} />,
         {
             signal: request.signal,

@@ -52,7 +52,7 @@ export default function TableCard({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {(countByProperty || []).map((item: any, key) => (
+                    {(countByProperty || []).map((item, key) => (
                         <TableRow
                             key={item[0]}
                             className="relative group [&_td]:last:rounded-b-md"
@@ -80,6 +80,13 @@ export default function TableCard({
 
 TableCard.propTypes = {
     propertyName: PropTypes.string,
-    countByProperty: PropTypes.array,
+    countByProperty: PropTypes.arrayOf(
+        PropTypes.arrayOf(
+            PropTypes.oneOfType([
+                PropTypes.string.isRequired,
+                PropTypes.number.isRequired,
+            ]).isRequired,
+        ).isRequired,
+    ).isRequired,
     columnHeaders: PropTypes.array,
 };

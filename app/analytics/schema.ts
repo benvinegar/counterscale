@@ -1,11 +1,15 @@
-export interface ColumnMappingsType {
-    [key: string]: string;
-}
+export type ColumnMappingToType<
+    T extends (typeof ColumnMappings)[keyof typeof ColumnMappings],
+> = T extends `blob${number}`
+    ? string
+    : T extends `double${number}`
+      ? number
+      : never;
 
 /**
  * This maps logical column names to the actual column names in the data store.
  */
-export const ColumnMappings: ColumnMappingsType = {
+export const ColumnMappings = {
     /**
      * blobs
      */
@@ -27,4 +31,4 @@ export const ColumnMappings: ColumnMappingsType = {
 
     // this record is a new session (resets after 30m inactivity)
     newSession: "double2",
-};
+} as const;

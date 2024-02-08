@@ -1,11 +1,19 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import {
+    describe,
+    expect,
+    test,
+    vi,
+    beforeEach,
+    afterEach,
+    Mock,
+} from "vitest";
 
 import { AnalyticsEngineAPI } from "./query";
 
-function createFetchResponse(data: any) {
+function createFetchResponse<T>(data: T) {
     return {
         ok: true,
-        json: () => new Promise((resolve) => resolve(data)),
+        json: () => new Promise<T>((resolve) => resolve(data)),
     };
 }
 
@@ -14,7 +22,7 @@ describe("AnalyticsEngineAPI", () => {
         "test_account_id_abc123",
         "test_api_token_def456",
     );
-    let fetch: any; // todo: figure out how to type this mocked fetch
+    let fetch: Mock; // todo: figure out how to type this mocked fetch
 
     beforeEach(() => {
         fetch = global.fetch = vi.fn();
@@ -28,11 +36,7 @@ describe("AnalyticsEngineAPI", () => {
 
     describe("query", () => {
         test("forms a valid HTTP request query for CF analytics engine", () => {
-            fetch.mockResolvedValue(
-                new Promise((resolve) => {
-                    resolve(createFetchResponse({}));
-                }),
-            );
+            fetch.mockResolvedValue(createFetchResponse({}));
 
             api.query("SELECT * FROM web_counter");
 
@@ -56,26 +60,22 @@ describe("AnalyticsEngineAPI", () => {
             expect(process.env.TZ).toBe("EST");
 
             fetch.mockResolvedValue(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [
-                                {
-                                    count: 3,
-                                    // note: intentionally sparse data (data for some timestamps missing)
-                                    bucket: "2024-01-13 05:00:00",
-                                },
-                                {
-                                    count: 2,
-                                    bucket: "2024-01-16 05:00:00",
-                                },
-                                {
-                                    count: 1,
-                                    bucket: "2024-01-17 05:00:00",
-                                },
-                            ],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [
+                        {
+                            count: 3,
+                            // note: intentionally sparse data (data for some timestamps missing)
+                            bucket: "2024-01-13 05:00:00",
+                        },
+                        {
+                            count: 2,
+                            bucket: "2024-01-16 05:00:00",
+                        },
+                        {
+                            count: 1,
+                            bucket: "2024-01-17 05:00:00",
+                        },
+                    ],
                 }),
             );
 
@@ -122,26 +122,22 @@ describe("AnalyticsEngineAPI", () => {
         expect(process.env.TZ).toBe("EST");
 
         fetch.mockResolvedValue(
-            new Promise((resolve) => {
-                resolve(
-                    createFetchResponse({
-                        data: [
-                            {
-                                count: 3,
-                                // note: intentionally sparse data (data for some timestamps missing)
-                                bucket: "2024-01-17 11:00:00",
-                            },
-                            {
-                                count: 2,
-                                bucket: "2024-01-17 14:00:00",
-                            },
-                            {
-                                count: 1,
-                                bucket: "2024-01-17 16:00:00",
-                            },
-                        ],
-                    }),
-                );
+            createFetchResponse({
+                data: [
+                    {
+                        count: 3,
+                        // note: intentionally sparse data (data for some timestamps missing)
+                        bucket: "2024-01-17 11:00:00",
+                    },
+                    {
+                        count: 2,
+                        bucket: "2024-01-17 14:00:00",
+                    },
+                    {
+                        count: 1,
+                        bucket: "2024-01-17 16:00:00",
+                    },
+                ],
             }),
         );
 
@@ -151,6 +147,7 @@ describe("AnalyticsEngineAPI", () => {
             "example.com",
             "HOUR",
             1,
+            "America/New_York",
         );
 
         // reminder results are expressed as UTC
@@ -188,28 +185,24 @@ describe("AnalyticsEngineAPI", () => {
     describe("getCounts", () => {
         test("should return an object with view, visit, and visitor counts", async () => {
             fetch.mockResolvedValue(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [
-                                {
-                                    count: 3,
-                                    isVisit: 1,
-                                    isVisitor: 0,
-                                },
-                                {
-                                    count: 2,
-                                    isVisit: 0,
-                                    isVisitor: 0,
-                                },
-                                {
-                                    count: 1,
-                                    isVisit: 0,
-                                    isVisitor: 1,
-                                },
-                            ],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [
+                        {
+                            count: 3,
+                            isVisit: 1,
+                            isVisitor: 0,
+                        },
+                        {
+                            count: 2,
+                            isVisit: 0,
+                            isVisitor: 0,
+                        },
+                        {
+                            count: 1,
+                            isVisit: 0,
+                            isVisitor: 1,
+                        },
+                    ],
                 }),
             );
 
@@ -228,25 +221,21 @@ describe("AnalyticsEngineAPI", () => {
     describe("getVisitorCountByColumn", () => {
         test("it should map logical columns to schema columns and return an array of [column, count] tuples", async () => {
             fetch.mockResolvedValue(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [
-                                {
-                                    blob4: "CA",
-                                    count: 3,
-                                },
-                                {
-                                    blob4: "US",
-                                    count: 2,
-                                },
-                                {
-                                    blob4: "GB",
-                                    count: 1,
-                                },
-                            ],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [
+                        {
+                            blob4: "CA",
+                            count: 3,
+                        },
+                        {
+                            blob4: "US",
+                            count: 2,
+                        },
+                        {
+                            blob4: "GB",
+                            count: 1,
+                        },
+                    ],
                 }),
             );
 
@@ -271,25 +260,21 @@ describe("AnalyticsEngineAPI", () => {
             // note: getSitesByHits orders by count descending in SQL; since we're mocking
             //       the HTTP/SQL response, the mocked results are pre-sorted
             fetch.mockResolvedValue(
-                new Promise((resolve) => {
-                    resolve(
-                        createFetchResponse({
-                            data: [
-                                {
-                                    siteId: "example.com",
-                                    count: 130,
-                                },
-                                {
-                                    siteId: "foo.com",
-                                    count: 100,
-                                },
-                                {
-                                    siteId: "test.dev",
-                                    count: 90,
-                                },
-                            ],
-                        }),
-                    );
+                createFetchResponse({
+                    data: [
+                        {
+                            siteId: "example.com",
+                            count: 130,
+                        },
+                        {
+                            siteId: "foo.com",
+                            count: 100,
+                        },
+                        {
+                            siteId: "test.dev",
+                            count: 90,
+                        },
+                    ],
                 }),
             );
 
