@@ -16,13 +16,13 @@ type CountByProperty = [string, string][];
 function calculateCountPercentages(countByProperty: CountByProperty) {
     const totalCount = countByProperty.reduce(
         (sum, row) => sum + parseInt(row[1]),
-        0
+        0,
     );
 
     return countByProperty.map((row) => {
         const count = parseInt(row[1]);
         const percentage = ((count / totalCount) * 100).toFixed(2);
-        return percentage;
+        return `${percentage}%`;
     });
 }
 export default function TableCard({
@@ -30,7 +30,7 @@ export default function TableCard({
     columnHeaders,
 }: InferProps<typeof TableCard.propTypes>) {
     const barChartPercentages = calculateCountPercentages(
-        countByProperty as CountByProperty
+        countByProperty as CountByProperty,
     );
     return (
         <Card>

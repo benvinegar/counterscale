@@ -55,7 +55,7 @@ TableFooter.displayName = "TableFooter";
 const TableRow = React.forwardRef<
     HTMLTableRowElement,
     React.HTMLAttributes<HTMLTableRowElement> & {
-        width?: number;
+        width?: string;
     }
 >(({ className, ...props }, ref) => (
     <tr
@@ -67,7 +67,7 @@ const TableRow = React.forwardRef<
         style={
             props.width !== undefined
                 ? {
-                      background: `linear-gradient(90deg, #F7BA70 ${props.width}%, transparent ${props.width}%)`,
+                      background: `linear-gradient(90deg, #F7BA70 ${props.width}, transparent ${props.width})`,
                   }
                 : {}
         }
