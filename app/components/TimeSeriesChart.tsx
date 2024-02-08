@@ -20,7 +20,7 @@ export default function TimeSeriesChart({
     }
 
     // get the max integer value of data views
-    const maxViews = Math.max(...data.map((item: any) => item.views));
+    const maxViews = Math.max(...data.map((item) => item.views));
 
     function xAxisDateFormatter(date: string): string {
         const dateObj = new Date(date);
@@ -91,6 +91,10 @@ export default function TimeSeriesChart({
 }
 
 TimeSeriesChart.propTypes = {
-    data: PropTypes.any,
+    data: PropTypes.arrayOf(
+        PropTypes.shape({
+            views: PropTypes.number.isRequired,
+        }).isRequired,
+    ).isRequired,
     intervalType: PropTypes.string,
 };
