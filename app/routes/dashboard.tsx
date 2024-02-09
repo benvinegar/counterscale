@@ -33,6 +33,10 @@ declare module "@remix-run/server-runtime" {
 }
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
+    if (!context.env.CF_BEARER_TOKEN || !context.env.CF_ACCOUNT_ID) {
+        throw new Error("Missing Cloudflare credentials");
+    }
+
     const analyticsEngine = new AnalyticsEngineAPI(
         context.env.CF_ACCOUNT_ID,
         context.env.CF_BEARER_TOKEN,

@@ -41,6 +41,24 @@ describe("Dashboard route", () => {
     });
 
     describe("loader", () => {
+        test("throws an exception if no Cloudflare credentials are provided", async () => {
+            // empty strings
+            await expect(
+                loader({
+                    context: {
+                        env: {
+                            CF_BEARER_TOKEN: "",
+                            CF_ACCOUNT_ID: "",
+                        },
+                    },
+                    // @ts-expect-error we don't need to provide all the properties of the request object
+                    request: {
+                        url: "http://localhost:3000/dashboard",
+                    },
+                }),
+            ).rejects.toThrow("Missing Cloudflare credentials");
+        });
+
         test("redirects to ?site=siteId if no siteId is provided via query string", async () => {
             // response for getSitesByOrderedHits
             fetch.mockResolvedValueOnce(
