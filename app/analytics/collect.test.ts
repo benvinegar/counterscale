@@ -1,4 +1,4 @@
-import { Mock, describe, expect, test, vi } from "vitest";
+import { Mock, describe, expect, test, vi, beforeEach } from "vitest";
 import httpMocks from "node-mocks-http";
 
 import { collectRequestHandler } from "./collect";
@@ -34,6 +34,11 @@ function generateRequestParams(headers: Record<string, string>) {
 }
 
 describe("collectRequestHandler", () => {
+    beforeEach(() => {
+        // default time is just middle of the day
+        vi.setSystemTime(new Date("2024-01-18T09:33:02").getTime());
+    });
+
     test("invokes writeDataPoint with transformed params", () => {
         const env = {
             WEB_COUNTER_AE: {
@@ -117,6 +122,39 @@ describe("collectRequestHandler", () => {
             [
                 0, // new visitor
                 0, // new session
+            ],
+        );
+    });
+
+    test("if-modified since is within 30 minutes but over day boundary", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as CFAnalyticsEngine,
+        } as Environment;
+
+        // intentionally set system time as 00:15:00
+        // if the user last visited ~30 minutes ago, that occurred during
+        // the prior day, so this should be considered a new visit
+        vi.setSystemTime(new Date("2024-01-18T00:15:00").getTime());
+
+        const request = httpMocks.createRequest(
+            // @ts-expect-error - we're mocking the request object
+            generateRequestParams({
+                "if-modified-since": new Date(
+                    Date.now() - 25 * 60 * 1000, // 25 minutes
+                ).toUTCString(),
+            }),
+        );
+
+        collectRequestHandler(request, env);
+
+        const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
+        expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
+            "doubles",
+            [
+                1, // new visitor because a new day began
+                0, // NOT a new session because continuation of earlier session (< 30 mins)
             ],
         );
     });
