@@ -109,7 +109,7 @@ describe("collectRequestHandler", () => {
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
                 "if-modified-since": new Date(
-                    Date.now() - 5 * 60 * 1000,
+                    Date.now() - 5 * 60 * 1000, // 5 mins ago
                 ).toUTCString(),
             }),
         );
@@ -120,8 +120,8 @@ describe("collectRequestHandler", () => {
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
             "doubles",
             [
-                0, // new visitor
-                0, // new session
+                0, // NOT a new visitor
+                0, // NOT a new session
             ],
         );
     });
@@ -142,7 +142,7 @@ describe("collectRequestHandler", () => {
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
                 "if-modified-since": new Date(
-                    Date.now() - 25 * 60 * 1000, // 25 minutes
+                    Date.now() - 25 * 60 * 1000, // 25 minutes ago
                 ).toUTCString(),
             }),
         );
@@ -155,11 +155,12 @@ describe("collectRequestHandler", () => {
             [
                 1, // new visitor because a new day began
                 0, // NOT a new session because continuation of earlier session (< 30 mins)
+                // (session logic doesn't care if a new day began or not)
             ],
         );
     });
 
-    test("if-modified-since is over 30 ago", () => {
+    test("if-modified-since is over 30 days ago", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
@@ -170,7 +171,7 @@ describe("collectRequestHandler", () => {
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
                 "if-modified-since": new Date(
-                    Date.now() - 31 * 60 * 1000,
+                    Date.now() - 31 * 24 * 60 * 60 * 1000, // 31 days ago
                 ).toUTCString(),
             }),
         );
@@ -181,8 +182,8 @@ describe("collectRequestHandler", () => {
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
             "doubles",
             [
-                0, // new visitor
-                1, // new session
+                1, // new visitor because > 30 days passed
+                1, // new session because > 30 minutes passed
             ],
         );
     });
@@ -198,7 +199,7 @@ describe("collectRequestHandler", () => {
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
                 "if-modified-since": new Date(
-                    Date.now() - 60 * 24 * 60 * 1000,
+                    Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
                 ).toUTCString(),
             }),
         );
@@ -209,8 +210,8 @@ describe("collectRequestHandler", () => {
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
             "doubles",
             [
-                1, // new visitor
-                1, // new session
+                1, // new visitor because > 24 hours passed
+                1, // new session because > 30 minutes passed
             ],
         );
     });
