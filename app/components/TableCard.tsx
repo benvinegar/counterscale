@@ -53,16 +53,16 @@ export default function TableCard({
                     {(countByProperty || []).map((item, key) => (
                         <TableRow
                             key={item[0]}
-                            className="relative group [&_td]:last:rounded-b-md"
+                            className="group [&_td]:last:rounded-b-md"
                             width={barChartPercentages[key]}
                         >
                             <TableCell
-                                className="font-medium relative w-3/4"
+                                className="font-medium w-3/4"
                                 width={barChartPercentages[key]}
                             >
                                 {item[0]}
                             </TableCell>
-                            <TableCell className="text-right relative w-1/4">
+                            <TableCell className="text-right w-1/4">
                                 {item[1]}
                             </TableCell>
                         </TableRow>
