@@ -54,9 +54,7 @@ TableFooter.displayName = "TableFooter";
 
 const TableRow = React.forwardRef<
     HTMLTableRowElement,
-    React.HTMLAttributes<HTMLTableRowElement> & {
-        width?: string;
-    }
+    React.HTMLAttributes<HTMLTableRowElement>
 >(({ className, ...props }, ref) => (
     <tr
         ref={ref}
@@ -64,13 +62,6 @@ const TableRow = React.forwardRef<
             "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
             className,
         )}
-        style={
-            props.width !== undefined
-                ? {
-                      background: `linear-gradient(90deg, #F7BA70 ${props.width}, transparent ${props.width})`,
-                  }
-                : {}
-        }
         {...props}
     />
 ));
@@ -93,14 +84,21 @@ TableHead.displayName = "TableHead";
 
 const TableCell = React.forwardRef<
     HTMLTableCellElement,
-    React.TdHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
+    React.TdHTMLAttributes<HTMLTableCellElement> & { width?: string }
+>(({ className, width, ...props }, ref) => (
     <td
         ref={ref}
         className={cn(
             "p-4 align-middle [&:has([role=checkbox])]:pr-0",
             className,
         )}
+        style={
+            width !== undefined
+                ? {
+                      background: `linear-gradient(90deg, #F7BA70 ${width}, transparent ${width})`,
+                  }
+                : {}
+        }
         {...props}
     />
 ));
@@ -120,11 +118,11 @@ TableCaption.displayName = "TableCaption";
 
 export {
     Table,
-    TableHeader,
     TableBody,
+    TableCaption,
+    TableCell,
     TableFooter,
     TableHead,
+    TableHeader,
     TableRow,
-    TableCell,
-    TableCaption,
 };
