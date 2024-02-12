@@ -54,7 +54,6 @@ export default function TableCard({
                         <TableRow
                             key={item[0]}
                             className="group [&_td]:last:rounded-b-md"
-                            width={barChartPercentages[key]}
                         >
                             <TableCell
                                 className="font-medium w-3/4"
