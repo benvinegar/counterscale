@@ -179,7 +179,10 @@ export default function Dashboard() {
     const countByCountryName = convertCountryCodesToNames(data.countByCountry);
 
     return (
-        <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
+        <div
+            style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}
+            className="mb-12"
+        >
             <div className="w-full mb-4 flex gap-4">
                 <div className="w-1/2 sm:w-1/3 md:w-1/5">
                     <Select
@@ -269,7 +272,7 @@ export default function Dashboard() {
                 />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
                 <TableCard
                     countByProperty={data.countByBrowser}
                     columnHeaders={["Browser", "Visitors"]}
