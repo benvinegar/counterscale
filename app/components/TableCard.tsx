@@ -56,12 +56,12 @@ export default function TableCard({
                             className="group [&_td]:last:rounded-b-md"
                         >
                             <TableCell
-                                className="font-medium w-3/4"
+                                className="font-medium w-4/5"
                                 width={barChartPercentages[key]}
                             >
                                 {item[0]}
                             </TableCell>
-                            <TableCell className="text-right w-1/4">
+                            <TableCell className="text-right w-1/5">
                                 {item[1]}
                             </TableCell>
                         </TableRow>
