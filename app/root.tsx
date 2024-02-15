@@ -90,7 +90,7 @@ export default function App() {
                             <a
                                 href={`https://github.com/benvinegar/counterscale/commit/${data.version}`}
                             >
-                                {data.version.slice(0, 7)}
+                                {data.version?.slice(0, 7)}
                             </a>
                         </div>
                     </footer>
