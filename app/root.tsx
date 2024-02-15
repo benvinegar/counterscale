@@ -1,5 +1,9 @@
 import styles from "./globals.css";
-import type { LinksFunction } from "@remix-run/cloudflare";
+import {
+    json,
+    LoaderFunctionArgs,
+    type LinksFunction,
+} from "@remix-run/cloudflare";
 import { cssBundleHref } from "@remix-run/css-bundle";
 import {
     Links,
@@ -8,6 +12,7 @@ import {
     Outlet,
     Scripts,
     ScrollRestoration,
+    useLoaderData,
 } from "@remix-run/react";
 
 export const links: LinksFunction = () => [
@@ -15,7 +20,13 @@ export const links: LinksFunction = () => [
     ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
 ];
 
+export const loader = ({ context }: LoaderFunctionArgs) => {
+    return json({ version: context.env.VERSION });
+};
+
 export default function App() {
+    const data = useLoaderData<typeof loader>();
+
     return (
         <html lang="en">
             <head>
@@ -72,6 +83,17 @@ export default function App() {
                     <main role="main" className="w-full">
                         <Outlet />
                     </main>
+
+                    <footer className="py-4 flex justify-end text-s">
+                        <div>
+                            Version{" "}
+                            <a
+                                href={`https://github.com/benvinegar/counterscale/commit/${data.version}`}
+                            >
+                                {data.version.slice(0, 7)}
+                            </a>
+                        </div>
+                    </footer>
                 </div>
                 <ScrollRestoration />
                 <Scripts />

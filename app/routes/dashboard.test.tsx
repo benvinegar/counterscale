@@ -47,6 +47,7 @@ describe("Dashboard route", () => {
                 loader({
                     context: {
                         env: {
+                            VERSION: "",
                             CF_BEARER_TOKEN: "",
                             CF_ACCOUNT_ID: "",
                         },
@@ -70,6 +71,7 @@ describe("Dashboard route", () => {
             const response = await loader({
                 context: {
                     env: {
+                        VERSION: "",
                         CF_BEARER_TOKEN: "fake",
                         CF_ACCOUNT_ID: "fake",
                     },
@@ -98,6 +100,7 @@ describe("Dashboard route", () => {
             const response = await loader({
                 context: {
                     env: {
+                        VERSION: "",
                         CF_BEARER_TOKEN: "fake",
                         CF_ACCOUNT_ID: "fake",
                     },
@@ -181,6 +184,7 @@ describe("Dashboard route", () => {
             const response = await loader({
                 context: {
                     env: {
+                        VERSION: "",
                         CF_BEARER_TOKEN: "fake",
                         CF_ACCOUNT_ID: "fake",
                     },
@@ -233,6 +237,7 @@ describe("Dashboard route", () => {
             const response = await loader({
                 context: {
                     env: {
+                        VERSION: "",
                         CF_BEARER_TOKEN: "fake",
                         CF_ACCOUNT_ID: "fake",
                     },

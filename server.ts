@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === "development") {
 export default {
     async fetch(
         request: Request,
-        env: Environment,
+        env: Environment & { VERSION: string },
         ctx: ExecutionContext,
     ): Promise<Response> {
         try {

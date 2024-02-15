@@ -26,6 +26,7 @@ export const meta: MetaFunction = () => {
 declare module "@remix-run/server-runtime" {
     export interface AppLoadContext {
         env: {
+            VERSION: string;
             CF_BEARER_TOKEN: string;
             CF_ACCOUNT_ID: string;
         };
@@ -179,10 +180,7 @@ export default function Dashboard() {
     const countByCountryName = convertCountryCodesToNames(data.countByCountry);
 
     return (
-        <div
-            style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}
-            className="mb-12"
-        >
+        <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
             <div className="w-full mb-4 flex gap-4">
                 <div className="w-1/2 sm:w-1/3 md:w-1/5">
                     <Select
