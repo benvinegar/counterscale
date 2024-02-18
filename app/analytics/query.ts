@@ -429,15 +429,13 @@ export class AnalyticsEngineAPI {
         );
 
         return allCountsResultPromise.then((allCountsResult) => {
-            // return new Promise<[string, number, number][]>(async (resolve) => {
-            //     const allCountsResult = await allCountsResultPromise;
-
             const result: [string, number, number][] = [];
             for (const [key] of Object.entries(allCountsResult)) {
                 const record = allCountsResult[key];
                 result.push([key, record.visitors, record.views]);
             }
-            return result;
+            // sort by visitors
+            return result.sort((a, b) => b[1] - a[1]);
         });
     }
 
