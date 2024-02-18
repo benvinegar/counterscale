@@ -21,6 +21,27 @@ interface AnalyticsCountResult {
     visitors: number;
 }
 
+/** Given an AnalyticsCountResult object, and an object representing a row returned from
+ *  CF Analytics Engine w/ counts grouped by isVisitor and isVisit, accumulate view,
+ *  visit, and visitor counts.
+ */
+function accumulateCountsFromRowResult(
+    counts: AnalyticsCountResult,
+    row: {
+        count: number;
+        isVisitor: number;
+        isVisit: number;
+    },
+) {
+    if (row.isVisit == 1) {
+        counts.visits += Number(row.count);
+    }
+    if (row.isVisitor == 1) {
+        counts.visitors += Number(row.count);
+    }
+    counts.views += Number(row.count);
+}
+
 /**
  * Convert a Date object to YY-MM-DD HH:MM:SS
  */
@@ -276,13 +297,7 @@ export class AnalyticsEngineAPI {
                     // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but
                     //       no row where isVisit=0), so this code makes no assumption on number of results
                     responseData.data.forEach((row) => {
-                        if (row.isVisit == 1) {
-                            counts.visits += Number(row.count);
-                        }
-                        if (row.isVisitor == 1) {
-                            counts.visitors += Number(row.count);
-                        }
-                        counts.views += Number(row.count);
+                        accumulateCountsFromRowResult(counts, row);
                     });
                     resolve(counts);
                 })(),
@@ -390,12 +405,12 @@ export class AnalyticsEngineAPI {
                         (await response.json()) as AnalyticsQueryResult<SelectionSet>;
 
                     const result = responseData.data.reduce(
-                        (acc, cur) => {
-                            console.log(cur);
+                        (acc, row) => {
+                            console.log(row);
                             const key =
-                                cur[_column] === ""
+                                row[_column] === ""
                                     ? "(none)"
-                                    : (cur[_column] as string);
+                                    : (row[_column] as string);
                             if (!Object.hasOwn(acc, key)) {
                                 acc[key] = {
                                     views: 0,
@@ -404,13 +419,7 @@ export class AnalyticsEngineAPI {
                                 } as AnalyticsCountResult;
                             }
 
-                            if (cur.isVisitor === 1) {
-                                acc[key].visitors += Number(cur.count);
-                            }
-                            if (cur.isVisit === 1) {
-                                acc[key].visits += Number(cur.count);
-                            }
-                            acc[key].views += Number(cur.count);
+                            accumulateCountsFromRowResult(acc[key], row);
                             return acc;
                         },
                         {} as Record<string, AnalyticsCountResult>,
