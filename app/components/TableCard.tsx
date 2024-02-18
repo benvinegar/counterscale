@@ -61,9 +61,16 @@ export default function TableCard({
                             >
                                 {item[0]}
                             </TableCell>
+
                             <TableCell className="text-right w-1/5">
                                 {item[1]}
                             </TableCell>
+
+                            {item.length > 2 && (
+                                <TableCell className="text-right w-1/5">
+                                    {item[2]}
+                                </TableCell>
+                            )}
                         </TableRow>
                     ))}
                 </TableBody>

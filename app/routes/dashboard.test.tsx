@@ -140,7 +140,10 @@ describe("Dashboard route", () => {
             // response for getCountByPath
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
-                    data: [{ blob3: "/", count: 1 }],
+                    data: [
+                        { blob3: "/", count: 1, isVisitor: 1, isVisit: 1 },
+                        { blob3: "/", count: 3, isVisitor: 0, isVisit: 0 },
+                    ],
                 }),
             );
 
@@ -203,7 +206,7 @@ describe("Dashboard route", () => {
                 views: 6,
                 visits: 3,
                 visitors: 1,
-                countByPath: [["/", 1]],
+                countByPath: [["/", 1, 4]],
                 countByCountry: [["US", 1]],
                 countByReferrer: [["google.com", 1]],
                 countByBrowser: [["Chrome", 2]],

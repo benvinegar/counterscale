@@ -239,8 +239,8 @@ export class AnalyticsEngineAPI {
         const siteIdColumn = ColumnMappings["siteId"];
 
         const query = `
-            SELECT SUM(_sample_interval) as count, 
-                ${ColumnMappings.newVisitor} as isVisitor, 
+            SELECT SUM(_sample_interval) as count,
+                ${ColumnMappings.newVisitor} as isVisitor,
                 ${ColumnMappings.newSession} as isVisit
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
@@ -344,6 +344,103 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
+    async getAllCountsByColumn<T extends keyof typeof ColumnMappings>(
+        siteId: string,
+        column: T,
+        sinceDays: number,
+        limit?: number,
+    ) {
+        // defaults to 1 day if not specified
+        const interval = sinceDays || 1;
+        limit = limit || 10;
+
+        const _column = ColumnMappings[column];
+        const query = `
+            SELECT ${_column},
+                ${ColumnMappings.newVisitor} as isVisitor,
+                ${ColumnMappings.newSession} as isVisit,
+                SUM(_sample_interval) as count
+            FROM metricsDataset
+            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+                AND ${ColumnMappings.siteId} = '${siteId}'
+            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
+            ORDER BY count DESC
+            LIMIT ${limit}`;
+
+        type SelectionSet = {
+            readonly count: number;
+            readonly isVisitor: number;
+            readonly isVisit: number;
+        } & Record<
+            (typeof ColumnMappings)[T],
+            ColumnMappingToType<(typeof ColumnMappings)[T]>
+        >;
+
+        const queryResult = this.query(query);
+        const returnPromise = new Promise<Record<string, AnalyticsCountResult>>(
+            (resolve, reject) =>
+                (async () => {
+                    const response = await queryResult;
+
+                    if (!response.ok) {
+                        reject(response.statusText);
+                    }
+
+                    const responseData =
+                        (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+                    const result = responseData.data.reduce(
+                        (acc, cur) => {
+                            console.log(cur);
+                            const key =
+                                cur[_column] === ""
+                                    ? "(none)"
+                                    : (cur[_column] as string);
+                            if (!Object.hasOwn(acc, key)) {
+                                acc[key] = {
+                                    views: 0,
+                                    visitors: 0,
+                                    visits: 0,
+                                } as AnalyticsCountResult;
+                            }
+
+                            if (cur.isVisitor === 1) {
+                                acc[key].visitors += Number(cur.count);
+                            }
+                            if (cur.isVisit === 1) {
+                                acc[key].visits += Number(cur.count);
+                            }
+                            acc[key].views += Number(cur.count);
+                            return acc;
+                        },
+                        {} as Record<string, AnalyticsCountResult>,
+                    );
+                    resolve(result);
+                })(),
+        );
+        return returnPromise;
+    }
+
+    async getCountByPath(siteId: string, sinceDays: number) {
+        const allCountsResultPromise = this.getAllCountsByColumn(
+            siteId,
+            "path",
+            sinceDays,
+        );
+
+        return allCountsResultPromise.then((allCountsResult) => {
+            // return new Promise<[string, number, number][]>(async (resolve) => {
+            //     const allCountsResult = await allCountsResultPromise;
+
+            const result: [string, number, number][] = [];
+            for (const [key] of Object.entries(allCountsResult)) {
+                const record = allCountsResult[key];
+                result.push([key, record.visitors, record.views]);
+            }
+            return result;
+        });
+    }
+
     async getCountByUserAgent(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "userAgent", sinceDays);
     }
@@ -355,11 +452,6 @@ export class AnalyticsEngineAPI {
     async getCountByReferrer(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "referrer", sinceDays);
     }
-
-    async getCountByPath(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "path", sinceDays);
-    }
-
     async getCountByBrowser(siteId: string, sinceDays: number) {
         return this.getVisitorCountByColumn(siteId, "browserName", sinceDays);
     }
@@ -374,7 +466,7 @@ export class AnalyticsEngineAPI {
         limit = limit || 10;
 
         const query = `
-            SELECT SUM(_sample_interval) as count, 
+            SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.siteId} as siteId
             FROM metricsDataset
             WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
