@@ -261,7 +261,7 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <TableCard
                     countByProperty={data.countByPath}
-                    columnHeaders={["Page", "Visitors", "Visits"]}
+                    columnHeaders={["Page", "Visitors", "Views"]}
                 />
 
                 <TableCard
