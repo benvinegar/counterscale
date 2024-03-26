@@ -315,7 +315,7 @@ describe("Dashboard route", () => {
     const defaultMockedLoaderJson = {
         siteId: "example",
         sites: ["example"],
-        views: 100,
+        views: 2133,
         visits: 80,
         visitors: 33,
         countByPath: [
@@ -375,7 +375,9 @@ describe("Dashboard route", () => {
         await waitFor(() => screen.findByText("Chrome"));
 
         // assert some of the data we mocked actually rendered into the document
-        expect(screen.getByText("33")).toBeInTheDocument();
+        expect(screen.getByText("2.1K")).toBeInTheDocument(); // view count
+        expect(screen.getByText("33")).toBeInTheDocument(); // visitor count
+
         expect(screen.getByText("/about")).toBeInTheDocument();
         expect(screen.getByText("Chrome")).toBeInTheDocument();
         expect(screen.getByText("google.com")).toBeInTheDocument();

@@ -179,6 +179,8 @@ export default function Dashboard() {
 
     const countByCountryName = convertCountryCodesToNames(data.countByCountry);
 
+    const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
+
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
             <div className="w-full mb-4 flex gap-4">
@@ -228,17 +230,23 @@ export default function Dashboard() {
                         <div className="grid grid-cols-3 gap-10 items-end">
                             <div>
                                 <div className="text-sm sm:text-lg">Views</div>
-                                <div className="text-4xl">{data.views}</div>
+                                <div className="text-4xl">
+                                    {countFormatter.format(data.views)}
+                                </div>
                             </div>
                             <div>
                                 <div className="text-sm sm:text-lg">Visits</div>
-                                <div className="text-4xl">{data.visits}</div>
+                                <div className="text-4xl">
+                                    {countFormatter.format(data.visits)}
+                                </div>
                             </div>
                             <div>
                                 <div className="text-sm sm:text-lg">
                                     Visitors
                                 </div>
-                                <div className="text-4xl">{data.visitors}</div>
+                                <div className="text-4xl">
+                                    {countFormatter.format(data.visitors)}
+                                </div>
                             </div>
                         </div>
                     </CardContent>
