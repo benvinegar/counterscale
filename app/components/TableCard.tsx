@@ -32,6 +32,8 @@ export default function TableCard({
     const barChartPercentages = calculateCountPercentages(
         countByProperty as CountByProperty,
     );
+
+    const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
     return (
         <Card>
             <Table>
@@ -63,12 +65,12 @@ export default function TableCard({
                             </TableCell>
 
                             <TableCell className="text-right w-1/5">
-                                {item[1]}
+                                {countFormatter.format(item[1] as number)}
                             </TableCell>
 
                             {item.length > 2 && (
                                 <TableCell className="text-right w-1/5">
-                                    {item[2]}
+                                    {countFormatter.format(item[2] as number)}
                                 </TableCell>
                             )}
                         </TableRow>
