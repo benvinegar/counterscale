@@ -15,6 +15,7 @@ import { AnalyticsEngineAPI } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
 import TimeSeriesChart from "~/components/TimeSeriesChart";
+import dayjs from "dayjs";
 
 export const meta: MetaFunction = () => {
     return [
@@ -68,7 +69,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
     const tz = context.requestTimezone as string;
-    console.log(tz);
 
     // initiate requests to AE in parallel
     const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval, tz);
@@ -111,11 +111,29 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             intervalType = "DAY";
             break;
     }
+    // get start date in the past by subtracting interval * type
+
+    let localDateTime = dayjs().utc();
+    if (interval === "today") {
+        localDateTime = localDateTime.tz(tz).startOf("day");
+    } else {
+        const daysAgo = Number(interval.split("d")[0]);
+        if (intervalType === "DAY") {
+            localDateTime = localDateTime
+                .subtract(daysAgo, "day")
+                .tz(tz)
+                .startOf("day");
+        } else if (intervalType === "HOUR") {
+            localDateTime = localDateTime
+                .subtract(daysAgo, "day")
+                .startOf("hour");
+        }
+    }
 
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
         intervalType,
-        30,
+        localDateTime.toDate(),
         tz,
     );
 

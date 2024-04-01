@@ -98,34 +98,21 @@ function intervalToSql(interval: string, tz?: string) {
  * */
 function generateEmptyRowsOverInterval(
     intervalType: string,
-    daysAgo: number,
+    startDateTime: Date,
     tz?: string,
-): [Date, { [key: string]: number }] {
+): { [key: string]: number } {
     if (!tz) {
         tz = "Etc/UTC";
     }
 
-    let localDateTime = dayjs();
     let intervalMs = 0;
-
-    // get start date in the past by subtracting interval * type
     if (intervalType === "DAY") {
-        localDateTime = dayjs()
-            .utc()
-            .subtract(daysAgo, "day")
-            .tz(tz)
-            .startOf("day");
-
-        // assumes interval is 24 hours
         intervalMs = 24 * 60 * 60 * 1000;
     } else if (intervalType === "HOUR") {
-        localDateTime = dayjs().utc().subtract(daysAgo, "day").startOf("hour");
-
-        // assumes interval is hourly
         intervalMs = 60 * 60 * 1000;
+    } else {
+        throw new Error("Invalid interval type");
     }
-
-    const startDateTime = localDateTime.toDate();
 
     const initialRows: { [key: string]: number } = {};
 
@@ -141,7 +128,7 @@ function generateEmptyRowsOverInterval(
         initialRows[key] = 0;
     }
 
-    return [startDateTime, initialRows];
+    return initialRows;
 }
 
 /**
@@ -188,7 +175,7 @@ export class AnalyticsEngineAPI {
     async getViewsGroupedByInterval(
         siteId: string,
         intervalType: string,
-        sinceDays: number,
+        startDateTime: Date,
         tz?: string,
     ) {
         let intervalCount = 1;
@@ -202,9 +189,9 @@ export class AnalyticsEngineAPI {
         }
 
         // note interval count hard-coded to hours at the moment
-        const [startDateTime, initialRows] = generateEmptyRowsOverInterval(
+        const initialRows = generateEmptyRowsOverInterval(
             intervalType,
-            sinceDays,
+            startDateTime,
             tz,
         );
 
@@ -222,7 +209,7 @@ export class AnalyticsEngineAPI {
             toDateTime(_bucket, 'Etc/UTC') as bucket
 
             FROM metricsDataset
-            WHERE timestamp > toDateTime('${formatDateString(startDateTime)}')
+            WHERE timestamp > toDateTime('${formatDateString(startDateTime)}', '${tz}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
@@ -295,7 +282,6 @@ export class AnalyticsEngineAPI {
             isVisit: number;
         };
 
-        console.log(query);
         const queryResult = this.query(query);
 
         const returnPromise = new Promise<AnalyticsCountResult>(
