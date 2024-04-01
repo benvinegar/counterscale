@@ -67,25 +67,36 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
+    const tz = context.requestTimezone as string;
+    console.log(tz);
+
     // initiate requests to AE in parallel
-    const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval);
-    const counts = analyticsEngine.getCounts(actualSiteId, interval);
-    const countByPath = analyticsEngine.getCountByPath(actualSiteId, interval);
+    const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval, tz);
+    const counts = analyticsEngine.getCounts(actualSiteId, interval, tz);
+    const countByPath = analyticsEngine.getCountByPath(
+        actualSiteId,
+        interval,
+        tz,
+    );
     const countByCountry = analyticsEngine.getCountByCountry(
         actualSiteId,
         interval,
+        tz,
     );
     const countByReferrer = analyticsEngine.getCountByReferrer(
         actualSiteId,
         interval,
+        tz,
     );
     const countByBrowser = analyticsEngine.getCountByBrowser(
         actualSiteId,
         interval,
+        tz,
     );
     const countByDevice = analyticsEngine.getCountByDevice(
         actualSiteId,
         interval,
+        tz,
     );
 
     let intervalType = "DAY";
@@ -100,8 +111,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             intervalType = "DAY";
             break;
     }
-
-    const tz = context.requestTimezone as string;
 
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
@@ -130,9 +139,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             countByDevice: await countByDevice,
             viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
+            interval,
         };
     } catch (err) {
-        console.error(err);
         throw new Error("Failed to fetch data from Analytics Engine");
     }
     return json(out);
@@ -215,7 +224,7 @@ export default function Dashboard() {
 
                 <div className="w-1/2 sm:w-1/3 md:w-1/5">
                     <Select
-                        defaultValue="7"
+                        defaultValue={data.interval}
                         onValueChange={(interval) => changeInterval(interval)}
                     >
                         <SelectTrigger>

@@ -66,11 +66,13 @@ function formatDateString(d: Date) {
     );
 }
 
-function intervalToSql(interval: string) {
+function intervalToSql(interval: string, tz?: string) {
     let intervalSql = "";
     switch (interval) {
         case "today":
-            intervalSql = dayjs().startOf("day").format();
+            // example: toDateTime('2024-01-07 00:00:00', 'America/New_York')
+            intervalSql = `toDateTime('${dayjs().startOf("day").format("YYYY-MM-DD HH:mm:ss")}', '${tz}')`;
+            break;
         case "1d":
         case "7d":
         case "30d":
@@ -275,7 +277,7 @@ export class AnalyticsEngineAPI {
         // defaults to 1 day if not specified
         const siteIdColumn = ColumnMappings["siteId"];
 
-        let intervalSql = intervalToSql(interval);
+        let intervalSql = intervalToSql(interval, tz);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
@@ -293,6 +295,7 @@ export class AnalyticsEngineAPI {
             isVisit: number;
         };
 
+        console.log(query);
         const queryResult = this.query(query);
 
         const returnPromise = new Promise<AnalyticsCountResult>(
@@ -329,11 +332,12 @@ export class AnalyticsEngineAPI {
         siteId: string,
         column: T,
         interval: string,
+        tz?: string,
         limit?: number,
     ) {
         limit = limit || 10;
 
-        const intervalSql = intervalToSql(interval);
+        const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -382,12 +386,13 @@ export class AnalyticsEngineAPI {
         siteId: string,
         column: T,
         interval: string,
+        tz?: string,
         limit?: number,
     ) {
         // defaults to 1 day if not specified
         limit = limit || 10;
 
-        const intervalSql = intervalToSql(interval);
+        const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -449,11 +454,12 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByPath(siteId: string, interval: string) {
+    async getCountByPath(siteId: string, interval: string, tz?: string) {
         const allCountsResultPromise = this.getAllCountsByColumn(
             siteId,
             "path",
             interval,
+            tz,
         );
 
         return allCountsResultPromise.then((allCountsResult) => {
@@ -467,31 +473,41 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getCountByUserAgent(siteId: string, interval: string) {
-        return this.getVisitorCountByColumn(siteId, "userAgent", interval);
+    async getCountByUserAgent(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(siteId, "userAgent", interval, tz);
     }
 
-    async getCountByCountry(siteId: string, interval: string) {
-        return this.getVisitorCountByColumn(siteId, "country", interval);
+    async getCountByCountry(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(siteId, "country", interval, tz);
     }
 
-    async getCountByReferrer(siteId: string, interval: string) {
-        return this.getVisitorCountByColumn(siteId, "referrer", interval);
+    async getCountByReferrer(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(siteId, "referrer", interval, tz);
     }
-    async getCountByBrowser(siteId: string, interval: string) {
-        return this.getVisitorCountByColumn(siteId, "browserName", interval);
+    async getCountByBrowser(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "browserName",
+            interval,
+            tz,
+        );
     }
 
-    async getCountByDevice(siteId: string, interval: string) {
-        return this.getVisitorCountByColumn(siteId, "deviceModel", interval);
+    async getCountByDevice(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "deviceModel",
+            interval,
+            tz,
+        );
     }
 
-    async getSitesOrderedByHits(interval: string, limit?: number) {
+    async getSitesOrderedByHits(interval: string, tz?: string, limit?: number) {
         // defaults to 1 day if not specified
 
         limit = limit || 10;
 
-        let intervalSql = intervalToSql(interval);
+        let intervalSql = intervalToSql(interval, tz);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
