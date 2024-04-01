@@ -287,7 +287,6 @@ export class AnalyticsEngineAPI {
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
 
-        console.log(query);
         type SelectionSet = {
             count: number;
             isVisitor: number;
@@ -295,6 +294,7 @@ export class AnalyticsEngineAPI {
         };
 
         const queryResult = this.query(query);
+
         const returnPromise = new Promise<AnalyticsCountResult>(
             (resolve, reject) =>
                 (async () => {

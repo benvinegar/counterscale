@@ -111,20 +111,30 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     );
 
     // await all requests to AE then return the results
-    const out = {
-        siteId: siteId,
-        sites: (await sitesByHits).map(([site, _]: [string, number]) => site),
-        views: (await counts).views,
-        visits: (await counts).visits,
-        visitors: (await counts).visitors,
-        countByPath: await countByPath,
-        countByBrowser: await countByBrowser,
-        countByCountry: await countByCountry,
-        countByReferrer: await countByReferrer,
-        countByDevice: await countByDevice,
-        viewsGroupedByInterval: await viewsGroupedByInterval,
-        intervalType,
-    };
+
+    let out;
+
+    try {
+        out = {
+            siteId: siteId,
+            sites: (await sitesByHits).map(
+                ([site, _]: [string, number]) => site,
+            ),
+            views: (await counts).views,
+            visits: (await counts).visits,
+            visitors: (await counts).visitors,
+            countByPath: await countByPath,
+            countByBrowser: await countByBrowser,
+            countByCountry: await countByCountry,
+            countByReferrer: await countByReferrer,
+            countByDevice: await countByDevice,
+            viewsGroupedByInterval: await viewsGroupedByInterval,
+            intervalType,
+        };
+    } catch (err) {
+        console.error(err);
+        throw new Error("Failed to fetch data from Analytics Engine");
+    }
     return json(out);
 };
 
