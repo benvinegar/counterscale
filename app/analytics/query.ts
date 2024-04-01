@@ -199,6 +199,7 @@ export class AnalyticsEngineAPI {
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
         //       is just a limitation of Cloudflare Analytics Engine.
         //       -- but you can filter on them (using WHERE)
+
         const query = `
             SELECT SUM(_sample_interval) as count,
 
@@ -264,7 +265,7 @@ export class AnalyticsEngineAPI {
         // defaults to 1 day if not specified
         const siteIdColumn = ColumnMappings["siteId"];
 
-        let intervalSql = intervalToSql(interval, tz);
+        const intervalSql = intervalToSql(interval, tz);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
@@ -493,7 +494,7 @@ export class AnalyticsEngineAPI {
 
         limit = limit || 10;
 
-        let intervalSql = intervalToSql(interval, tz);
+        const intervalSql = intervalToSql(interval, tz);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
