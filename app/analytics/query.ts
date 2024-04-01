@@ -406,7 +406,6 @@ export class AnalyticsEngineAPI {
 
                     const result = responseData.data.reduce(
                         (acc, row) => {
-                            console.log(row);
                             const key =
                                 row[_column] === ""
                                     ? "(none)"
