@@ -66,6 +66,21 @@ function formatDateString(d: Date) {
     );
 }
 
+function intervalToSql(interval: string) {
+    let intervalSql = "";
+    switch (interval) {
+        case "1d":
+        case "7d":
+        case "30d":
+        case "90d":
+            intervalSql = `'${interval.split("d")[0]}' DAY`;
+            break;
+        default:
+            intervalSql = `'1' DAY`;
+    }
+    return intervalSql;
+}
+
 /**
  * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
  * example:
@@ -254,21 +269,23 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCounts(siteId: string, sinceDays: number) {
+    async getCounts(siteId: string, interval: string) {
         // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings["siteId"];
+
+        let intervalSql = intervalToSql(interval);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.newVisitor} as isVisitor,
                 ${ColumnMappings.newSession} as isVisit
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
 
+        console.log(query);
         type SelectionSet = {
             count: number;
             isVisitor: number;
@@ -309,18 +326,18 @@ export class AnalyticsEngineAPI {
     async getVisitorCountByColumn<T extends keyof typeof ColumnMappings>(
         siteId: string,
         column: T,
-        sinceDays: number,
+        interval: string,
         limit?: number,
     ) {
-        // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
         limit = limit || 10;
+
+        const intervalSql = intervalToSql(interval);
 
         const _column = ColumnMappings[column];
         const query = `
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
                 AND ${ColumnMappings.newVisitor} = 1
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}
@@ -362,12 +379,13 @@ export class AnalyticsEngineAPI {
     async getAllCountsByColumn<T extends keyof typeof ColumnMappings>(
         siteId: string,
         column: T,
-        sinceDays: number,
+        interval: string,
         limit?: number,
     ) {
         // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
         limit = limit || 10;
+
+        const intervalSql = intervalToSql(interval);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -376,7 +394,7 @@ export class AnalyticsEngineAPI {
                 ${ColumnMappings.newSession} as isVisit,
                 SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
             ORDER BY count DESC
@@ -429,11 +447,11 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByPath(siteId: string, sinceDays: number) {
+    async getCountByPath(siteId: string, interval: string) {
         const allCountsResultPromise = this.getAllCountsByColumn(
             siteId,
             "path",
-            sinceDays,
+            interval,
         );
 
         return allCountsResultPromise.then((allCountsResult) => {
@@ -447,35 +465,37 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getCountByUserAgent(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "userAgent", sinceDays);
+    async getCountByUserAgent(siteId: string, interval: string) {
+        return this.getVisitorCountByColumn(siteId, "userAgent", interval);
     }
 
-    async getCountByCountry(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "country", sinceDays);
+    async getCountByCountry(siteId: string, interval: string) {
+        return this.getVisitorCountByColumn(siteId, "country", interval);
     }
 
-    async getCountByReferrer(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "referrer", sinceDays);
+    async getCountByReferrer(siteId: string, interval: string) {
+        return this.getVisitorCountByColumn(siteId, "referrer", interval);
     }
-    async getCountByBrowser(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "browserName", sinceDays);
-    }
-
-    async getCountByDevice(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "deviceModel", sinceDays);
+    async getCountByBrowser(siteId: string, interval: string) {
+        return this.getVisitorCountByColumn(siteId, "browserName", interval);
     }
 
-    async getSitesOrderedByHits(sinceDays: number, limit?: number) {
+    async getCountByDevice(siteId: string, interval: string) {
+        return this.getVisitorCountByColumn(siteId, "deviceModel", interval);
+    }
+
+    async getSitesOrderedByHits(interval: string, limit?: number) {
         // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
+
         limit = limit || 10;
+
+        let intervalSql = intervalToSql(interval);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.siteId} as siteId
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
             GROUP BY siteId
             ORDER BY count DESC
             LIMIT ${limit}

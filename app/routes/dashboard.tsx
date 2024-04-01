@@ -47,10 +47,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     let interval;
     try {
-        interval = url.searchParams.get("interval") || "7";
-        interval = Number(interval);
+        interval = url.searchParams.get("interval") || "7d";
     } catch (err) {
-        interval = 7;
+        interval = "7d";
     }
 
     // if no siteId is set, redirect to the site with the most hits
@@ -91,16 +90,13 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     let intervalType = "DAY";
     switch (interval) {
-        case 1:
+        case "today":
+        case "1d":
             intervalType = "HOUR";
             break;
-        case 7:
-            intervalType = "DAY";
-            break;
-        case 30:
-            intervalType = "DAY";
-            break;
-        case 90:
+        case "7d":
+        case "30d":
+        case "90d":
             intervalType = "DAY";
             break;
     }
@@ -110,12 +106,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
         intervalType,
-        interval,
+        30,
         tz,
     );
 
     // await all requests to AE then return the results
-    return json({
+    const out = {
         siteId: siteId,
         sites: (await sitesByHits).map(([site, _]: [string, number]) => site),
         views: (await counts).views,
@@ -128,7 +124,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         countByDevice: await countByDevice,
         viewsGroupedByInterval: await viewsGroupedByInterval,
         intervalType,
-    });
+    };
+    return json(out);
 };
 
 function convertCountryCodesToNames(
@@ -215,10 +212,11 @@ export default function Dashboard() {
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="1">1 day</SelectItem>
-                            <SelectItem value="7">7 days</SelectItem>
-                            <SelectItem value="30">30 days</SelectItem>
-                            <SelectItem value="90">90 days</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="1d">24 hours</SelectItem>
+                            <SelectItem value="7d">7 days</SelectItem>
+                            <SelectItem value="30d">30 days</SelectItem>
+                            <SelectItem value="90d">90 days</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
