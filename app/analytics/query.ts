@@ -69,14 +69,16 @@ function formatDateString(d: Date) {
 function intervalToSql(interval: string) {
     let intervalSql = "";
     switch (interval) {
+        case "today":
+            intervalSql = dayjs().startOf("day").format();
         case "1d":
         case "7d":
         case "30d":
         case "90d":
-            intervalSql = `'${interval.split("d")[0]}' DAY`;
+            intervalSql = `NOW() - INTERVAL '${interval.split("d")[0]}' DAY`;
             break;
         default:
-            intervalSql = `'1' DAY`;
+            intervalSql = `NOW() - INTERVAL '1' DAY`;
     }
     return intervalSql;
 }
@@ -269,7 +271,7 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCounts(siteId: string, interval: string) {
+    async getCounts(siteId: string, interval: string, tz?: string) {
         // defaults to 1 day if not specified
         const siteIdColumn = ColumnMappings["siteId"];
 
@@ -280,7 +282,7 @@ export class AnalyticsEngineAPI {
                 ${ColumnMappings.newVisitor} as isVisitor,
                 ${ColumnMappings.newSession} as isVisit
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
+            WHERE timestamp > ${intervalSql}
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
@@ -337,7 +339,7 @@ export class AnalyticsEngineAPI {
         const query = `
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
+            WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.newVisitor} = 1
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}
@@ -394,7 +396,7 @@ export class AnalyticsEngineAPI {
                 ${ColumnMappings.newSession} as isVisit,
                 SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
+            WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
             ORDER BY count DESC
@@ -495,7 +497,7 @@ export class AnalyticsEngineAPI {
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.siteId} as siteId
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL ${intervalSql}
+            WHERE timestamp > ${intervalSql}
             GROUP BY siteId
             ORDER BY count DESC
             LIMIT ${limit}
