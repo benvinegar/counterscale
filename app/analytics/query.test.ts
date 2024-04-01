@@ -84,7 +84,7 @@ describe("AnalyticsEngineAPI", () => {
             const result1 = await api.getViewsGroupedByInterval(
                 "example.com",
                 "DAY",
-                7,
+                new Date("2024-01-11 00:00:00"), // local time (because tz also passed)
                 "America/New_York",
             );
 
@@ -104,7 +104,7 @@ describe("AnalyticsEngineAPI", () => {
             const result2 = await api.getViewsGroupedByInterval(
                 "example.com",
                 "DAY",
-                5,
+                new Date("2024-01-13 00:00:00"), // local time (because tz also passed)
                 "America/New_York",
             );
             expect(result2).toEqual([
@@ -146,7 +146,7 @@ describe("AnalyticsEngineAPI", () => {
         const result1 = await api.getViewsGroupedByInterval(
             "example.com",
             "HOUR",
-            1,
+            new Date("2024-01-17 05:00:00"), // local time (because tz also passed)
             "America/New_York",
         );
 
@@ -206,7 +206,7 @@ describe("AnalyticsEngineAPI", () => {
                 }),
             );
 
-            const result = api.getCounts("example.com", 7);
+            const result = api.getCounts("example.com", "7d");
 
             // verify fetch was invoked before awaiting result
             expect(fetch).toHaveBeenCalled();
@@ -242,7 +242,7 @@ describe("AnalyticsEngineAPI", () => {
             const result = api.getVisitorCountByColumn(
                 "example.com",
                 "country",
-                7,
+                "7d",
             );
 
             // verify fetch was invoked before awaiting result
@@ -278,7 +278,7 @@ describe("AnalyticsEngineAPI", () => {
                 }),
             );
 
-            const result = api.getSitesOrderedByHits(7);
+            const result = api.getSitesOrderedByHits("7d");
             // verify fetch was invoked before awaiting result
             expect(fetch).toHaveBeenCalled();
             expect(await result).toEqual([
