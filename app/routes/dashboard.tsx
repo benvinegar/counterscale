@@ -15,6 +15,7 @@ import { AnalyticsEngineAPI } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
 import TimeSeriesChart from "~/components/TimeSeriesChart";
+import dayjs from "dayjs";
 
 export const meta: MetaFunction = () => {
     return [
@@ -47,10 +48,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     let interval;
     try {
-        interval = url.searchParams.get("interval") || "7";
-        interval = Number(interval);
+        interval = url.searchParams.get("interval") || "7d";
     } catch (err) {
-        interval = 7;
+        interval = "7d";
     }
 
     // if no siteId is set, redirect to the site with the most hits
@@ -68,67 +68,101 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
+    const tz = context.requestTimezone as string;
+
     // initiate requests to AE in parallel
-    const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval);
-    const counts = analyticsEngine.getCounts(actualSiteId, interval);
-    const countByPath = analyticsEngine.getCountByPath(actualSiteId, interval);
+    const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval, tz);
+    const counts = analyticsEngine.getCounts(actualSiteId, interval, tz);
+    const countByPath = analyticsEngine.getCountByPath(
+        actualSiteId,
+        interval,
+        tz,
+    );
     const countByCountry = analyticsEngine.getCountByCountry(
         actualSiteId,
         interval,
+        tz,
     );
     const countByReferrer = analyticsEngine.getCountByReferrer(
         actualSiteId,
         interval,
+        tz,
     );
     const countByBrowser = analyticsEngine.getCountByBrowser(
         actualSiteId,
         interval,
+        tz,
     );
     const countByDevice = analyticsEngine.getCountByDevice(
         actualSiteId,
         interval,
+        tz,
     );
 
     let intervalType = "DAY";
     switch (interval) {
-        case 1:
+        case "today":
+        case "1d":
             intervalType = "HOUR";
             break;
-        case 7:
-            intervalType = "DAY";
-            break;
-        case 30:
-            intervalType = "DAY";
-            break;
-        case 90:
+        case "7d":
+        case "30d":
+        case "90d":
             intervalType = "DAY";
             break;
     }
+    // get start date in the past by subtracting interval * type
 
-    const tz = context.requestTimezone as string;
+    let localDateTime = dayjs().utc();
+    if (interval === "today") {
+        localDateTime = localDateTime.tz(tz).startOf("day");
+    } else {
+        const daysAgo = Number(interval.split("d")[0]);
+        if (intervalType === "DAY") {
+            localDateTime = localDateTime
+                .subtract(daysAgo, "day")
+                .tz(tz)
+                .startOf("day");
+        } else if (intervalType === "HOUR") {
+            localDateTime = localDateTime
+                .subtract(daysAgo, "day")
+                .startOf("hour");
+        }
+    }
 
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
         intervalType,
-        interval,
+        localDateTime.toDate(),
         tz,
     );
 
     // await all requests to AE then return the results
-    return json({
-        siteId: siteId,
-        sites: (await sitesByHits).map(([site, _]: [string, number]) => site),
-        views: (await counts).views,
-        visits: (await counts).visits,
-        visitors: (await counts).visitors,
-        countByPath: await countByPath,
-        countByBrowser: await countByBrowser,
-        countByCountry: await countByCountry,
-        countByReferrer: await countByReferrer,
-        countByDevice: await countByDevice,
-        viewsGroupedByInterval: await viewsGroupedByInterval,
-        intervalType,
-    });
+
+    let out;
+
+    try {
+        out = {
+            siteId: siteId,
+            sites: (await sitesByHits).map(
+                ([site, _]: [string, number]) => site,
+            ),
+            views: (await counts).views,
+            visits: (await counts).visits,
+            visitors: (await counts).visitors,
+            countByPath: await countByPath,
+            countByBrowser: await countByBrowser,
+            countByCountry: await countByCountry,
+            countByReferrer: await countByReferrer,
+            countByDevice: await countByDevice,
+            viewsGroupedByInterval: await viewsGroupedByInterval,
+            intervalType,
+            interval,
+        };
+    } catch (err) {
+        throw new Error("Failed to fetch data from Analytics Engine");
+    }
+    return json(out);
 };
 
 function convertCountryCodesToNames(
@@ -208,17 +242,18 @@ export default function Dashboard() {
 
                 <div className="w-1/2 sm:w-1/3 md:w-1/5">
                     <Select
-                        defaultValue="7"
+                        defaultValue={data.interval}
                         onValueChange={(interval) => changeInterval(interval)}
                     >
                         <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="1">1 day</SelectItem>
-                            <SelectItem value="7">7 days</SelectItem>
-                            <SelectItem value="30">30 days</SelectItem>
-                            <SelectItem value="90">90 days</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="1d">24 hours</SelectItem>
+                            <SelectItem value="7d">7 days</SelectItem>
+                            <SelectItem value="30d">30 days</SelectItem>
+                            <SelectItem value="90d">90 days</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

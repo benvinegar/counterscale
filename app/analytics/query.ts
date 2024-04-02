@@ -66,6 +66,25 @@ function formatDateString(d: Date) {
     );
 }
 
+function intervalToSql(interval: string, tz?: string) {
+    let intervalSql = "";
+    switch (interval) {
+        case "today":
+            // example: toDateTime('2024-01-07 00:00:00', 'America/New_York')
+            intervalSql = `toDateTime('${dayjs().startOf("day").format("YYYY-MM-DD HH:mm:ss")}', '${tz}')`;
+            break;
+        case "1d":
+        case "7d":
+        case "30d":
+        case "90d":
+            intervalSql = `NOW() - INTERVAL '${interval.split("d")[0]}' DAY`;
+            break;
+        default:
+            intervalSql = `NOW() - INTERVAL '1' DAY`;
+    }
+    return intervalSql;
+}
+
 /**
  * returns an object with keys of the form "YYYY-MM-DD HH:00:00" and values of 0
  * example:
@@ -79,34 +98,21 @@ function formatDateString(d: Date) {
  * */
 function generateEmptyRowsOverInterval(
     intervalType: string,
-    daysAgo: number,
+    startDateTime: Date,
     tz?: string,
-): [Date, { [key: string]: number }] {
+): { [key: string]: number } {
     if (!tz) {
         tz = "Etc/UTC";
     }
 
-    let localDateTime = dayjs();
     let intervalMs = 0;
-
-    // get start date in the past by subtracting interval * type
     if (intervalType === "DAY") {
-        localDateTime = dayjs()
-            .utc()
-            .subtract(daysAgo, "day")
-            .tz(tz)
-            .startOf("day");
-
-        // assumes interval is 24 hours
         intervalMs = 24 * 60 * 60 * 1000;
     } else if (intervalType === "HOUR") {
-        localDateTime = dayjs().utc().subtract(daysAgo, "day").startOf("hour");
-
-        // assumes interval is hourly
         intervalMs = 60 * 60 * 1000;
+    } else {
+        throw new Error("Invalid interval type");
     }
-
-    const startDateTime = localDateTime.toDate();
 
     const initialRows: { [key: string]: number } = {};
 
@@ -122,7 +128,7 @@ function generateEmptyRowsOverInterval(
         initialRows[key] = 0;
     }
 
-    return [startDateTime, initialRows];
+    return initialRows;
 }
 
 /**
@@ -169,7 +175,7 @@ export class AnalyticsEngineAPI {
     async getViewsGroupedByInterval(
         siteId: string,
         intervalType: string,
-        sinceDays: number,
+        startDateTime: Date,
         tz?: string,
     ) {
         let intervalCount = 1;
@@ -183,9 +189,9 @@ export class AnalyticsEngineAPI {
         }
 
         // note interval count hard-coded to hours at the moment
-        const [startDateTime, initialRows] = generateEmptyRowsOverInterval(
+        const initialRows = generateEmptyRowsOverInterval(
             intervalType,
-            sinceDays,
+            startDateTime,
             tz,
         );
 
@@ -193,6 +199,7 @@ export class AnalyticsEngineAPI {
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
         //       is just a limitation of Cloudflare Analytics Engine.
         //       -- but you can filter on them (using WHERE)
+
         const query = `
             SELECT SUM(_sample_interval) as count,
 
@@ -203,7 +210,7 @@ export class AnalyticsEngineAPI {
             toDateTime(_bucket, 'Etc/UTC') as bucket
 
             FROM metricsDataset
-            WHERE timestamp > toDateTime('${formatDateString(startDateTime)}')
+            WHERE timestamp > toDateTime('${formatDateString(startDateTime)}', '${tz}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
@@ -254,17 +261,18 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCounts(siteId: string, sinceDays: number) {
+    async getCounts(siteId: string, interval: string, tz?: string) {
         // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
         const siteIdColumn = ColumnMappings["siteId"];
+
+        const intervalSql = intervalToSql(interval, tz);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.newVisitor} as isVisitor,
                 ${ColumnMappings.newSession} as isVisit
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > ${intervalSql}
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
@@ -276,6 +284,7 @@ export class AnalyticsEngineAPI {
         };
 
         const queryResult = this.query(query);
+
         const returnPromise = new Promise<AnalyticsCountResult>(
             (resolve, reject) =>
                 (async () => {
@@ -309,18 +318,19 @@ export class AnalyticsEngineAPI {
     async getVisitorCountByColumn<T extends keyof typeof ColumnMappings>(
         siteId: string,
         column: T,
-        sinceDays: number,
+        interval: string,
+        tz?: string,
         limit?: number,
     ) {
-        // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
         limit = limit || 10;
+
+        const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];
         const query = `
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.newVisitor} = 1
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}
@@ -362,12 +372,14 @@ export class AnalyticsEngineAPI {
     async getAllCountsByColumn<T extends keyof typeof ColumnMappings>(
         siteId: string,
         column: T,
-        sinceDays: number,
+        interval: string,
+        tz?: string,
         limit?: number,
     ) {
         // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
         limit = limit || 10;
+
+        const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -376,7 +388,7 @@ export class AnalyticsEngineAPI {
                 ${ColumnMappings.newSession} as isVisit,
                 SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
             ORDER BY count DESC
@@ -429,11 +441,12 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByPath(siteId: string, sinceDays: number) {
+    async getCountByPath(siteId: string, interval: string, tz?: string) {
         const allCountsResultPromise = this.getAllCountsByColumn(
             siteId,
             "path",
-            sinceDays,
+            interval,
+            tz,
         );
 
         return allCountsResultPromise.then((allCountsResult) => {
@@ -447,35 +460,47 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getCountByUserAgent(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "userAgent", sinceDays);
+    async getCountByUserAgent(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(siteId, "userAgent", interval, tz);
     }
 
-    async getCountByCountry(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "country", sinceDays);
+    async getCountByCountry(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(siteId, "country", interval, tz);
     }
 
-    async getCountByReferrer(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "referrer", sinceDays);
+    async getCountByReferrer(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(siteId, "referrer", interval, tz);
     }
-    async getCountByBrowser(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "browserName", sinceDays);
+    async getCountByBrowser(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "browserName",
+            interval,
+            tz,
+        );
     }
 
-    async getCountByDevice(siteId: string, sinceDays: number) {
-        return this.getVisitorCountByColumn(siteId, "deviceModel", sinceDays);
+    async getCountByDevice(siteId: string, interval: string, tz?: string) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "deviceModel",
+            interval,
+            tz,
+        );
     }
 
-    async getSitesOrderedByHits(sinceDays: number, limit?: number) {
+    async getSitesOrderedByHits(interval: string, tz?: string, limit?: number) {
         // defaults to 1 day if not specified
-        const interval = sinceDays || 1;
+
         limit = limit || 10;
+
+        const intervalSql = intervalToSql(interval, tz);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.siteId} as siteId
             FROM metricsDataset
-            WHERE timestamp > NOW() - INTERVAL '${interval}' DAY
+            WHERE timestamp > ${intervalSql}
             GROUP BY siteId
             ORDER BY count DESC
             LIMIT ${limit}

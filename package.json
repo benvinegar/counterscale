@@ -8,7 +8,7 @@
         "deploy": "wrangler deploy --var VERSION:$(git rev-parse HEAD)",
         "dev": "remix dev --manual -c \"npm start\"",
         "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-        "start": "wrangler dev ./build/index.js --var VERSION:$(git rev-parse HEAD)",
+        "start": "wrangler dev --var VERSION:$(git rev-parse HEAD)",
         "test": "TZ=EST vitest run",
         "test-ci": "TZ=EST vitest run --coverage",
         "typecheck": "tsc",
