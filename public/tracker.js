@@ -34,6 +34,13 @@ SOFTWARE.
 (function () {
     "use strict";
 
+    if (window.location.hostname === "localhost") {
+        console.warn(
+            "[counterscale] localhost detected, datapoints will not be collected",
+        );
+        return;
+    }
+
     let queue = (window.counterscale && window.counterscale.q) || [];
     let config = {
         siteId: "",
