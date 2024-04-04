@@ -15,8 +15,7 @@ It's designed to be easy to deploy and maintain, and should cost you near-zero t
 If you don't have one already, [create a Cloudflare account here](https://dash.cloudflare.com/sign-up).
 
 1. Go to your Cloudflare dashboard and set up a Cloudflare Workers subdomain
-1. Enable [Cloudflare Analytics Engine beta](https://developers.cloudflare.com/analytics/analytics-engine/get-started/) for your account
-![cloudflare-dashabord](https://github.com/benvinegar/counterscale/assets/4562878/ad1b5712-2344-4489-a684-685b876635d1)
+1. Enable [Cloudflare Analytics Engine beta](https://developers.cloudflare.com/analytics/analytics-engine/get-started/) for your account ([screenshot](https://github.com/benvinegar/counterscale/assets/4562878/ad1b5712-2344-4489-a684-685b876635d1))
 1. Create a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions at a minimum.
 1. Run `npm install`
 1. Run `npx wrangler secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
