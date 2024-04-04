@@ -9,7 +9,11 @@ import {
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
-import { useLoaderData, useSearchParams } from "@remix-run/react";
+import {
+    useLoaderData,
+    useNavigation,
+    useSearchParams,
+} from "@remix-run/react";
 
 import { AnalyticsEngineAPI } from "../analytics/query";
 
@@ -160,6 +164,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             interval,
         };
     } catch (err) {
+        console.error(err);
         throw new Error("Failed to fetch data from Analytics Engine");
     }
     return json(out);
@@ -188,6 +193,8 @@ export default function Dashboard() {
     const [, setSearchParams] = useSearchParams();
 
     const data = useLoaderData<typeof loader>();
+    const navigation = useNavigation();
+    const loading = navigation.state === "loading";
 
     function changeSite(site: string) {
         setSearchParams((prev) => {
@@ -259,75 +266,75 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div className="w-full mb-4">
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="grid grid-cols-3 gap-10 items-end">
-                            <div>
-                                <div className="text-sm sm:text-lg">Views</div>
-                                <div className="text-4xl">
-                                    {countFormatter.format(data.views)}
+            <div className="transition" style={{ opacity: loading ? 0.6 : 1 }}>
+                <div className="w-full mb-4">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="grid grid-cols-3 gap-10 items-end">
+                                <div>
+                                    <div className="text-sm sm:text-lg">
+                                        Views
+                                    </div>
+                                    <div className="text-4xl">
+                                        {countFormatter.format(data.views)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-sm sm:text-lg">
+                                        Visits
+                                    </div>
+                                    <div className="text-4xl">
+                                        {countFormatter.format(data.visits)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-sm sm:text-lg">
+                                        Visitors
+                                    </div>
+                                    <div className="text-4xl">
+                                        {countFormatter.format(data.visitors)}
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <div className="text-sm sm:text-lg">Visits</div>
-                                <div className="text-4xl">
-                                    {countFormatter.format(data.visits)}
-                                </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="w-full mb-4">
+                    <Card>
+                        <CardContent>
+                            <div className="h-80 pt-6 -m-4 -ml-8 sm:m-0">
+                                <TimeSeriesChart
+                                    data={chartData}
+                                    intervalType={data.intervalType}
+                                ></TimeSeriesChart>
                             </div>
-                            <div>
-                                <div className="text-sm sm:text-lg">
-                                    Visitors
-                                </div>
-                                <div className="text-4xl">
-                                    {countFormatter.format(data.visitors)}
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="w-full mb-4">
-                <Card>
-                    <CardContent>
-                        <div className="h-80 pt-6 -m-4 -ml-8 sm:m-0">
-                            <TimeSeriesChart
-                                data={chartData}
-                                intervalType={data.intervalType}
-                            ></TimeSeriesChart>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-                <TableCard
-                    countByProperty={data.countByPath}
-                    columnHeaders={["Page", "Visitors", "Views"]}
-                />
-
-                <TableCard
-                    countByProperty={data.countByReferrer}
-                    columnHeaders={["Referrer", "Visitors"]}
-                />
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-4 mb-4">
-                <TableCard
-                    countByProperty={data.countByBrowser}
-                    columnHeaders={["Browser", "Visitors"]}
-                />
-
-                <TableCard
-                    countByProperty={countByCountryName}
-                    columnHeaders={["Country", "Visitors"]}
-                />
-
-                <TableCard
-                    countByProperty={data.countByDevice}
-                    columnHeaders={["Device", "Visitors"]}
-                ></TableCard>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <TableCard
+                        countByProperty={data.countByPath}
+                        columnHeaders={["Page", "Visitors", "Views"]}
+                    />
+                    <TableCard
+                        countByProperty={data.countByReferrer}
+                        columnHeaders={["Referrer", "Visitors"]}
+                    />
+                </div>
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <TableCard
+                        countByProperty={data.countByBrowser}
+                        columnHeaders={["Browser", "Visitors"]}
+                    />
+                    <TableCard
+                        countByProperty={countByCountryName}
+                        columnHeaders={["Country", "Visitors"]}
+                    />
+                    <TableCard
+                        countByProperty={data.countByDevice}
+                        columnHeaders={["Device", "Visitors"]}
+                    ></TableCard>
+                </div>
             </div>
         </div>
     );
