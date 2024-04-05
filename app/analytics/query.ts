@@ -105,13 +105,6 @@ function generateEmptyRowsOverInterval(
         tz = "Etc/UTC";
     }
 
-    let intervalMs = 0;
-    if (intervalType === "DAY") {
-        intervalMs = 24 * 60 * 60 * 1000;
-    } else if (intervalType === "HOUR") {
-        intervalMs = 60 * 60 * 1000;
-    }
-
     const initialRows: { [key: string]: number } = {};
 
     while (startDateTime.getTime() < Date.now()) {
@@ -119,6 +112,7 @@ function generateEmptyRowsOverInterval(
         initialRows[key] = 0;
 
         startDateTime = dayjs(startDateTime)
+            // increment by either DAY or HOUR
             .add(1, intervalType.toLowerCase() as ManipulateType)
             .toDate();
     }
