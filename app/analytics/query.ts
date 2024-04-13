@@ -107,6 +107,18 @@ function generateEmptyRowsOverInterval(
 
     const initialRows: { [key: string]: number } = {};
 
+    // NOTE: Need to explicitly use dayjs to increment by 1 day/1 hour/etc, because
+    //       dayjs will respect and adjust for daylight savings time boundaries.
+    //
+    //       For example, in 2024, Daylight Savings Time began on 3/10/24 at 2:00 AM.
+    //       In UTC, before the switch, America/New_York was 5 hours behind UTC (+5:00).
+    //       But after the switch, it becomes 4 hours behind UTC (+4:00). Dayjs
+    //       accounts for this difference.
+    //
+    //       There is no unit test affirming this behavior, because I could not figure
+    //       out how to get vitest/mock dates to recreate DST changes.
+    //       See: https://github.com/benvinegar/counterscale/pull/62
+
     while (startDateTime.getTime() < Date.now()) {
         const key = dayjs(startDateTime).utc().format("YYYY-MM-DD HH:mm:ss");
         initialRows[key] = 0;
