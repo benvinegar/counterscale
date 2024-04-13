@@ -1,6 +1,6 @@
 import { ColumnMappingToType, ColumnMappings } from "./schema";
 
-import dayjs from "dayjs";
+import dayjs, { ManipulateType } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 
@@ -97,7 +97,7 @@ function intervalToSql(interval: string, tz?: string) {
  *
  * */
 function generateEmptyRowsOverInterval(
-    intervalType: string,
+    intervalType: "DAY" | "HOUR",
     startDateTime: Date,
     tz?: string,
 ): { [key: string]: number } {
@@ -105,27 +105,28 @@ function generateEmptyRowsOverInterval(
         tz = "Etc/UTC";
     }
 
-    let intervalMs = 0;
-    if (intervalType === "DAY") {
-        intervalMs = 24 * 60 * 60 * 1000;
-    } else if (intervalType === "HOUR") {
-        intervalMs = 60 * 60 * 1000;
-    } else {
-        throw new Error("Invalid interval type");
-    }
-
     const initialRows: { [key: string]: number } = {};
 
-    for (let i = startDateTime.getTime(); i < Date.now(); i += intervalMs) {
-        // get date as utc
-        const rowDate = new Date(i);
-        // convert to UTC
-        const utcDateTime = new Date(
-            rowDate.getTime() + rowDate.getTimezoneOffset() * 60_000,
-        );
+    // NOTE: Need to explicitly use dayjs to increment by 1 day/1 hour/etc, because
+    //       dayjs will respect and adjust for daylight savings time boundaries.
+    //
+    //       For example, in 2024, Daylight Savings Time began on 3/10/24 at 2:00 AM.
+    //       In UTC, before the switch, America/New_York was 5 hours behind UTC (+5:00).
+    //       But after the switch, it becomes 4 hours behind UTC (+4:00). Dayjs
+    //       accounts for this difference.
+    //
+    //       There is no unit test affirming this behavior, because I could not figure
+    //       out how to get vitest/mock dates to recreate DST changes.
+    //       See: https://github.com/benvinegar/counterscale/pull/62
 
-        const key = formatDateString(utcDateTime);
+    while (startDateTime.getTime() < Date.now()) {
+        const key = dayjs(startDateTime).utc().format("YYYY-MM-DD HH:mm:ss");
         initialRows[key] = 0;
+
+        startDateTime = dayjs(startDateTime)
+            // increment by either DAY or HOUR
+            .add(1, intervalType.toLowerCase() as ManipulateType)
+            .toDate();
     }
 
     return initialRows;
@@ -174,7 +175,7 @@ export class AnalyticsEngineAPI {
 
     async getViewsGroupedByInterval(
         siteId: string,
-        intervalType: string,
+        intervalType: "DAY" | "HOUR",
         startDateTime: Date,
         tz?: string,
     ) {
@@ -199,6 +200,11 @@ export class AnalyticsEngineAPI {
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
         //       is just a limitation of Cloudflare Analytics Engine.
         //       -- but you can filter on them (using WHERE)
+
+        // NOTE 2: Since CF AE doesn't support COALESCE, this query will not return
+        //         rows (dates) where no hits were recorded -- which is why we need
+        //         to generate empty buckets in JS (generateEmptyRowsOverInterval)
+        //         and merge them with the results.
 
         const query = `
             SELECT SUM(_sample_interval) as count,
