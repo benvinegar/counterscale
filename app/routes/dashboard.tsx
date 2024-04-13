@@ -28,6 +28,8 @@ export const meta: MetaFunction = () => {
     ];
 };
 
+const MAX_RETENTION_DAYS = 90;
+
 declare module "@remix-run/server-runtime" {
     export interface AppLoadContext {
         env: {
@@ -58,6 +60,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     }
 
     // if no siteId is set, redirect to the site with the most hits
+    // during the default interval (e.g. 7d)
     if (url.searchParams.has("site") === false) {
         const sitesByHits =
             await analyticsEngine.getSitesOrderedByHits(interval);
@@ -75,7 +78,15 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const tz = context.requestTimezone as string;
 
     // initiate requests to AE in parallel
-    const sitesByHits = analyticsEngine.getSitesOrderedByHits(interval, tz);
+
+    // sites by hits: This is to populate the "sites" dropdown. We query the full retention
+    //                period (90 days) so that any site that has been active in the past 90 days
+    //                will show up in the dropdown.
+    const sitesByHits = analyticsEngine.getSitesOrderedByHits(
+        `${MAX_RETENTION_DAYS}d`,
+        tz,
+    );
+
     const counts = analyticsEngine.getCounts(actualSiteId, interval, tz);
     const countByPath = analyticsEngine.getCountByPath(
         actualSiteId,
