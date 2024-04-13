@@ -246,7 +246,7 @@ export class AnalyticsEngineAPI {
                         (accum, row) => {
                             const utcDateTime = new Date(row["bucket"]);
                             const key = formatDateString(utcDateTime);
-                            accum[key] = row["count"];
+                            accum[key] = Number(row["count"]);
                             return accum;
                         },
                         initialRows,
