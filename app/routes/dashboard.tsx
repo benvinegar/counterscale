@@ -103,7 +103,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         tz,
     );
 
-    let intervalType = "DAY";
+    let intervalType: "DAY" | "HOUR" = "DAY";
     switch (interval) {
         case "today":
         case "1d":
