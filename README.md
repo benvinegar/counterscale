@@ -102,3 +102,17 @@ Right now there is no local "test" database. This means in local development:
 
 -   Writes will no-op (no hits will be recorded)
 -   Reads will be read from the production Analaytics Engine dataset (local development shows production data)
+
+### Development Philosophy
+
+The primary goal of Counterscale is to be super easy to self-host and maintain. It should be "set up once and forget".
+
+To achieve that:
+
+* There should be no application state outside of CF Analytics Engine
+    * e.g. no additional relational database like MySQL, PostgreSQL, etc.
+    * That means no `users` table, no `sites` table, etc.
+    * This also means retention will be limited by what CF Analytics Engine provides. While it could be possible to stand up a "hit counter" for long-lived data (e.g. years), that would mean another database, which we will not pursue.
+* We prioritize backwards compatibility
+    * New `metricsDataset` columns can be added, but old columns cannot be removed or renamed (they can however, be "forgotten").
+    * That also means it's okay if a feature only works during a period where the data is active.
