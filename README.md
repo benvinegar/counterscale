@@ -103,6 +103,10 @@ Right now there is no local "test" database. This means in local development:
 -   Writes will no-op (no hits will be recorded)
 -   Reads will be read from the production Analaytics Engine dataset (local development shows production data)
 
+### Sampling
+
+Cloudflare Analytics Engine uses sampling to make high volume data ingestion/querying affordable at scale (this is similar to most other analytics tools, see [Google Analytics on Sampling](https://support.google.com/analytics/answer/2637192?hl=en#zippy=%2Cin-this-article)). You can find out more how [sampling works with CF AE here](https://developers.cloudflare.com/analytics/analytics-engine/sampling/).
+
 ### Development Philosophy
 
 The primary goal of Counterscale is to be super easy to self-host and maintain. It should be "set up once and forget".
