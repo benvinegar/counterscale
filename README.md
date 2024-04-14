@@ -2,7 +2,9 @@
 
 ![](/public/counterscale-logo-300x300.webp)
 
-![ci status](https://github.com/benvinegar/counterscale/actions/workflows/ci.yaml/badge.svg) [![codecov](https://codecov.io/gh/benvinegar/counterscale/graph/badge.svg?token=NUHURNB682)](https://codecov.io/gh/benvinegar/counterscale)
+![ci status](https://github.com/benvinegar/counterscale/actions/workflows/ci.yaml/badge.svg)
+[![License](https://img.shields.io/github/license/benvinegar/counterscale)](https://github.com/benvinegar/counterscale/blob/master/LICENSE)
+[![codecov](https://codecov.io/gh/benvinegar/counterscale/graph/badge.svg?token=NUHURNB682)](https://codecov.io/gh/benvinegar/counterscale)
 
 Counterscale is a simple web analytics tracker and dashboard that you self-host on Cloudflare.
 
