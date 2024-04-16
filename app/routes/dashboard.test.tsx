@@ -207,7 +207,7 @@ describe("Dashboard route", () => {
                 visits: 3,
                 visitors: 1,
                 countByPath: [["/", 1, 4]],
-                countByCountry: [["US", 1]],
+                countByCountry: [["United States", 1]],
                 countByReferrer: [["google.com", 1]],
                 countByBrowser: [["Chrome", 2]],
                 countByDevice: [["Desktop", 3]],
@@ -331,9 +331,9 @@ describe("Dashboard route", () => {
             ["Firefox", 60],
         ],
         countByCountry: [
-            ["US", 100],
-            ["CA", 80],
-            ["UK", 60],
+            ["United States", 100],
+            ["Canada", 80],
+            ["United Kingdom", 60],
         ],
         countByReferrer: [
             ["google.com", 100],
@@ -385,34 +385,5 @@ describe("Dashboard route", () => {
         expect(screen.getByText("google.com")).toBeInTheDocument();
         expect(screen.getByText("Canada")).toBeInTheDocument(); // assert converted CA -> Canada
         expect(screen.getByText("Mobile")).toBeInTheDocument();
-    });
-
-    test("renders with invalid country code", async () => {
-        function loader() {
-            return json({
-                ...defaultMockedLoaderJson,
-                countByCountry: [
-                    ["US", 100],
-                    ["CA", 80],
-                    ["not_a_valid_country_code", 60],
-                ],
-            });
-        }
-
-        const RemixStub = createRemixStub([
-            {
-                path: "/",
-                Component: Dashboard,
-                loader,
-            },
-        ]);
-
-        render(<RemixStub />);
-
-        // wait until the rows render in the document
-        await waitFor(() => screen.findByText("Chrome"));
-
-        // assert the invalid country code was converted to "(unknown)"
-        expect(screen.getByText("(unknown)")).toBeInTheDocument();
     });
 });

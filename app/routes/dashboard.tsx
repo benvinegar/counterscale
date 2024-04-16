@@ -178,6 +178,13 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         console.error(err);
         throw new Error("Failed to fetch data from Analytics Engine");
     }
+
+    // normalize country codes to country names
+    // NOTE: this must be done ONLY on server otherwise hydration mismatches
+    //       can occur because Intl.DisplayNames produces different results
+    //       in different browsers (see )
+    out.countByCountry = convertCountryCodesToNames(out.countByCountry);
+
     return json(out);
 };
 
@@ -228,8 +235,6 @@ export default function Dashboard() {
             views: row[1],
         });
     });
-
-    const countByCountryName = convertCountryCodesToNames(data.countByCountry);
 
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
@@ -338,7 +343,7 @@ export default function Dashboard() {
                         columnHeaders={["Browser", "Visitors"]}
                     />
                     <TableCard
-                        countByProperty={countByCountryName}
+                        countByProperty={data.countByCountry}
                         columnHeaders={["Country", "Visitors"]}
                     />
                     <TableCard
