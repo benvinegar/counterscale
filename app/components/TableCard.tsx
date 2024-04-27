@@ -58,18 +58,18 @@ export default function TableCard({
                             className="group [&_td]:last:rounded-b-md"
                         >
                             <TableCell
-                                className="font-medium w-4/5"
+                                className="font-medium w-full break-all"
                                 width={barChartPercentages[key]}
                             >
                                 {item[0]}
                             </TableCell>
 
-                            <TableCell className="text-right w-1/5">
+                            <TableCell className="text-right min-w-16">
                                 {countFormatter.format(item[1] as number)}
                             </TableCell>
 
                             {item.length > 2 && (
-                                <TableCell className="text-right w-1/5">
+                                <TableCell className="text-right min-w-16">
                                     {countFormatter.format(item[2] as number)}
                                 </TableCell>
                             )}
