@@ -21,7 +21,7 @@ export const links: LinksFunction = () => [
 ];
 
 export const loader = ({ context, request }: LoaderFunctionArgs) => {
-    var url = new URL(request.url);
+    const url = new URL(request.url);
     return json({
         version: context.env.VERSION,
         origin: url.origin,
