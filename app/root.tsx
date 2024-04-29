@@ -25,7 +25,7 @@ export const loader = ({ context, request }: LoaderFunctionArgs) => {
     return json({
         version: context.env.VERSION,
         origin: url.origin,
-        url: url.pathname, // omit query string
+        url: request.url,
     });
 };
 
