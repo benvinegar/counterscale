@@ -20,8 +20,13 @@ export const links: LinksFunction = () => [
     ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
 ];
 
-export const loader = ({ context }: LoaderFunctionArgs) => {
-    return json({ version: context.env.VERSION });
+export const loader = ({ context, request }: LoaderFunctionArgs) => {
+    const url = new URL(request.url);
+    return json({
+        version: context.env.VERSION,
+        origin: url.origin,
+        url: request.url,
+    });
 };
 
 export default function App() {
@@ -36,6 +41,31 @@ export default function App() {
                     content="width=device-width, initial-scale=1"
                 />
                 <link rel="icon" type="image/x-icon" href="/favicon.png" />
+
+                <meta property="og:url" content={data.url} />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="Counterscale" />
+                <meta
+                    property="og:description"
+                    content="Scalable web analytics you run yourself on Cloudflare"
+                />
+                <meta
+                    property="og:image"
+                    content={data.origin + "/counterscale-og-large.webp"}
+                />
+
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta property="twitter:domain" content="counterscale.dev" />
+                <meta property="twitter:url" content={data.url} />
+                <meta name="twitter:title" content="Counterscale" />
+                <meta
+                    name="twitter:description"
+                    content="Scalable web analytics you run yourself on Cloudflare"
+                />
+                <meta
+                    name="twitter:image"
+                    content={data.origin + "/counterscale-og-large.webp"}
+                />
                 <Meta />
                 <Links />
             </head>
