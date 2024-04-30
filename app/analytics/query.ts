@@ -42,12 +42,12 @@ function accumulateCountsFromRowResult(
     counts.views += Number(row.count);
 }
 
-function intervalToSql(interval: string, tz?: string) {
+export function intervalToSql(interval: string, tz?: string) {
     let intervalSql = "";
     switch (interval) {
         case "today":
             // example: toDateTime('2024-01-07 00:00:00', 'America/New_York')
-            intervalSql = `toDateTime('${dayjs().startOf("day").format("YYYY-MM-DD HH:mm:ss")}', '${tz}')`;
+            intervalSql = `toDateTime('${dayjs().tz(tz).startOf("day").utc().format("YYYY-MM-DD HH:mm:ss")}')`;
             break;
         case "1d":
         case "7d":

@@ -8,7 +8,7 @@ import {
     Mock,
 } from "vitest";
 
-import { AnalyticsEngineAPI } from "./query";
+import { AnalyticsEngineAPI, intervalToSql } from "./query";
 
 function createFetchResponse<T>(data: T) {
     return {
@@ -287,5 +287,23 @@ describe("AnalyticsEngineAPI", () => {
                 ["test.dev", 90],
             ]);
         });
+    });
+});
+
+describe("intervalToSql", () => {
+    // test intervalToSql
+    test("should return the proper sql interval for 1d, 30d, 90d, etc (days)", () => {
+        expect(intervalToSql("1d")).toBe("NOW() - INTERVAL '1' DAY");
+        expect(intervalToSql("30d")).toBe("NOW() - INTERVAL '30' DAY");
+        expect(intervalToSql("90d")).toBe("NOW() - INTERVAL '90' DAY");
+    });
+
+    test("should return the proper tz-adjusted sql interval for 'today'", () => {
+        expect(intervalToSql("today", "America/New_York")).toBe(
+            "toDateTime('2024-04-29 04:00:00')",
+        );
+        expect(intervalToSql("today", "America/Los_Angeles")).toBe(
+            "toDateTime('2024-04-29 07:00:00')",
+        );
     });
 });
