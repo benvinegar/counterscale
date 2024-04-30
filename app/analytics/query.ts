@@ -42,30 +42,6 @@ function accumulateCountsFromRowResult(
     counts.views += Number(row.count);
 }
 
-/**
- * Convert a Date object to YY-MM-DD HH:MM:SS
- */
-function formatDateString(d: Date) {
-    function pad(n: number) {
-        return n < 10 ? "0" + n : n;
-    }
-    const dash = "-";
-    const colon = ":";
-    return (
-        d.getFullYear() +
-        dash +
-        pad(d.getMonth() + 1) +
-        dash +
-        pad(d.getDate()) +
-        " " +
-        pad(d.getHours()) +
-        colon +
-        pad(d.getMinutes()) +
-        colon +
-        pad(d.getSeconds())
-    );
-}
-
 function intervalToSql(interval: string, tz?: string) {
     let intervalSql = "";
     switch (interval) {
@@ -176,8 +152,8 @@ export class AnalyticsEngineAPI {
     async getViewsGroupedByInterval(
         siteId: string,
         intervalType: "DAY" | "HOUR",
-        startDateTime: Date,
-        tz?: string,
+        startDateTime: Date, // start date/time in local timezone
+        tz?: string, // local timezone
     ) {
         let intervalCount = 1;
 
@@ -206,24 +182,22 @@ export class AnalyticsEngineAPI {
         //         to generate empty buckets in JS (generateEmptyRowsOverInterval)
         //         and merge them with the results.
 
+        const utcStartDateTime = dayjs(startDateTime).tz(tz).utc();
+
         const query = `
             SELECT SUM(_sample_interval) as count,
 
             /* interval start needs local timezone, e.g. 00:00 in America/New York means start of day in NYC */
-            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}, '${tz}') as _bucket,
-
-            /* format output date as UTC (otherwise will be users local TZ) */
-            toDateTime(_bucket, 'Etc/UTC') as bucket
+            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}) as bucket
 
             FROM metricsDataset
-            WHERE timestamp > toDateTime('${formatDateString(startDateTime)}', '${tz}')
+            WHERE timestamp > toDateTime('${utcStartDateTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
-            GROUP BY _bucket
-            ORDER BY _bucket ASC`;
+            GROUP BY bucket
+            ORDER BY bucket ASC`;
 
         type SelectionSet = {
             count: number;
-            _bucket: string;
             bucket: string;
         };
 
@@ -245,7 +219,9 @@ export class AnalyticsEngineAPI {
                     const rowsByDateTime = responseData.data.reduce(
                         (accum, row) => {
                             const utcDateTime = new Date(row["bucket"]);
-                            const key = formatDateString(utcDateTime);
+                            const key = dayjs(utcDateTime).format(
+                                "YYYY-MM-DD HH:mm:ss",
+                            );
                             accum[key] = Number(row["count"]);
                             return accum;
                         },
