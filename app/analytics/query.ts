@@ -182,19 +182,22 @@ export class AnalyticsEngineAPI {
         //         to generate empty buckets in JS (generateEmptyRowsOverInterval)
         //         and merge them with the results.
 
-        const utcStartDateTime = dayjs(startDateTime).tz(tz).utc();
+        const localStartTime = dayjs(startDateTime).tz(tz).utc();
 
         const query = `
             SELECT SUM(_sample_interval) as count,
 
             /* interval start needs local timezone, e.g. 00:00 in America/New York means start of day in NYC */
-            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}) as bucket
+            toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}, '${tz}') as _bucket,
+
+            /* output as UTC */
+            toDateTime(_bucket, 'Etc/UTC') as bucket
 
             FROM metricsDataset
-            WHERE timestamp > toDateTime('${utcStartDateTime.format("YYYY-MM-DD HH:mm:ss")}')
+            WHERE timestamp > toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
-            GROUP BY bucket
-            ORDER BY bucket ASC`;
+            GROUP BY _bucket
+            ORDER BY _bucket ASC`;
 
         type SelectionSet = {
             count: number;

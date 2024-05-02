@@ -6,6 +6,7 @@ import {
     beforeEach,
     afterEach,
     Mock,
+    beforeAll,
 } from "vitest";
 
 import { AnalyticsEngineAPI, intervalToSql } from "./query";
@@ -291,6 +292,10 @@ describe("AnalyticsEngineAPI", () => {
 });
 
 describe("intervalToSql", () => {
+    beforeAll(() => {
+        vi.setSystemTime(new Date("2024-04-29T09:33:02").getTime());
+    });
+
     // test intervalToSql
     test("should return the proper sql interval for 1d, 30d, 90d, etc (days)", () => {
         expect(intervalToSql("1d")).toBe("NOW() - INTERVAL '1' DAY");
