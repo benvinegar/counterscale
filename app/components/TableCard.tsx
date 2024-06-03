@@ -34,11 +34,16 @@ export default function TableCard({
     );
 
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
+
+    const gridCols =
+        (columnHeaders || []).length === 3
+            ? "grid-cols-[minmax(0,1fr),minmax(0,8ch),minmax(0,8ch)]"
+            : "grid-cols-[minmax(0,1fr),minmax(0,8ch)]";
     return (
         <Card>
             <Table>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className={`${gridCols}`}>
                         {(columnHeaders || []).map((header: string, index) => (
                             <TableHead
                                 key={header}
@@ -55,12 +60,10 @@ export default function TableCard({
                     {(countByProperty || []).map((item, key) => (
                         <TableRow
                             key={item[0]}
-                            className="group [&_td]:last:rounded-b-md"
+                            className={`group [&_td]:last:rounded-b-md ${gridCols}`}
+                            width={barChartPercentages[key]}
                         >
-                            <TableCell
-                                className="font-medium w-full break-all"
-                                width={barChartPercentages[key]}
-                            >
+                            <TableCell className="font-medium min-w-48 break-all">
                                 {item[0]}
                             </TableCell>
 
