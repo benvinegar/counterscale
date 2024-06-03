@@ -128,6 +128,9 @@ SOFTWARE.
 
         // only set referrer if not internal
         let referrer = vars.referrer || "";
+        // strip query string from referrer
+        referrer = referrer.split("?")[0];
+
         if (document.referrer.indexOf(hostname) < 0) {
             referrer = document.referrer;
         }
