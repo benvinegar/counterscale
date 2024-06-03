@@ -120,6 +120,8 @@ SOFTWARE.
         if (!path) {
             path = "/";
         }
+        // strip query string from path
+        path = path.split("?")[0];
 
         // determine hostname
         let hostname = vars.hostname || req.protocol + "//" + req.hostname;
