@@ -18,6 +18,8 @@ import {
 import { AnalyticsEngineAPI } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
+import ReferrerCard from "~/components/ReferrerCard";
+
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
 
@@ -173,6 +175,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
             interval,
+            pagination: {
+                referrer: 1,
+            },
         };
     } catch (err) {
         console.error(err);
@@ -184,6 +189,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     //       can occur because Intl.DisplayNames produces different results
     //       in different browsers (see )
     out.countByCountry = convertCountryCodesToNames(out.countByCountry);
+
+    out.pagination = {
+        referrer: Number(url.searchParams.get("referrer_page") || 1),
+    };
+
+    console.log(out);
 
     return json(out);
 };
@@ -328,28 +339,37 @@ export default function Dashboard() {
                     </Card>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <TableCard
-                        countByProperty={data.countByPath}
-                        columnHeaders={["Page", "Visitors", "Views"]}
-                    />
-                    <TableCard
-                        countByProperty={data.countByReferrer}
-                        columnHeaders={["Referrer", "Visitors"]}
+                    <Card>
+                        <TableCard
+                            countByProperty={data.countByPath}
+                            columnHeaders={["Page", "Visitors", "Views"]}
+                        />
+                    </Card>
+                    <ReferrerCard
+                        countByReferrer={data.countByReferrer}
+                        initialPage={data.pagination.referrer}
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <TableCard
-                        countByProperty={data.countByBrowser}
-                        columnHeaders={["Browser", "Visitors"]}
-                    />
-                    <TableCard
-                        countByProperty={data.countByCountry}
-                        columnHeaders={["Country", "Visitors"]}
-                    />
-                    <TableCard
-                        countByProperty={data.countByDevice}
-                        columnHeaders={["Device", "Visitors"]}
-                    ></TableCard>
+                    <Card>
+                        <TableCard
+                            countByProperty={data.countByBrowser}
+                            columnHeaders={["Browser", "Visitors"]}
+                        />
+                    </Card>
+                    <Card>
+                        <TableCard
+                            countByProperty={data.countByCountry}
+                            columnHeaders={["Country", "Visitors"]}
+                        />
+                    </Card>
+
+                    <Card>
+                        <TableCard
+                            countByProperty={data.countByDevice}
+                            columnHeaders={["Device", "Visitors"]}
+                        ></TableCard>
+                    </Card>
                 </div>
             </div>
         </div>
