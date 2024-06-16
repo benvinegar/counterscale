@@ -82,8 +82,12 @@ export const ReferrerCard = ({
                     <div className="p-2 pr-0 grid grid-cols-[auto,2rem,2rem] text-right">
                         <div></div>
                         <a
-                            onClick={() => handlePagination(page - 1)}
-                            className="text-primary"
+                            onClick={() => {
+                                if (page > 1) handlePagination(page - 1);
+                            }}
+                            className={
+                                page > 1 ? `text-primary` : `text-orange-300`
+                            }
                         >
                             <ArrowLeft />
                         </a>
