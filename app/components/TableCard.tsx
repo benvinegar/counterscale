@@ -48,7 +48,9 @@ export default function TableCard({
                             <TableHead
                                 key={header}
                                 className={
-                                    index === 0 ? "text-left" : "text-right"
+                                    index === 0
+                                        ? "text-left"
+                                        : "text-right pr-4 pl-0"
                                 }
                             >
                                 {header}
