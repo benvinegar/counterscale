@@ -305,9 +305,11 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
+        page?: number,
         limit?: number,
     ) {
         limit = limit || 10;
+        page = page || 1;
 
         const intervalSql = intervalToSql(interval, tz);
 
@@ -320,8 +322,9 @@ export class AnalyticsEngineAPI {
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}
             ORDER BY count DESC
-            LIMIT ${limit}`;
+            LIMIT ${limit * page}`;
 
+        console.log(query);
         type SelectionSet = {
             count: number;
         } & Record<
@@ -453,8 +456,19 @@ export class AnalyticsEngineAPI {
         return this.getVisitorCountByColumn(siteId, "country", interval, tz);
     }
 
-    async getCountByReferrer(siteId: string, interval: string, tz?: string) {
-        return this.getVisitorCountByColumn(siteId, "referrer", interval, tz);
+    async getCountByReferrer(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "referrer",
+            interval,
+            tz,
+            page,
+        );
     }
     async getCountByBrowser(siteId: string, interval: string, tz?: string) {
         return this.getVisitorCountByColumn(

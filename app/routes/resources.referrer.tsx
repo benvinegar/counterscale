@@ -15,24 +15,23 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 
     const tz = context.requestTimezone as string;
 
+    const page = Number(url.searchParams.get("referrer_page") || 1);
     const countByReferrer = await analyticsEngine.getCountByReferrer(
         siteId,
         interval,
         tz,
+        page,
     );
-    console.log(siteId, interval, tz);
-    console.log(countByReferrer);
+
     return json({
         countByReferrer: countByReferrer,
-        page: Number(url.searchParams.get("referrer_page") || 1),
+        page,
     });
 }
 
 import { useEffect } from "react";
 import TableCard from "~/components/TableCard";
 import { Card } from "~/components/ui/card";
-
-import { useSearchParams } from "@remix-run/react";
 
 export const ReferrerCard = ({
     siteId,
@@ -43,8 +42,6 @@ export const ReferrerCard = ({
     interval: string;
     error?: string | null;
 }) => {
-    const [_, setSearchParams] = useSearchParams();
-
     const dataFetcher = useFetcher<typeof loader>();
     const countByReferrer = dataFetcher.data?.countByReferrer || [];
     const page = dataFetcher.data?.page || 1;
@@ -68,10 +65,7 @@ export const ReferrerCard = ({
     }, [siteId, interval]);
 
     function handlePagination(page: number) {
-        useUpdateQueryStringValueWithoutNavigation(
-            "referrer_page",
-            page.toString(),
-        );
+        // TODO: is there a way of updating the query string with this state without triggering a navigation?
         dataFetcher.load(
             `/resources/referrer?site=${siteId}&interval=${interval}&referrer_page=${page}`,
         );
