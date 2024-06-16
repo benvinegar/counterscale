@@ -4,39 +4,23 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import { AnalyticsEngineAPI } from "../analytics/query";
+import { useUpdateQueryStringValueWithoutNavigation } from "~/lib/utils";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
-    if (!context.env.CF_BEARER_TOKEN || !context.env.CF_ACCOUNT_ID) {
-        throw new Error("Missing Cloudflare credentials");
-    }
-
-    const analyticsEngine = new AnalyticsEngineAPI(
-        context.env.CF_ACCOUNT_ID,
-        context.env.CF_BEARER_TOKEN,
-    );
+    const { analyticsEngine } = context;
 
     const url = new URL(request.url);
-
-    let interval;
-    try {
-        interval = url.searchParams.get("interval") || "7d";
-    } catch (err) {
-        interval = "7d";
-    }
-
+    const interval = url.searchParams.get("interval") || "";
     const siteId = url.searchParams.get("site") || "";
-    const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
     const tz = context.requestTimezone as string;
 
-    console.log(actualSiteId, interval, tz);
     const countByReferrer = await analyticsEngine.getCountByReferrer(
-        actualSiteId,
+        siteId,
         interval,
         tz,
     );
-    console.log(actualSiteId, interval, tz);
+    console.log(siteId, interval, tz);
     console.log(countByReferrer);
     return json({
         countByReferrer: countByReferrer,
@@ -44,7 +28,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     });
 }
 
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import TableCard from "~/components/TableCard";
 import { Card } from "~/components/ui/card";
 
@@ -84,13 +68,15 @@ export const ReferrerCard = ({
     }, [siteId, interval]);
 
     function handlePagination(page: number) {
-        setSearchParams(
-            { referrer_page: page.toString() },
-            {
-                preventScrollReset: true,
-            },
+        useUpdateQueryStringValueWithoutNavigation(
+            "referrer_page",
+            page.toString(),
+        );
+        dataFetcher.load(
+            `/resources/referrer?site=${siteId}&interval=${interval}&referrer_page=${page}`,
         );
     }
+
     return (
         <Card>
             {countByReferrer ? (

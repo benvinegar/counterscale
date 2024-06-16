@@ -34,6 +34,7 @@ const MAX_RETENTION_DAYS = 90;
 
 declare module "@remix-run/server-runtime" {
     export interface AppLoadContext {
+        analyticsEngine: AnalyticsEngineAPI;
         env: {
             VERSION: string;
             CF_BEARER_TOKEN: string;

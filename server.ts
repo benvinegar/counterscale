@@ -4,6 +4,7 @@ import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 import type { AppLoadContext } from "@remix-run/cloudflare";
 import { createRequestHandler, logDevReady } from "@remix-run/cloudflare";
 
+import { AnalyticsEngineAPI } from "./app/analytics/query";
 import { collectRequestHandler } from "./app/analytics/collect";
 
 import * as build from "@remix-run/dev/server-build";
@@ -52,8 +53,16 @@ export default {
             // No-op
         }
 
+        if (!env.CF_BEARER_TOKEN || !env.CF_ACCOUNT_ID) {
+            throw new Error("Missing Cloudflare credentials");
+        }
         try {
+            const analyticsEngine = new AnalyticsEngineAPI(
+                env.CF_ACCOUNT_ID,
+                env.CF_BEARER_TOKEN,
+            );
             const loadContext: AppLoadContext = {
+                analyticsEngine,
                 env,
                 requestTimezone: (request as RequestInit).cf
                     ?.timezone as string,
