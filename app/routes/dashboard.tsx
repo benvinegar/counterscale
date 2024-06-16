@@ -18,7 +18,7 @@ import {
 import { AnalyticsEngineAPI } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
-import ReferrerCard from "~/components/ReferrerCard";
+import { ReferrerCard } from "./resources.referrer";
 
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
@@ -73,8 +73,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         redirectUrl.searchParams.set("site", redirectSite);
         return redirect(redirectUrl.toString());
     }
-    const siteId = url.searchParams.get("site") || "";
 
+    const siteId = url.searchParams.get("site") || "";
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
     const tz = context.requestTimezone as string;
@@ -100,11 +100,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         interval,
         tz,
     );
-    const countByReferrer = analyticsEngine.getCountByReferrer(
-        actualSiteId,
-        interval,
-        tz,
-    );
+
     const countByBrowser = analyticsEngine.getCountByBrowser(
         actualSiteId,
         interval,
@@ -170,7 +166,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             countByPath: await countByPath,
             countByBrowser: await countByBrowser,
             countByCountry: await countByCountry,
-            countByReferrer: await countByReferrer,
+            // countByReferrer: await countByReferrer,
             countByDevice: await countByDevice,
             viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
@@ -178,6 +174,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             pagination: {
                 referrer: 1,
             },
+            tz,
         };
     } catch (err) {
         console.error(err);
@@ -193,8 +190,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     out.pagination = {
         referrer: Number(url.searchParams.get("referrer_page") || 1),
     };
-
-    console.log(out);
 
     return json(out);
 };
@@ -346,8 +341,8 @@ export default function Dashboard() {
                         />
                     </Card>
                     <ReferrerCard
-                        countByReferrer={data.countByReferrer}
-                        initialPage={data.pagination.referrer}
+                        siteId={data.siteId}
+                        interval={data.interval}
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
