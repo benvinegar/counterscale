@@ -1,5 +1,7 @@
 import { useFetcher } from "@remix-run/react";
 
+import { ArrowRight, ArrowLeft } from "lucide-react";
+
 // app/routes/resources/customers.tsx
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
@@ -77,19 +79,19 @@ export const ReferrerCard = ({
                         countByProperty={countByReferrer}
                         columnHeaders={["Referrer", "Visitors"]}
                     />
-                    <div className="text-right">
-                        <span>Page: {page}</span>
+                    <div className="p-2 pr-0 grid grid-cols-[auto,2rem,2rem] text-right">
+                        <div></div>
                         <a
                             onClick={() => handlePagination(page - 1)}
-                            className="text-blue-600"
+                            className="text-primary"
                         >
-                            ←
+                            <ArrowLeft />
                         </a>
                         <a
                             onClick={() => handlePagination(page + 1)}
-                            className="text-blue-600"
+                            className="text-primary"
                         >
-                            →
+                            <ArrowRight />
                         </a>
                     </div>
                 </div>
