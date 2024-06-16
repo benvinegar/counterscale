@@ -324,7 +324,6 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
-        console.log(query);
         type SelectionSet = {
             count: number;
         } & Record<
@@ -345,8 +344,16 @@ export class AnalyticsEngineAPI {
 
                 const responseData =
                     (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+                // since CF AE doesn't support OFFSET clauses, we select up to LIMIT and
+                // then slice that into the individual requested page
+                const pageData = responseData.data.slice(
+                    limit * (page - 1),
+                    limit * page,
+                );
+
                 resolve(
-                    responseData.data.map((row) => {
+                    pageData.map((row) => {
                         const key =
                             row[_column] === "" ? "(none)" : row[_column];
                         return [key, row["count"]] as const;

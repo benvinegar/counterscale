@@ -4,8 +4,6 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import { useUpdateQueryStringValueWithoutNavigation } from "~/lib/utils";
-
 export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
 
