@@ -56,7 +56,7 @@ export const ReferrerCard = ({
     }, []);
 
     useEffect(() => {
-        // Your code here
+        // NOTE: intentionally resets page to default when interval or site changes
         if (dataFetcher.state === "idle") {
             dataFetcher.load(
                 `/resources/referrer?site=${siteId}&interval=${interval}`,
@@ -71,6 +71,7 @@ export const ReferrerCard = ({
         );
     }
 
+    const hasMore = countByReferrer.length === 10;
     return (
         <Card>
             {countByReferrer ? (
@@ -92,8 +93,12 @@ export const ReferrerCard = ({
                             <ArrowLeft />
                         </a>
                         <a
-                            onClick={() => handlePagination(page + 1)}
-                            className="text-primary"
+                            onClick={() => {
+                                if (hasMore) handlePagination(page + 1);
+                            }}
+                            className={
+                                hasMore ? `text-primary` : `text-orange-300`
+                            }
                         >
                             <ArrowRight />
                         </a>
