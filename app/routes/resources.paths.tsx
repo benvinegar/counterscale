@@ -70,7 +70,7 @@ export const PathsCard = ({
 
     const hasMore = countByPath.length === 10;
     return (
-        <Card>
+        <Card className={dataFetcher.state === "loading" ? "opacity-60" : ""}>
             {countByPath ? (
                 <div className="grid grid-rows-[auto,40px] h-full">
                     <TableCard
