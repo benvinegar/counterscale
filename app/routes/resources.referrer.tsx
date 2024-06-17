@@ -1,9 +1,13 @@
+import { useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
-
-import { ArrowRight, ArrowLeft } from "lucide-react";
 
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
+
+import { paramsFromUrl } from "~/lib/utils";
+import TableCard from "~/components/TableCard";
+import { Card } from "~/components/ui/card";
+import PaginationButtons from "~/components/PaginationButtons";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
@@ -23,12 +27,6 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
         page: Number(page),
     });
 }
-
-import { useEffect } from "react";
-import TableCard from "~/components/TableCard";
-import { Card } from "~/components/ui/card";
-import { paramsFromUrl } from "~/lib/utils";
-import PaginationButtons from "~/components/PaginationButtons";
 
 export const ReferrerCard = ({
     siteId,
