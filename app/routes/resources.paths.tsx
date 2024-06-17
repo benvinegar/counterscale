@@ -29,6 +29,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 import { useEffect } from "react";
 import TableCard from "~/components/TableCard";
 import { Card } from "~/components/ui/card";
+import PaginationButtons from "~/components/PaginationButtons";
 
 export const PathsCard = ({
     siteId,
@@ -77,33 +78,11 @@ export const PathsCard = ({
                         countByProperty={countByPath}
                         columnHeaders={["Page", "Visitors", "Views"]}
                     />
-                    <div className="p-2 pr-0 grid grid-cols-[auto,2rem,2rem] text-right">
-                        <div></div>
-                        <a
-                            onClick={() => {
-                                if (page > 1) handlePagination(page - 1);
-                            }}
-                            className={
-                                page > 1
-                                    ? `text-primary hover:cursor-pointer`
-                                    : `text-orange-300`
-                            }
-                        >
-                            <ArrowLeft />
-                        </a>
-                        <a
-                            onClick={() => {
-                                if (hasMore) handlePagination(page + 1);
-                            }}
-                            className={
-                                hasMore
-                                    ? "text-primary hover:cursor-pointer"
-                                    : "text-orange-300"
-                            }
-                        >
-                            <ArrowRight />
-                        </a>
-                    </div>
+                    <PaginationButtons
+                        page={page}
+                        hasMore={hasMore}
+                        handlePagination={handlePagination}
+                    />
                 </div>
             ) : null}
         </Card>

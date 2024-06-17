@@ -92,11 +92,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     );
 
     const counts = analyticsEngine.getCounts(actualSiteId, interval, tz);
-    const countByPath = analyticsEngine.getCountByPath(
-        actualSiteId,
-        interval,
-        tz,
-    );
     const countByCountry = analyticsEngine.getCountByCountry(
         actualSiteId,
         interval,
@@ -165,7 +160,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             views: (await counts).views,
             visits: (await counts).visits,
             visitors: (await counts).visitors,
-            countByPath: await countByPath,
             countByBrowser: await countByBrowser,
             countByCountry: await countByCountry,
             // countByReferrer: await countByReferrer,
