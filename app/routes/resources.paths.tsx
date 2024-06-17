@@ -72,7 +72,7 @@ export const PathsCard = ({
     return (
         <Card>
             {countByPath ? (
-                <div>
+                <div className="grid grid-rows-[auto,40px] h-full">
                     <TableCard
                         countByProperty={countByPath}
                         columnHeaders={["Page", "Visitors", "Views"]}

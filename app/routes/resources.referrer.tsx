@@ -69,7 +69,7 @@ export const ReferrerCard = ({
     return (
         <Card>
             {countByReferrer ? (
-                <div>
+                <div className="grid grid-rows-[auto,40px] h-full">
                     <TableCard
                         countByProperty={countByReferrer}
                         columnHeaders={["Referrer", "Visitors"]}
