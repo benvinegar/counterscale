@@ -81,7 +81,9 @@ export const ReferrerCard = ({
                                 if (page > 1) handlePagination(page - 1);
                             }}
                             className={
-                                page > 1 ? `text-primary` : `text-orange-300`
+                                page > 1
+                                    ? `text-primary hover:cursor-pointer`
+                                    : `text-orange-300`
                             }
                         >
                             <ArrowLeft />
@@ -91,7 +93,9 @@ export const ReferrerCard = ({
                                 if (hasMore) handlePagination(page + 1);
                             }}
                             className={
-                                hasMore ? `text-primary` : `text-orange-300`
+                                hasMore
+                                    ? "text-primary hover:cursor-pointer"
+                                    : "text-orange-300"
                             }
                         >
                             <ArrowRight />
