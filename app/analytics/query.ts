@@ -369,10 +369,12 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
+        page?: number,
         limit?: number,
     ) {
         // defaults to 1 day if not specified
         limit = limit || 10;
+        page = page || 1;
 
         const intervalSql = intervalToSql(interval, tz);
 
@@ -387,7 +389,7 @@ export class AnalyticsEngineAPI {
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
             ORDER BY count DESC
-            LIMIT ${limit}`;
+            LIMIT ${limit * page}`;
 
         type SelectionSet = {
             readonly count: number;
@@ -411,7 +413,14 @@ export class AnalyticsEngineAPI {
                     const responseData =
                         (await response.json()) as AnalyticsQueryResult<SelectionSet>;
 
-                    const result = responseData.data.reduce(
+                    // since CF AE doesn't support OFFSET clauses, we select up to LIMIT and
+                    // then slice that into the individual requested page
+                    const pageData = responseData.data.slice(
+                        limit * (page - 1),
+                        limit * page,
+                    );
+
+                    const result = pageData.reduce(
                         (acc, row) => {
                             const key =
                                 row[_column] === ""
@@ -436,12 +445,18 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByPath(siteId: string, interval: string, tz?: string) {
+    async getCountByPath(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
         const allCountsResultPromise = this.getAllCountsByColumn(
             siteId,
             "path",
             interval,
             tz,
+            page,
         );
 
         return allCountsResultPromise.then((allCountsResult) => {

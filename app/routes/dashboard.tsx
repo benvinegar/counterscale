@@ -19,6 +19,7 @@ import { AnalyticsEngineAPI } from "../analytics/query";
 
 import TableCard from "~/components/TableCard";
 import { ReferrerCard } from "./resources.referrer";
+import { PathsCard } from "./resources.paths";
 
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
@@ -335,12 +336,7 @@ export default function Dashboard() {
                     </Card>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <Card>
-                        <TableCard
-                            countByProperty={data.countByPath}
-                            columnHeaders={["Page", "Visitors", "Views"]}
-                        />
-                    </Card>
+                    <PathsCard siteId={data.siteId} interval={data.interval} />
                     <ReferrerCard
                         siteId={data.siteId}
                         interval={data.interval}

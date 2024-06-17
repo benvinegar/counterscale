@@ -2,6 +2,8 @@ import { useFetcher } from "@remix-run/react";
 
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
+import { paramsFromUrl } from "~/lib/utils";
+
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
@@ -11,7 +13,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
     const tz = context.requestTimezone as string;
 
-    const countByReferrer = await analyticsEngine.getCountByReferrer(
+    const countByPath = await analyticsEngine.getCountByPath(
         site,
         interval,
         tz,
@@ -19,7 +21,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     );
 
     return json({
-        countByReferrer: countByReferrer,
+        countByPath,
         page: Number(page),
     });
 }
@@ -27,24 +29,25 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 import { useEffect } from "react";
 import TableCard from "~/components/TableCard";
 import { Card } from "~/components/ui/card";
-import { paramsFromUrl } from "~/lib/utils";
 
-export const ReferrerCard = ({
+export const PathsCard = ({
     siteId,
     interval,
+    error,
 }: {
     siteId: string;
     interval: string;
+    error?: string | null;
 }) => {
     const dataFetcher = useFetcher<typeof loader>();
-    const countByReferrer = dataFetcher.data?.countByReferrer || [];
+    const countByPath = dataFetcher.data?.countByPath || [];
     const page = dataFetcher.data?.page || 1;
 
     useEffect(() => {
         // Your code here
         if (dataFetcher.state === "idle") {
             dataFetcher.load(
-                `/resources/referrer?site=${siteId}&interval=${interval}`,
+                `/resources/paths?site=${siteId}&interval=${interval}`,
             );
         }
     }, []);
@@ -53,7 +56,7 @@ export const ReferrerCard = ({
         // NOTE: intentionally resets page to default when interval or site changes
         if (dataFetcher.state === "idle") {
             dataFetcher.load(
-                `/resources/referrer?site=${siteId}&interval=${interval}`,
+                `/resources/paths?site=${siteId}&interval=${interval}`,
             );
         }
     }, [siteId, interval]);
@@ -61,18 +64,18 @@ export const ReferrerCard = ({
     function handlePagination(page: number) {
         // TODO: is there a way of updating the query string with this state without triggering a navigation?
         dataFetcher.load(
-            `/resources/referrer?site=${siteId}&interval=${interval}&page=${page}`,
+            `/resources/paths?site=${siteId}&interval=${interval}&paths_page=${page}`,
         );
     }
 
-    const hasMore = countByReferrer.length === 10;
+    const hasMore = countByPath.length === 10;
     return (
         <Card>
-            {countByReferrer ? (
+            {countByPath ? (
                 <div>
                     <TableCard
-                        countByProperty={countByReferrer}
-                        columnHeaders={["Referrer", "Visitors"]}
+                        countByProperty={countByPath}
+                        columnHeaders={["Page", "Visitors", "Views"]}
                     />
                     <div className="p-2 pr-0 grid grid-cols-[auto,2rem,2rem] text-right">
                         <div></div>
