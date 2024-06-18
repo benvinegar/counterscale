@@ -12,6 +12,5 @@ export function paramsFromUrl(url: string) {
     searchParams.forEach((value, key) => {
         params[key] = value;
     });
-    console.log(params);
     return params;
 }

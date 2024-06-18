@@ -20,6 +20,9 @@ import { AnalyticsEngineAPI } from "../analytics/query";
 import TableCard from "~/components/TableCard";
 import { ReferrerCard } from "./resources.referrer";
 import { PathsCard } from "./resources.paths";
+import { BrowserCard } from "./resources.browser";
+import { CountryCard } from "./resources.country";
+import { DeviceCard } from "./resources.device";
 
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
@@ -177,37 +180,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         throw new Error("Failed to fetch data from Analytics Engine");
     }
 
-    // normalize country codes to country names
-    // NOTE: this must be done ONLY on server otherwise hydration mismatches
-    //       can occur because Intl.DisplayNames produces different results
-    //       in different browsers (see )
-    out.countByCountry = convertCountryCodesToNames(out.countByCountry);
-
     out.pagination = {
         referrer: Number(url.searchParams.get("referrer_page") || 1),
     };
 
     return json(out);
 };
-
-function convertCountryCodesToNames(
-    countByCountry: [string, number][],
-): [string, number][] {
-    const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
-    return countByCountry.map((countByBrowserRow) => {
-        let countryName;
-        try {
-            // throws an exception if country code isn't valid
-            //   use try/catch to be defensive and not explode if an invalid
-            //   country code gets insrted into Analytics Engine
-            countryName = regionNames.of(countByBrowserRow[0])!; // "United States"
-        } catch (err) {
-            countryName = "(unknown)";
-        }
-        const count = countByBrowserRow[1];
-        return [countryName, count];
-    });
-}
 
 export default function Dashboard() {
     const [, setSearchParams] = useSearchParams();
@@ -337,25 +315,17 @@ export default function Dashboard() {
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <Card>
-                        <TableCard
-                            countByProperty={data.countByBrowser}
-                            columnHeaders={["Browser", "Visitors"]}
-                        />
-                    </Card>
-                    <Card>
-                        <TableCard
-                            countByProperty={data.countByCountry}
-                            columnHeaders={["Country", "Visitors"]}
-                        />
-                    </Card>
+                    <BrowserCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                    />
 
-                    <Card>
-                        <TableCard
-                            countByProperty={data.countByDevice}
-                            columnHeaders={["Device", "Visitors"]}
-                        ></TableCard>
-                    </Card>
+                    <CountryCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                    />
+
+                    <DeviceCard siteId={data.siteId} interval={data.interval} />
                 </div>
             </div>
         </div>

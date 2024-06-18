@@ -13,7 +13,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const tz = context.requestTimezone as string;
 
     return json({
-        countsByProperty: await analyticsEngine.getCountByPath(
+        countsByProperty: await analyticsEngine.getCountByDevice(
             site,
             interval,
             tz,
@@ -23,7 +23,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     });
 }
 
-export const PathsCard = ({
+export const DeviceCard = ({
     siteId,
     interval,
 }: {
@@ -34,9 +34,9 @@ export const PathsCard = ({
         <PaginatedTableCard
             siteId={siteId}
             interval={interval}
-            columnHeaders={["Path", "Visitors", "Views"]}
+            columnHeaders={["Path", "Visitors"]}
             dataFetcher={useFetcher<typeof loader>()}
-            loaderUrl="/resources/paths"
+            loaderUrl="/resources/device"
         />
     );
 };

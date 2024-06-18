@@ -470,12 +470,34 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getCountByUserAgent(siteId: string, interval: string, tz?: string) {
-        return this.getVisitorCountByColumn(siteId, "userAgent", interval, tz);
+    async getCountByUserAgent(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "userAgent",
+            interval,
+            tz,
+            page,
+        );
     }
 
-    async getCountByCountry(siteId: string, interval: string, tz?: string) {
-        return this.getVisitorCountByColumn(siteId, "country", interval, tz);
+    async getCountByCountry(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "country",
+            interval,
+            tz,
+            page,
+        );
     }
 
     async getCountByReferrer(
@@ -492,21 +514,33 @@ export class AnalyticsEngineAPI {
             page,
         );
     }
-    async getCountByBrowser(siteId: string, interval: string, tz?: string) {
+    async getCountByBrowser(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
         return this.getVisitorCountByColumn(
             siteId,
             "browserName",
             interval,
             tz,
+            page,
         );
     }
 
-    async getCountByDevice(siteId: string, interval: string, tz?: string) {
+    async getCountByDevice(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
         return this.getVisitorCountByColumn(
             siteId,
             "deviceModel",
             interval,
             tz,
+            page,
         );
     }
 
