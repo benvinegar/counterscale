@@ -9,8 +9,6 @@ import {
     TableRow,
 } from "~/components/ui/table";
 
-import { Card } from "~/components/ui/card";
-
 type CountByProperty = [string, string][];
 
 function calculateCountPercentages(countByProperty: CountByProperty) {

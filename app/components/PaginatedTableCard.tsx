@@ -13,16 +13,14 @@ const ReferrerCard = ({
 }: {
     siteId: string;
     interval: string;
-    dataFetcher: any;
+    dataFetcher: any; // ignore type for now
     columnHeaders: string[];
     loaderUrl: string;
 }) => {
-    // const dataFetcher = useFetcher<typeof loader>();
     const countsByProperty = dataFetcher.data?.countsByProperty || [];
     const page = dataFetcher.data?.page || 1;
 
     useEffect(() => {
-        // Your code here
         if (dataFetcher.state === "idle") {
             dataFetcher.load(
                 `${loaderUrl}?site=${siteId}&interval=${interval}`,
@@ -31,7 +29,6 @@ const ReferrerCard = ({
     }, []);
 
     useEffect(() => {
-        // NOTE: intentionally resets page to default when interval or site changes
         if (dataFetcher.state === "idle") {
             dataFetcher.load(
                 `${loaderUrl}?site=${siteId}&interval=${interval}`,
@@ -40,7 +37,6 @@ const ReferrerCard = ({
     }, [siteId, interval]);
 
     function handlePagination(page: number) {
-        // TODO: is there a way of updating the query string with this state without triggering a navigation?
         dataFetcher.load(
             `${loaderUrl}?site=${siteId}&interval=${interval}&page=${page}`,
         );

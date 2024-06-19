@@ -305,12 +305,9 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
-        page?: number,
-        limit?: number,
+        page: number = 1,
+        limit: number = 10,
     ) {
-        limit = limit || 10;
-        page = page || 1;
-
         const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];
@@ -369,13 +366,9 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
-        page?: number,
-        limit?: number,
+        page: number = 1,
+        limit: number = 10,
     ) {
-        // defaults to 1 day if not specified
-        limit = limit || 10;
-        page = page || 1;
-
         const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];

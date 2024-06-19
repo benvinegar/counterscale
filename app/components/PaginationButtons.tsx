@@ -16,7 +16,7 @@ const PaginationButtons: React.FC<PaginationButtonsProps> = ({
     return (
         <div className="p-2 pr-0 grid grid-cols-[auto,2rem,2rem] text-right">
             <div></div>
-            <a
+            <button
                 onClick={() => {
                     if (page > 1) handlePagination(page - 1);
                 }}
@@ -27,8 +27,8 @@ const PaginationButtons: React.FC<PaginationButtonsProps> = ({
                 }
             >
                 <ArrowLeft />
-            </a>
-            <a
+            </button>
+            <button
                 onClick={() => {
                     if (hasMore) handlePagination(page + 1);
                 }}
@@ -39,7 +39,7 @@ const PaginationButtons: React.FC<PaginationButtonsProps> = ({
                 }
             >
                 <ArrowRight />
-            </a>
+            </button>
         </div>
     );
 };

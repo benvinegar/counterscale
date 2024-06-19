@@ -17,7 +17,6 @@ import {
 
 import { AnalyticsEngineAPI } from "../analytics/query";
 
-import TableCard from "~/components/TableCard";
 import { ReferrerCard } from "./resources.referrer";
 import { PathsCard } from "./resources.paths";
 import { BrowserCard } from "./resources.browser";

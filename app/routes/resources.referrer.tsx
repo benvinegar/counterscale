@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
 
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
