@@ -150,44 +150,6 @@ describe("Dashboard route", () => {
                 }),
             );
 
-            // response for getCountByPath
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [
-                        { blob3: "/", count: 1, isVisitor: 1, isVisit: 1 },
-                        { blob3: "/", count: 3, isVisitor: 0, isVisit: 0 },
-                    ],
-                }),
-            );
-
-            // response for getCountByCountry
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob4: "US", count: 1 }],
-                }),
-            );
-
-            // response for getCountByReferrer
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob5: "google.com", count: 1 }],
-                }),
-            );
-
-            // response for getCountByBrowser
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob6: "Chrome", count: 2 }],
-                }),
-            );
-
-            // response for getCountByDevice
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob7: "Desktop", count: 3 }],
-                }),
-            );
-
             // response for getViewsGroupedByInterval
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
@@ -223,11 +185,6 @@ describe("Dashboard route", () => {
                 views: 6,
                 visits: 3,
                 visitors: 1,
-                countByPath: [["/", 1, 4]],
-                countByCountry: [["United States", 1]],
-                countByReferrer: [["google.com", 1]],
-                countByBrowser: [["Chrome", 2]],
-                countByDevice: [["Desktop", 3]],
                 viewsGroupedByInterval: [
                     ["2024-01-11 05:00:00", 4],
                     ["2024-01-12 05:00:00", 0],
