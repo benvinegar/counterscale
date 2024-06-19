@@ -16,6 +16,7 @@ import { createRemixStub } from "@remix-run/testing";
 import { render, screen, waitFor } from "@testing-library/react";
 
 import Dashboard, { loader } from "./dashboard";
+import { AnalyticsEngineAPI } from "~/analytics/query";
 
 function createFetchResponse<T>(data: T) {
     return {
@@ -46,6 +47,10 @@ describe("Dashboard route", () => {
             await expect(
                 loader({
                     context: {
+                        analyticsEngine: new AnalyticsEngineAPI(
+                            "testAccountId",
+                            "testApiToken",
+                        ),
                         env: {
                             VERSION: "",
                             CF_BEARER_TOKEN: "",
@@ -70,6 +75,10 @@ describe("Dashboard route", () => {
 
             const response = await loader({
                 context: {
+                    analyticsEngine: new AnalyticsEngineAPI(
+                        "testAccountId",
+                        "testApiToken",
+                    ),
                     env: {
                         VERSION: "",
                         CF_BEARER_TOKEN: "fake",
@@ -99,6 +108,10 @@ describe("Dashboard route", () => {
 
             const response = await loader({
                 context: {
+                    analyticsEngine: new AnalyticsEngineAPI(
+                        "testAccountId",
+                        "testApiToken",
+                    ),
                     env: {
                         VERSION: "",
                         CF_BEARER_TOKEN: "fake",
@@ -137,44 +150,6 @@ describe("Dashboard route", () => {
                 }),
             );
 
-            // response for getCountByPath
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [
-                        { blob3: "/", count: 1, isVisitor: 1, isVisit: 1 },
-                        { blob3: "/", count: 3, isVisitor: 0, isVisit: 0 },
-                    ],
-                }),
-            );
-
-            // response for getCountByCountry
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob4: "US", count: 1 }],
-                }),
-            );
-
-            // response for getCountByReferrer
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob5: "google.com", count: 1 }],
-                }),
-            );
-
-            // response for getCountByBrowser
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob6: "Chrome", count: 2 }],
-                }),
-            );
-
-            // response for getCountByDevice
-            fetch.mockResolvedValueOnce(
-                createFetchResponse({
-                    data: [{ blob7: "Desktop", count: 3 }],
-                }),
-            );
-
             // response for getViewsGroupedByInterval
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
@@ -186,6 +161,10 @@ describe("Dashboard route", () => {
 
             const response = await loader({
                 context: {
+                    analyticsEngine: new AnalyticsEngineAPI(
+                        "testAccountId",
+                        "testApiToken",
+                    ),
                     env: {
                         VERSION: "",
                         CF_BEARER_TOKEN: "fake",
@@ -206,11 +185,6 @@ describe("Dashboard route", () => {
                 views: 6,
                 visits: 3,
                 visitors: 1,
-                countByPath: [["/", 1, 4]],
-                countByCountry: [["United States", 1]],
-                countByReferrer: [["google.com", 1]],
-                countByBrowser: [["Chrome", 2]],
-                countByDevice: [["Desktop", 3]],
                 viewsGroupedByInterval: [
                     ["2024-01-11 05:00:00", 4],
                     ["2024-01-12 05:00:00", 0],
@@ -231,15 +205,14 @@ describe("Dashboard route", () => {
 
             fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getSitesOrderedByHits
             fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // get counts
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByPath
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByCountry
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByReferrer
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByBrowser
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByDevice
             fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getViewsGroupedByInterval
 
             const response = await loader({
                 context: {
+                    analyticsEngine: new AnalyticsEngineAPI(
+                        "testAccountId",
+                        "testApiToken",
+                    ),
                     env: {
                         VERSION: "",
                         CF_BEARER_TOKEN: "fake",
@@ -260,11 +233,6 @@ describe("Dashboard route", () => {
                 views: 0,
                 visits: 0,
                 visitors: 0,
-                countByPath: [],
-                countByCountry: [],
-                countByReferrer: [],
-                countByBrowser: [],
-                countByDevice: [],
                 viewsGroupedByInterval: [
                     ["2024-01-11 05:00:00", 0],
                     ["2024-01-12 05:00:00", 0],
@@ -289,11 +257,6 @@ describe("Dashboard route", () => {
                 views: [],
                 visits: [],
                 visitors: [],
-                countByPath: [],
-                countByBrowser: [],
-                countByCountry: [],
-                countByReferrer: [],
-                countByDevice: [],
                 viewsGroupedByInterval: [],
                 intervalType: "day",
             });
@@ -304,14 +267,49 @@ describe("Dashboard route", () => {
                 path: "/",
                 Component: Dashboard,
                 loader,
+                children: [
+                    {
+                        path: "/resources/paths",
+                        loader: () => {
+                            return json({ countsByProperty: [] });
+                        },
+                    },
+                    {
+                        path: "/resources/referrer",
+                        loader: () => {
+                            return json({ countsByProperty: [] });
+                        },
+                    },
+                    {
+                        path: "/resources/browser",
+                        loader: () => {
+                            return json({ countsByProperty: [] });
+                        },
+                    },
+                    {
+                        path: "/resources/country",
+                        loader: () => {
+                            return json({ countsByProperty: [] });
+                        },
+                    },
+                    {
+                        path: "/resources/device",
+                        loader: () => {
+                            return json({ countsByProperty: [] });
+                        },
+                    },
+                ],
             },
         ]);
 
         render(<RemixStub />);
 
-        // wait until the rows render in the document
-        await waitFor(() => screen.findByText("Country"));
+        await waitFor(() => screen.findByText("Path"));
+        expect(screen.getByText("Path")).toBeInTheDocument();
+        expect(screen.getByText("Referrer")).toBeInTheDocument();
+        expect(screen.getByText("Browser")).toBeInTheDocument();
         expect(screen.getByText("Country")).toBeInTheDocument();
+        expect(screen.getByText("Device")).toBeInTheDocument();
     });
 
     const defaultMockedLoaderJson = {
@@ -320,31 +318,6 @@ describe("Dashboard route", () => {
         views: 2133,
         visits: 80,
         visitors: 33,
-        countByPath: [
-            ["/", 100],
-            ["/about", 80],
-            ["/contact", 60],
-        ],
-        countByBrowser: [
-            ["Chrome", 100],
-            ["Safari", 80],
-            ["Firefox", 60],
-        ],
-        countByCountry: [
-            ["United States", 100],
-            ["Canada", 80],
-            ["United Kingdom", 60],
-        ],
-        countByReferrer: [
-            ["google.com", 100],
-            ["facebook.com", 80],
-            ["twitter.com", 60],
-        ],
-        countByDevice: [
-            ["Desktop", 100],
-            ["Mobile", 80],
-            ["Tablet", 60],
-        ],
         viewsGroupedByInterval: [
             ["2024-01-11 05:00:00", 0],
             ["2024-01-12 05:00:00", 0],
@@ -368,6 +341,68 @@ describe("Dashboard route", () => {
                 path: "/",
                 Component: Dashboard,
                 loader,
+                children: [
+                    {
+                        path: "/resources/paths",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["/", 100],
+                                    ["/about", 80],
+                                    ["/contact", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/referrer",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["google.com", 100],
+                                    ["facebook.com", 80],
+                                    ["twitter.com", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/browser",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["Chrome", 100],
+                                    ["Safari", 80],
+                                    ["Firefox", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/country",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["United States", 100],
+                                    ["Canada", 80],
+                                    ["United Kingdom", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/device",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["Desktop", 100],
+                                    ["Mobile", 80],
+                                    ["Tablet", 60],
+                                ],
+                            });
+                        },
+                    },
+                ],
             },
         ]);
 

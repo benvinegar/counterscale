@@ -17,7 +17,12 @@ import {
 
 import { AnalyticsEngineAPI } from "../analytics/query";
 
-import TableCard from "~/components/TableCard";
+import { ReferrerCard } from "./resources.referrer";
+import { PathsCard } from "./resources.paths";
+import { BrowserCard } from "./resources.browser";
+import { CountryCard } from "./resources.country";
+import { DeviceCard } from "./resources.device";
+
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
 
@@ -32,6 +37,7 @@ const MAX_RETENTION_DAYS = 90;
 
 declare module "@remix-run/server-runtime" {
     export interface AppLoadContext {
+        analyticsEngine: AnalyticsEngineAPI;
         env: {
             VERSION: string;
             CF_BEARER_TOKEN: string;
@@ -71,8 +77,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         redirectUrl.searchParams.set("site", redirectSite);
         return redirect(redirectUrl.toString());
     }
-    const siteId = url.searchParams.get("site") || "";
 
+    const siteId = url.searchParams.get("site") || "";
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
     const tz = context.requestTimezone as string;
@@ -88,32 +94,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     );
 
     const counts = analyticsEngine.getCounts(actualSiteId, interval, tz);
-    const countByPath = analyticsEngine.getCountByPath(
-        actualSiteId,
-        interval,
-        tz,
-    );
-    const countByCountry = analyticsEngine.getCountByCountry(
-        actualSiteId,
-        interval,
-        tz,
-    );
-    const countByReferrer = analyticsEngine.getCountByReferrer(
-        actualSiteId,
-        interval,
-        tz,
-    );
-    const countByBrowser = analyticsEngine.getCountByBrowser(
-        actualSiteId,
-        interval,
-        tz,
-    );
-    const countByDevice = analyticsEngine.getCountByDevice(
-        actualSiteId,
-        interval,
-        tz,
-    );
-
     let intervalType: "DAY" | "HOUR" = "DAY";
     switch (interval) {
         case "today":
@@ -165,47 +145,19 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             views: (await counts).views,
             visits: (await counts).visits,
             visitors: (await counts).visitors,
-            countByPath: await countByPath,
-            countByBrowser: await countByBrowser,
-            countByCountry: await countByCountry,
-            countByReferrer: await countByReferrer,
-            countByDevice: await countByDevice,
+            // countByReferrer: await countByReferrer,
             viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
             interval,
+            tz,
         };
     } catch (err) {
         console.error(err);
         throw new Error("Failed to fetch data from Analytics Engine");
     }
 
-    // normalize country codes to country names
-    // NOTE: this must be done ONLY on server otherwise hydration mismatches
-    //       can occur because Intl.DisplayNames produces different results
-    //       in different browsers (see )
-    out.countByCountry = convertCountryCodesToNames(out.countByCountry);
-
     return json(out);
 };
-
-function convertCountryCodesToNames(
-    countByCountry: [string, number][],
-): [string, number][] {
-    const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
-    return countByCountry.map((countByBrowserRow) => {
-        let countryName;
-        try {
-            // throws an exception if country code isn't valid
-            //   use try/catch to be defensive and not explode if an invalid
-            //   country code gets insrted into Analytics Engine
-            countryName = regionNames.of(countByBrowserRow[0])!; // "United States"
-        } catch (err) {
-            countryName = "(unknown)";
-        }
-        const count = countByBrowserRow[1];
-        return [countryName, count];
-    });
-}
 
 export default function Dashboard() {
     const [, setSearchParams] = useSearchParams();
@@ -328,28 +280,24 @@ export default function Dashboard() {
                     </Card>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <TableCard
-                        countByProperty={data.countByPath}
-                        columnHeaders={["Page", "Visitors", "Views"]}
-                    />
-                    <TableCard
-                        countByProperty={data.countByReferrer}
-                        columnHeaders={["Referrer", "Visitors"]}
+                    <PathsCard siteId={data.siteId} interval={data.interval} />
+                    <ReferrerCard
+                        siteId={data.siteId}
+                        interval={data.interval}
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <TableCard
-                        countByProperty={data.countByBrowser}
-                        columnHeaders={["Browser", "Visitors"]}
+                    <BrowserCard
+                        siteId={data.siteId}
+                        interval={data.interval}
                     />
-                    <TableCard
-                        countByProperty={data.countByCountry}
-                        columnHeaders={["Country", "Visitors"]}
+
+                    <CountryCard
+                        siteId={data.siteId}
+                        interval={data.interval}
                     />
-                    <TableCard
-                        countByProperty={data.countByDevice}
-                        columnHeaders={["Device", "Visitors"]}
-                    ></TableCard>
+
+                    <DeviceCard siteId={data.siteId} interval={data.interval} />
                 </div>
             </div>
         </div>

@@ -9,8 +9,6 @@ import {
     TableRow,
 } from "~/components/ui/table";
 
-import { Card } from "~/components/ui/card";
-
 type CountByProperty = [string, string][];
 
 function calculateCountPercentages(countByProperty: CountByProperty) {
@@ -40,49 +38,47 @@ export default function TableCard({
             ? "grid-cols-[minmax(0,1fr),minmax(0,8ch),minmax(0,8ch)]"
             : "grid-cols-[minmax(0,1fr),minmax(0,8ch)]";
     return (
-        <Card>
-            <Table>
-                <TableHeader>
-                    <TableRow className={`${gridCols}`}>
-                        {(columnHeaders || []).map((header: string, index) => (
-                            <TableHead
-                                key={header}
-                                className={
-                                    index === 0
-                                        ? "text-left"
-                                        : "text-right pr-4 pl-0"
-                                }
-                            >
-                                {header}
-                            </TableHead>
-                        ))}
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {(countByProperty || []).map((item, key) => (
-                        <TableRow
-                            key={item[0]}
-                            className={`group [&_td]:last:rounded-b-md ${gridCols}`}
-                            width={barChartPercentages[key]}
+        <Table>
+            <TableHeader>
+                <TableRow className={`${gridCols}`}>
+                    {(columnHeaders || []).map((header: string, index) => (
+                        <TableHead
+                            key={header}
+                            className={
+                                index === 0
+                                    ? "text-left"
+                                    : "text-right pr-4 pl-0"
+                            }
                         >
-                            <TableCell className="font-medium min-w-48 break-all">
-                                {item[0]}
-                            </TableCell>
-
-                            <TableCell className="text-right min-w-16">
-                                {countFormatter.format(item[1] as number)}
-                            </TableCell>
-
-                            {item.length > 2 && (
-                                <TableCell className="text-right min-w-16">
-                                    {countFormatter.format(item[2] as number)}
-                                </TableCell>
-                            )}
-                        </TableRow>
+                            {header}
+                        </TableHead>
                     ))}
-                </TableBody>
-            </Table>
-        </Card>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {(countByProperty || []).map((item, key) => (
+                    <TableRow
+                        key={item[0]}
+                        className={`group [&_td]:last:rounded-b-md ${gridCols}`}
+                        width={barChartPercentages[key]}
+                    >
+                        <TableCell className="font-medium min-w-48 break-all">
+                            {item[0]}
+                        </TableCell>
+
+                        <TableCell className="text-right min-w-16">
+                            {countFormatter.format(item[1] as number)}
+                        </TableCell>
+
+                        {item.length > 2 && (
+                            <TableCell className="text-right min-w-16">
+                                {countFormatter.format(item[2] as number)}
+                            </TableCell>
+                        )}
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
     );
 }
 

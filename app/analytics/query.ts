@@ -305,10 +305,9 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
-        limit?: number,
+        page: number = 1,
+        limit: number = 10,
     ) {
-        limit = limit || 10;
-
         const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];
@@ -320,7 +319,7 @@ export class AnalyticsEngineAPI {
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}
             ORDER BY count DESC
-            LIMIT ${limit}`;
+            LIMIT ${limit * page}`;
 
         type SelectionSet = {
             count: number;
@@ -342,8 +341,16 @@ export class AnalyticsEngineAPI {
 
                 const responseData =
                     (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+                // since CF AE doesn't support OFFSET clauses, we select up to LIMIT and
+                // then slice that into the individual requested page
+                const pageData = responseData.data.slice(
+                    limit * (page - 1),
+                    limit * page,
+                );
+
                 resolve(
-                    responseData.data.map((row) => {
+                    pageData.map((row) => {
                         const key =
                             row[_column] === "" ? "(none)" : row[_column];
                         return [key, row["count"]] as const;
@@ -359,11 +366,9 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
-        limit?: number,
+        page: number = 1,
+        limit: number = 10,
     ) {
-        // defaults to 1 day if not specified
-        limit = limit || 10;
-
         const intervalSql = intervalToSql(interval, tz);
 
         const _column = ColumnMappings[column];
@@ -377,7 +382,7 @@ export class AnalyticsEngineAPI {
                 AND ${ColumnMappings.siteId} = '${siteId}'
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
             ORDER BY count DESC
-            LIMIT ${limit}`;
+            LIMIT ${limit * page}`;
 
         type SelectionSet = {
             readonly count: number;
@@ -401,7 +406,14 @@ export class AnalyticsEngineAPI {
                     const responseData =
                         (await response.json()) as AnalyticsQueryResult<SelectionSet>;
 
-                    const result = responseData.data.reduce(
+                    // since CF AE doesn't support OFFSET clauses, we select up to LIMIT and
+                    // then slice that into the individual requested page
+                    const pageData = responseData.data.slice(
+                        limit * (page - 1),
+                        limit * page,
+                    );
+
+                    const result = pageData.reduce(
                         (acc, row) => {
                             const key =
                                 row[_column] === ""
@@ -426,12 +438,18 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCountByPath(siteId: string, interval: string, tz?: string) {
+    async getCountByPath(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
         const allCountsResultPromise = this.getAllCountsByColumn(
             siteId,
             "path",
             interval,
             tz,
+            page,
         );
 
         return allCountsResultPromise.then((allCountsResult) => {
@@ -445,32 +463,77 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getCountByUserAgent(siteId: string, interval: string, tz?: string) {
-        return this.getVisitorCountByColumn(siteId, "userAgent", interval, tz);
+    async getCountByUserAgent(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "userAgent",
+            interval,
+            tz,
+            page,
+        );
     }
 
-    async getCountByCountry(siteId: string, interval: string, tz?: string) {
-        return this.getVisitorCountByColumn(siteId, "country", interval, tz);
+    async getCountByCountry(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "country",
+            interval,
+            tz,
+            page,
+        );
     }
 
-    async getCountByReferrer(siteId: string, interval: string, tz?: string) {
-        return this.getVisitorCountByColumn(siteId, "referrer", interval, tz);
+    async getCountByReferrer(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "referrer",
+            interval,
+            tz,
+            page,
+        );
     }
-    async getCountByBrowser(siteId: string, interval: string, tz?: string) {
+    async getCountByBrowser(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
         return this.getVisitorCountByColumn(
             siteId,
             "browserName",
             interval,
             tz,
+            page,
         );
     }
 
-    async getCountByDevice(siteId: string, interval: string, tz?: string) {
+    async getCountByDevice(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        page: number = 1,
+    ) {
         return this.getVisitorCountByColumn(
             siteId,
             "deviceModel",
             interval,
             tz,
+            page,
         );
     }
 
