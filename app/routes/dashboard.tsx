@@ -150,19 +150,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
             interval,
-            pagination: {
-                referrer: 1,
-            },
             tz,
         };
     } catch (err) {
         console.error(err);
         throw new Error("Failed to fetch data from Analytics Engine");
     }
-
-    out.pagination = {
-        referrer: Number(url.searchParams.get("referrer_page") || 1),
-    };
 
     return json(out);
 };

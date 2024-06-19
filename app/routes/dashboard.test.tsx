@@ -248,11 +248,6 @@ describe("Dashboard route", () => {
 
             fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getSitesOrderedByHits
             fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // get counts
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByPath
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByCountry
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByReferrer
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByBrowser
-            fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getCountByDevice
             fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getViewsGroupedByInterval
 
             const response = await loader({
@@ -281,11 +276,6 @@ describe("Dashboard route", () => {
                 views: 0,
                 visits: 0,
                 visitors: 0,
-                countByPath: [],
-                countByCountry: [],
-                countByReferrer: [],
-                countByBrowser: [],
-                countByDevice: [],
                 viewsGroupedByInterval: [
                     ["2024-01-11 05:00:00", 0],
                     ["2024-01-12 05:00:00", 0],
