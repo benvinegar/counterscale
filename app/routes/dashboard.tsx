@@ -95,23 +95,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     );
 
     const counts = analyticsEngine.getCounts(actualSiteId, interval, tz);
-    const countByCountry = analyticsEngine.getCountByCountry(
-        actualSiteId,
-        interval,
-        tz,
-    );
-
-    const countByBrowser = analyticsEngine.getCountByBrowser(
-        actualSiteId,
-        interval,
-        tz,
-    );
-    const countByDevice = analyticsEngine.getCountByDevice(
-        actualSiteId,
-        interval,
-        tz,
-    );
-
     let intervalType: "DAY" | "HOUR" = "DAY";
     switch (interval) {
         case "today":
@@ -163,10 +146,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             views: (await counts).views,
             visits: (await counts).visits,
             visitors: (await counts).visitors,
-            countByBrowser: await countByBrowser,
-            countByCountry: await countByCountry,
             // countByReferrer: await countByReferrer,
-            countByDevice: await countByDevice,
             viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
             interval,

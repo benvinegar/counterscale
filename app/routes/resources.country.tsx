@@ -61,7 +61,7 @@ export const CountryCard = ({
         <PaginatedTableCard
             siteId={siteId}
             interval={interval}
-            columnHeaders={["Browser", "Visitors"]}
+            columnHeaders={["Country", "Visitors"]}
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/country"
         />

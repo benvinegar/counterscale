@@ -34,7 +34,7 @@ export const DeviceCard = ({
         <PaginatedTableCard
             siteId={siteId}
             interval={interval}
-            columnHeaders={["Path", "Visitors"]}
+            columnHeaders={["Device", "Visitors"]}
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/device"
         />
