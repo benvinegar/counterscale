@@ -357,7 +357,6 @@ describe("Dashboard route", () => {
 
         render(<RemixStub />);
 
-        screen.logTestingPlaygroundURL();
         await waitFor(() => screen.findByText("Path"));
         expect(screen.getByText("Path")).toBeInTheDocument();
         expect(screen.getByText("Referrer")).toBeInTheDocument();
@@ -395,22 +394,84 @@ describe("Dashboard route", () => {
                 path: "/",
                 Component: Dashboard,
                 loader,
+                children: [
+                    {
+                        path: "/resources/paths",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["/", 100],
+                                    ["/about", 80],
+                                    ["/contact", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/referrer",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["google.com", 100],
+                                    ["facebook.com", 80],
+                                    ["twitter.com", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/browser",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["Chrome", 100],
+                                    ["Safari", 80],
+                                    ["Firefox", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/country",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["United States", 100],
+                                    ["Canada", 80],
+                                    ["United Kingdom", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/device",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["Desktop", 100],
+                                    ["Mobile", 80],
+                                    ["Tablet", 60],
+                                ],
+                            });
+                        },
+                    },
+                ],
             },
         ]);
 
         render(<RemixStub />);
 
         // wait until the rows render in the document
-        await waitFor(() => screen.findByText("Visitors"));
+        await waitFor(() => screen.findByText("Chrome"));
 
         // assert some of the data we mocked actually rendered into the document
         expect(screen.getByText("2.1K")).toBeInTheDocument(); // view count
         expect(screen.getByText("33")).toBeInTheDocument(); // visitor count
 
-        // expect(screen.getByText("/about")).toBeInTheDocument();
-        // expect(screen.getByText("Chrome")).toBeInTheDocument();
-        // expect(screen.getByText("google.com")).toBeInTheDocument();
-        // expect(screen.getByText("Canada")).toBeInTheDocument(); // assert converted CA -> Canada
-        // expect(screen.getByText("Mobile")).toBeInTheDocument();
+        expect(screen.getByText("/about")).toBeInTheDocument();
+        expect(screen.getByText("Chrome")).toBeInTheDocument();
+        expect(screen.getByText("google.com")).toBeInTheDocument();
+        expect(screen.getByText("Canada")).toBeInTheDocument(); // assert converted CA -> Canada
+        expect(screen.getByText("Mobile")).toBeInTheDocument();
     });
 });
