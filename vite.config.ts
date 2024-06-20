@@ -13,7 +13,6 @@ export default defineConfig({
     },
     plugins: [
         remixCloudflareDevProxy({ getLoadContext }),
-        remix(),
         !process.env.VITEST &&
             remix({
                 ignoredRouteFiles: ["**/.*", "**/*.test.{ts,tsx}"],
