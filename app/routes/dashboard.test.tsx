@@ -51,10 +51,12 @@ describe("Dashboard route", () => {
                             "testAccountId",
                             "testApiToken",
                         ),
-                        env: {
-                            VERSION: "",
-                            CF_BEARER_TOKEN: "",
-                            CF_ACCOUNT_ID: "",
+                        cloudflare: {
+                            // @ts-expect-error we don't need to provide all the properties of the cloudflare object
+                            env: {
+                                CF_BEARER_TOKEN: "",
+                                CF_ACCOUNT_ID: "",
+                            },
                         },
                     },
                     // @ts-expect-error we don't need to provide all the properties of the request object
@@ -79,10 +81,12 @@ describe("Dashboard route", () => {
                         "testAccountId",
                         "testApiToken",
                     ),
-                    env: {
-                        VERSION: "",
-                        CF_BEARER_TOKEN: "fake",
-                        CF_ACCOUNT_ID: "fake",
+                    cloudflare: {
+                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
+                        env: {
+                            CF_BEARER_TOKEN: "fake",
+                            CF_ACCOUNT_ID: "fake",
+                        },
                     },
                 },
                 // @ts-expect-error we don't need to provide all the properties of the request object
@@ -112,10 +116,12 @@ describe("Dashboard route", () => {
                         "testAccountId",
                         "testApiToken",
                     ),
-                    env: {
-                        VERSION: "",
-                        CF_BEARER_TOKEN: "fake",
-                        CF_ACCOUNT_ID: "fake",
+                    cloudflare: {
+                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
+                        env: {
+                            CF_BEARER_TOKEN: "fake",
+                            CF_ACCOUNT_ID: "fake",
+                        },
                     },
                 },
                 // @ts-expect-error we don't need to provide all the properties of the request object
@@ -165,10 +171,12 @@ describe("Dashboard route", () => {
                         "testAccountId",
                         "testApiToken",
                     ),
-                    env: {
-                        VERSION: "",
-                        CF_BEARER_TOKEN: "fake",
-                        CF_ACCOUNT_ID: "fake",
+                    cloudflare: {
+                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
+                        env: {
+                            CF_BEARER_TOKEN: "fake",
+                            CF_ACCOUNT_ID: "fake",
+                        },
                     },
                 },
                 // @ts-expect-error we don't need to provide all the properties of the request object
@@ -213,10 +221,12 @@ describe("Dashboard route", () => {
                         "testAccountId",
                         "testApiToken",
                     ),
-                    env: {
-                        VERSION: "",
-                        CF_BEARER_TOKEN: "fake",
-                        CF_ACCOUNT_ID: "fake",
+                    cloudflare: {
+                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
+                        env: {
+                            CF_BEARER_TOKEN: "fake",
+                            CF_ACCOUNT_ID: "fake",
+                        },
                     },
                 },
                 // @ts-expect-error we don't need to provide all the properties of the request object

@@ -1,10 +1,10 @@
-import styles from "./globals.css";
+import styles from "./globals.css?url";
 import {
     json,
     LoaderFunctionArgs,
     type LinksFunction,
 } from "@remix-run/cloudflare";
-import { cssBundleHref } from "@remix-run/css-bundle";
+
 import {
     Links,
     LiveReload,
@@ -15,15 +15,12 @@ import {
     useLoaderData,
 } from "@remix-run/react";
 
-export const links: LinksFunction = () => [
-    { rel: "stylesheet", href: styles },
-    ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
 export const loader = ({ context, request }: LoaderFunctionArgs) => {
     const url = new URL(request.url);
     return json({
-        version: context.env.VERSION,
+        version: context.cloudflare.env.CF_PAGES_COMMIT_SHA,
         origin: url.origin,
         url: request.url,
     });
