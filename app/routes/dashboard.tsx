@@ -73,7 +73,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const siteId = url.searchParams.get("site") || "";
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
-    const tz = context.cloudflare.cf.requestTimezone as string;
+    const tz = context.cloudflare.cf.timezone as string;
 
     // initiate requests to AE in parallel
 

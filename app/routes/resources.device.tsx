@@ -10,7 +10,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
 
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
-    const tz = context.cloudflare.cf.requestTimezone as string;
+    const tz = context.cloudflare.cf.timezone as string;
 
     return json({
         countsByProperty: await analyticsEngine.getCountByDevice(
