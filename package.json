@@ -9,6 +9,7 @@
         "prepreview": "remix vite:build",
         "preview": "wrangler pages dev ./build/client",
         "deploy": "wrangler pages deploy ./build/client",
+        "prelint": "remix vite:build",
         "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         "start": "wrangler pages dev ./build/client --var VERSION:$(git rev-parse HEAD)",
         "test": "TZ=EST vitest run",
