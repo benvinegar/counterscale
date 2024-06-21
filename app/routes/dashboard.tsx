@@ -36,6 +36,7 @@ export const meta: MetaFunction = () => {
 const MAX_RETENTION_DAYS = 90;
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
+    // NOTE: probably duped from getLoadContext / need to de-duplicate
     if (
         !context.cloudflare.env.CF_BEARER_TOKEN ||
         !context.cloudflare.env.CF_ACCOUNT_ID
@@ -43,10 +44,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         throw new Error("Missing Cloudflare credentials");
     }
 
-    const analyticsEngine = new AnalyticsEngineAPI(
-        context.cloudflare.env.CF_ACCOUNT_ID,
-        context.cloudflare.env.CF_BEARER_TOKEN,
-    );
+    const { analyticsEngine } = context;
 
     const url = new URL(request.url);
 

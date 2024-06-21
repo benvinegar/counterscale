@@ -15,17 +15,6 @@ declare module "@remix-run/cloudflare" {
     }
 }
 
-// declare module "@remix-run/server-runtime" {
-//     export interface AppLoadContext {
-//         analyticsEngine: AnalyticsEngineAPI;
-//         env: {
-//             VERSION: string;
-//             CF_BEARER_TOKEN: string;
-//             CF_ACCOUNT_ID: string;
-//         };
-//     }
-// }
-
 type GetLoadContext = (args: {
     request: Request;
     context: { cloudflare: Cloudflare }; // load context _before_ augmentation
