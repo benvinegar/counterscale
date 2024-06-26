@@ -3,6 +3,7 @@
     "private": true,
     "sideEffects": false,
     "type": "module",
+    "version": "1.0.0",
     "scripts": {
         "build": "remix build",
         "deploy": "wrangler deploy --var VERSION:$(git rev-parse HEAD)",
