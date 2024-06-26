@@ -43,8 +43,8 @@ describe("collectRequestHandler", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
-            } as CFAnalyticsEngine,
-        } as Environment;
+            } as AnalyticsEngineDataset,
+        } as Env;
 
         // @ts-expect-error - we're mocking the request object
         const request = httpMocks.createRequest(defaultRequestParams);
@@ -80,8 +80,8 @@ describe("collectRequestHandler", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
-            } as CFAnalyticsEngine,
-        } as Environment;
+            } as AnalyticsEngineDataset,
+        } as Env;
 
         // @ts-expect-error - we're mocking the request object
         const request = httpMocks.createRequest(generateRequestParams({}));
@@ -102,8 +102,8 @@ describe("collectRequestHandler", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
-            } as CFAnalyticsEngine,
-        } as Environment;
+            } as AnalyticsEngineDataset,
+        } as Env;
 
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object
@@ -130,8 +130,8 @@ describe("collectRequestHandler", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
-            } as CFAnalyticsEngine,
-        } as Environment;
+            } as AnalyticsEngineDataset,
+        } as Env;
 
         // intentionally set system time as 00:15:00
         // if the user last visited ~30 minutes ago, that occurred during
@@ -164,8 +164,8 @@ describe("collectRequestHandler", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
-            } as CFAnalyticsEngine,
-        } as Environment;
+            } as AnalyticsEngineDataset,
+        } as Env;
 
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object
@@ -192,8 +192,8 @@ describe("collectRequestHandler", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
-            } as CFAnalyticsEngine,
-        } as Environment;
+            } as AnalyticsEngineDataset,
+        } as Env;
 
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object

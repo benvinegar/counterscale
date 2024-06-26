@@ -15,8 +15,6 @@ import {
     useSearchParams,
 } from "@remix-run/react";
 
-import { AnalyticsEngineAPI } from "../analytics/query";
-
 import { ReferrerCard } from "./resources.referrer";
 import { PathsCard } from "./resources.paths";
 import { BrowserCard } from "./resources.browser";
@@ -35,26 +33,16 @@ export const meta: MetaFunction = () => {
 
 const MAX_RETENTION_DAYS = 90;
 
-declare module "@remix-run/server-runtime" {
-    export interface AppLoadContext {
-        analyticsEngine: AnalyticsEngineAPI;
-        env: {
-            VERSION: string;
-            CF_BEARER_TOKEN: string;
-            CF_ACCOUNT_ID: string;
-        };
-    }
-}
-
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
-    if (!context.env.CF_BEARER_TOKEN || !context.env.CF_ACCOUNT_ID) {
+    // NOTE: probably duped from getLoadContext / need to de-duplicate
+    if (
+        !context.cloudflare.env.CF_BEARER_TOKEN ||
+        !context.cloudflare.env.CF_ACCOUNT_ID
+    ) {
         throw new Error("Missing Cloudflare credentials");
     }
 
-    const analyticsEngine = new AnalyticsEngineAPI(
-        context.env.CF_ACCOUNT_ID,
-        context.env.CF_BEARER_TOKEN,
-    );
+    const { analyticsEngine } = context;
 
     const url = new URL(request.url);
 
@@ -81,7 +69,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const siteId = url.searchParams.get("site") || "";
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
-    const tz = context.requestTimezone as string;
+    const tz = context.cloudflare.cf.timezone as string;
 
     // initiate requests to AE in parallel
 

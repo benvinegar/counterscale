@@ -51,7 +51,7 @@ function extractParamsFromQueryString(requestUrl: string): {
     return params;
 }
 
-export function collectRequestHandler(request: Request, env: Environment) {
+export function collectRequestHandler(request: Request, env: Env) {
     const params = extractParamsFromQueryString(request.url);
 
     const userAgent = request.headers.get("user-agent") || undefined;
@@ -130,7 +130,7 @@ interface DataPoint {
 // More here: https://developers.cloudflare.com/analytics/analytics-engine/get-started/#limits
 
 export function writeDataPoint(
-    analyticsEngine: CFAnalyticsEngine,
+    analyticsEngine: AnalyticsEngineDataset,
     data: DataPoint,
 ) {
     const datapoint = {

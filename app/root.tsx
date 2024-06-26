@@ -1,36 +1,39 @@
-import styles from "./globals.css";
+import styles from "./globals.css?url";
 import {
     json,
     LoaderFunctionArgs,
     type LinksFunction,
 } from "@remix-run/cloudflare";
-import { cssBundleHref } from "@remix-run/css-bundle";
+
 import {
+    isRouteErrorResponse,
     Links,
-    LiveReload,
     Meta,
     Outlet,
     Scripts,
     ScrollRestoration,
-    useLoaderData,
+    useRouteError,
+    useRouteLoaderData,
 } from "@remix-run/react";
 
-export const links: LinksFunction = () => [
-    { rel: "stylesheet", href: styles },
-    ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
 export const loader = ({ context, request }: LoaderFunctionArgs) => {
     const url = new URL(request.url);
     return json({
-        version: context.env.VERSION,
+        version: context.cloudflare.env.CF_PAGES_COMMIT_SHA,
         origin: url.origin,
         url: request.url,
     });
 };
 
-export default function App() {
-    const data = useLoaderData<typeof loader>();
+export const Layout = ({ children }: { children: React.ReactNode }) => {
+    const data = useRouteLoaderData<typeof loader>("root") ?? {
+        version: "unknown",
+        origin: "counterscale.dev",
+        url: "https://counterscale.dev/",
+    };
+    // const error = useRouteError();
 
     return (
         <html lang="en">
@@ -111,7 +114,7 @@ export default function App() {
                         </nav>
                     </header>
                     <main role="main" className="w-full">
-                        <Outlet />
+                        {children}
                     </main>
 
                     <footer className="py-4 flex justify-end text-s">
@@ -127,7 +130,6 @@ export default function App() {
                 </div>
                 <ScrollRestoration />
                 <Scripts />
-                <LiveReload />
                 <script
                     dangerouslySetInnerHTML={{
                         __html: "window.counterscale = {'q': [['set', 'siteId', 'counterscale-dev'], ['trackPageview']] };",
@@ -137,4 +139,30 @@ export default function App() {
             </body>
         </html>
     );
+};
+
+export default function App() {
+    return <Outlet />;
 }
+
+export const ErrorBoundary = () => {
+    const error = useRouteError();
+
+    if (isRouteErrorResponse(error)) {
+        return (
+            <>
+                <h1>
+                    {error.status} {error.statusText}
+                </h1>
+                <p>{error.data}</p>
+            </>
+        );
+    }
+
+    return (
+        <>
+            <h1>Error!</h1>
+            <p>{(error as { message?: string })?.message ?? "Unknown error"}</p>
+        </>
+    );
+};
