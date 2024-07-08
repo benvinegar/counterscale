@@ -18,10 +18,12 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 
 1. Go to your Cloudflare dashboard and, if you do not already have one, set up a [Cloudflare Workers subdomain](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/)
 1. Enable [Cloudflare Analytics Engine beta](https://developers.cloudflare.com/analytics/analytics-engine/get-started/) for your account ([screenshot](https://github.com/benvinegar/counterscale/assets/4562878/ad1b5712-2344-4489-a684-685b876635d1))
+    1. If this is your first time using Workers, you have to create a Worker before you can enable the Analytics Engine. Navigate to Workers & Pages > Overview, click the "Create Worker" button to create a "Hello World" worker (it doesn't matter what you name this Worker as you can delete it later).
 1. Create a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions at a minimum.
 1. Run `npm install`
 1. Run `npx wrangler secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
 1. Run `npx wrangler secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
+    1. Find you account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
 1. Run `npm run deploy` – this will do two things:
     1. Create a new worker, `counterscale`, now visible under _Workers and Pages_ in Cloudflare
     1. Create a new Analytics Engine dataset, called `metricsDataset`
@@ -119,10 +121,10 @@ The primary goal of Counterscale is to be super easy to self-host and maintain. 
 
 To achieve that:
 
-* There should be no application state outside of CF Analytics Engine
-    * e.g. no additional relational database like MySQL, PostgreSQL, etc.
-    * That means no `users` table, no `sites` table, etc.
-    * This also means retention will be limited by what CF Analytics Engine provides. While it could be possible to stand up a "hit counter" for long-lived data (e.g. years), that would mean another database, which we will not pursue.
-* We prioritize backwards compatibility
-    * New `metricsDataset` columns can be added, but old columns cannot be removed or renamed (they can however, be "forgotten").
-    * That also means it's okay if a feature only works during a period where the data is active.
+-   There should be no application state outside of CF Analytics Engine
+    -   e.g. no additional relational database like MySQL, PostgreSQL, etc.
+    -   That means no `users` table, no `sites` table, etc.
+    -   This also means retention will be limited by what CF Analytics Engine provides. While it could be possible to stand up a "hit counter" for long-lived data (e.g. years), that would mean another database, which we will not pursue.
+-   We prioritize backwards compatibility
+    -   New `metricsDataset` columns can be added, but old columns cannot be removed or renamed (they can however, be "forgotten").
+    -   That also means it's okay if a feature only works during a period where the data is active.
