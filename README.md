@@ -23,7 +23,7 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. Run `npm install`
 1. Run `npx wrangler secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
 1. Run `npx wrangler secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
-    1. Find you account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
+    1. Find your account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
 1. Run `npm run deploy` – this will do two things:
     1. Create a new worker, `counterscale`, now visible under _Workers and Pages_ in Cloudflare
     1. Create a new Analytics Engine dataset, called `metricsDataset`
