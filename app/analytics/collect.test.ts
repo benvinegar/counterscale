@@ -49,7 +49,7 @@ describe("collectRequestHandler", () => {
         // @ts-expect-error - we're mocking the request object
         const request = httpMocks.createRequest(defaultRequestParams);
 
-        collectRequestHandler(request, env);
+        collectRequestHandler(request as any, env);
 
         const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
         expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe("collectRequestHandler", () => {
         // @ts-expect-error - we're mocking the request object
         const request = httpMocks.createRequest(generateRequestParams({}));
 
-        collectRequestHandler(request, env);
+        collectRequestHandler(request as any, env);
 
         const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
@@ -114,7 +114,7 @@ describe("collectRequestHandler", () => {
             }),
         );
 
-        collectRequestHandler(request, env);
+        collectRequestHandler(request as any, env);
 
         const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
@@ -147,7 +147,7 @@ describe("collectRequestHandler", () => {
             }),
         );
 
-        collectRequestHandler(request, env);
+        collectRequestHandler(request as any, env);
 
         const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
@@ -176,7 +176,7 @@ describe("collectRequestHandler", () => {
             }),
         );
 
-        collectRequestHandler(request, env);
+        collectRequestHandler(request as any, env);
 
         const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
@@ -204,7 +204,7 @@ describe("collectRequestHandler", () => {
             }),
         );
 
-        collectRequestHandler(request, env);
+        collectRequestHandler(request as any, env);
 
         const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
