@@ -21,13 +21,16 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
     1. If this is your first time using Workers, you have to create a Worker before you can enable the Analytics Engine. Navigate to Workers & Pages > Overview, click the "Create Worker" button ([screenshot](./docs/create-worker.png)) to create a "Hello World" worker (it doesn't matter what you name this Worker as you can delete it later).
 1. Create a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions at a minimum ([screenshot](./docs/api-token.png)).
 1. Run `npm install`
-1. Run `npx wrangler secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
-1. Run `npx wrangler secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
+1. Run `npx wrangler pages secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
+1. Run `npx wrangler pages secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
     1. Find your account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
-1. Run `npm run deploy` – this will do two things:
-    1. Create a new worker, `counterscale`, now visible under _Workers and Pages_ in Cloudflare
+1. Run `npm run deploy` – this will do several things:
+    1. Prompt you to create a new Cloudflare Pages project (`counterscale`)
+    1. Prompt you for the production branch name (default is your current branch, i.e. `main`)
     1. Create a new Analytics Engine dataset, called `metricsDataset`
-1. It should now be live. Visit `https://counterscale.{yoursubdomain}.workers.dev`.
+    1. Deploy the site and give you the deployment URL.
+1. The site should now be deployed. Visit `https://{subdomain-emitted-from-npm-run-deploy}.pages.dev`.
+    1. NOTE: _It may take take a few minutes before the subdomain becomes live._
 
 ### Troubleshooting
 
