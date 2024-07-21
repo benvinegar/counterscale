@@ -129,7 +129,7 @@ export default function App() {
                 </nav>
             </header>
             <main role="main" className="w-full">
-                <Outlet />;
+                <Outlet />
             </main>
 
             <footer className="py-4 flex justify-end text-s">
