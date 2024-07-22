@@ -79,27 +79,10 @@ Open `.dev.vars` and enter the same values for `CF_BEARER_TOKEN` and `CF_ACCOUNT
 
 ### Running the Server
 
-Counterscale is built on Remix and Cloudflare Workers. In development, you'll run two servers:
+Counterscale is built on Remix and Cloudflare Workers. In development, you have two options:
 
--   The Remix development server
--   The Miniflare server (local environment for Cloudflare Workers)
-
-You run both using:
-
-```sh
-npm run dev
-```
-
-Afterwards, the dashboard should be visible at [http://127.0.0.1:8787](http://127.0.0.1:8787).
-
-If you want to check the production build, you can stop the dev server and run following commands:
-
-```sh
-npm run build
-npm start
-```
-
-Then refresh the same URL in your browser (no live reload for production builds).
+1. `npm run dev` → This runs the Vite development server in Node.js. This server will automatically rebuild files when you change them, but it does not best reflect Cloudflare's serverless platform.
+2. `npm run preview` → This runs Cloudflare's Miniflare server with a build of the Remix files. This closer matches the deployment environment, but does not (yet) automatically rebuild your app.
 
 ## Notes
 
