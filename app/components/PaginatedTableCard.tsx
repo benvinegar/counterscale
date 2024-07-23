@@ -9,6 +9,7 @@ const PaginatedTableCard = ({
     interval,
     dataFetcher,
     columnHeaders,
+    filters,
     loaderUrl,
     onClick,
 }: {
@@ -16,16 +17,22 @@ const PaginatedTableCard = ({
     interval: string;
     dataFetcher: any; // ignore type for now
     columnHeaders: string[];
+    filters: Record<string, string>;
     loaderUrl: string;
     onClick?: Function;
 }) => {
     const countsByProperty = dataFetcher.data?.countsByProperty || [];
     const page = dataFetcher.data?.page || 1;
 
+    // turn filters into query string
+    const filterString = filters
+        ? Object.entries(filters).map(([key, value]) => `&${key}=${value}`)
+        : "";
+
     useEffect(() => {
         if (dataFetcher.state === "idle") {
             dataFetcher.load(
-                `${loaderUrl}?site=${siteId}&interval=${interval}`,
+                `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`,
             );
         }
     }, []);
@@ -33,14 +40,14 @@ const PaginatedTableCard = ({
     useEffect(() => {
         if (dataFetcher.state === "idle") {
             dataFetcher.load(
-                `${loaderUrl}?site=${siteId}&interval=${interval}`,
+                `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`,
             );
         }
     }, [siteId, interval]);
 
     function handlePagination(page: number) {
         dataFetcher.load(
-            `${loaderUrl}?site=${siteId}&interval=${interval}&page=${page}`,
+            `${loaderUrl}?site=${siteId}&interval=${interval}&page=${page}${filterString}`,
         );
     }
 

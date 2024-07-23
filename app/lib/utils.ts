@@ -6,10 +6,26 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function paramsFromUrl(url: string) {
+    console.log(url);
     const searchParams = new URL(url).searchParams;
     const params: Record<string, string> = {};
     searchParams.forEach((value, key) => {
         params[key] = value;
     });
     return params;
+}
+
+export function getFiltersFromUrl(searchParams: URLSearchParams) {
+    let path;
+    try {
+        path = searchParams.get("path") || "";
+    } catch (err) {
+        path = "";
+    }
+
+    const filters: any = {};
+    if (path) {
+        filters["path"] = path;
+    }
+    return filters;
 }

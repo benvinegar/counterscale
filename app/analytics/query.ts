@@ -282,7 +282,6 @@ export class AnalyticsEngineAPI {
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
 
-        console.log(query);
         type SelectionSet = {
             count: number;
             isVisitor: number;
@@ -387,10 +386,13 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
+        filters: any = {},
         page: number = 1,
         limit: number = 10,
     ) {
         const intervalSql = intervalToSql(interval, tz);
+
+        const filterStr = filtersToSql(filters);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -401,10 +403,12 @@ export class AnalyticsEngineAPI {
             FROM metricsDataset
             WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
+                ${filterStr}
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
+        console.log(query);
         type SelectionSet = {
             readonly count: number;
             readonly isVisitor: number;
@@ -427,6 +431,7 @@ export class AnalyticsEngineAPI {
                     const responseData =
                         (await response.json()) as AnalyticsQueryResult<SelectionSet>;
 
+                    console.log(responseData);
                     // since CF AE doesn't support OFFSET clauses, we select up to LIMIT and
                     // then slice that into the individual requested page
                     const pageData = responseData.data.slice(
@@ -463,6 +468,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: any = {},
         page: number = 1,
     ) {
         const allCountsResultPromise = this.getAllCountsByColumn(
@@ -470,6 +476,7 @@ export class AnalyticsEngineAPI {
             "path",
             interval,
             tz,
+            filters,
             page,
         );
 
