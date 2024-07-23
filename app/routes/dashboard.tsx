@@ -69,6 +69,13 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const siteId = url.searchParams.get("site") || "";
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
+    let path;
+    try {
+        path = url.searchParams.get("path") || "";
+    } catch (err) {
+        path = "";
+    }
+
     const tz = context.cloudflare.cf.timezone as string;
 
     // initiate requests to AE in parallel
@@ -81,7 +88,17 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         tz,
     );
 
-    const counts = analyticsEngine.getCounts(actualSiteId, interval, tz);
+    const filters: any = {};
+    if (path) {
+        filters["path"] = path;
+    }
+
+    const counts = analyticsEngine.getCounts(
+        actualSiteId,
+        interval,
+        tz,
+        filters,
+    );
     let intervalType: "DAY" | "HOUR" = "DAY";
     switch (interval) {
         case "today":
@@ -118,12 +135,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         intervalType,
         localDateTime.toDate(),
         tz,
+        filters,
     );
 
     // await all requests to AE then return the results
 
     let out;
-
     try {
         out = {
             siteId: siteId,

@@ -4,18 +4,20 @@ import TableCard from "~/components/TableCard";
 import { Card } from "./ui/card";
 import PaginationButtons from "./PaginationButtons";
 
-const ReferrerCard = ({
+const PaginatedTableCard = ({
     siteId,
     interval,
     dataFetcher,
     columnHeaders,
     loaderUrl,
+    onClick,
 }: {
     siteId: string;
     interval: string;
     dataFetcher: any; // ignore type for now
     columnHeaders: string[];
     loaderUrl: string;
+    onClick?: Function;
 }) => {
     const countsByProperty = dataFetcher.data?.countsByProperty || [];
     const page = dataFetcher.data?.page || 1;
@@ -50,6 +52,7 @@ const ReferrerCard = ({
                     <TableCard
                         countByProperty={countsByProperty}
                         columnHeaders={columnHeaders}
+                        onClick={onClick}
                     />
                     <PaginationButtons
                         page={page}
@@ -62,4 +65,4 @@ const ReferrerCard = ({
     );
 };
 
-export default ReferrerCard;
+export default PaginatedTableCard;

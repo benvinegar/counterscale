@@ -1,3 +1,5 @@
+import { useSearchParams } from "@remix-run/react";
+
 import PropTypes, { InferProps } from "prop-types";
 
 import {
@@ -9,7 +11,7 @@ import {
     TableRow,
 } from "~/components/ui/table";
 
-type CountByProperty = [string, string][];
+type CountByProperty = [string, string, string?][];
 
 function calculateCountPercentages(countByProperty: CountByProperty) {
     const totalCount = countByProperty.reduce(
@@ -26,10 +28,15 @@ function calculateCountPercentages(countByProperty: CountByProperty) {
 export default function TableCard({
     countByProperty,
     columnHeaders,
-}: InferProps<typeof TableCard.propTypes>) {
-    const barChartPercentages = calculateCountPercentages(
-        countByProperty as CountByProperty,
-    );
+    onClick,
+}: {
+    countByProperty: CountByProperty;
+    columnHeaders: string[];
+    onClick?: Function;
+}) {
+    const [_, setSearchParams] = useSearchParams();
+
+    const barChartPercentages = calculateCountPercentages(countByProperty);
 
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
@@ -37,6 +44,11 @@ export default function TableCard({
         (columnHeaders || []).length === 3
             ? "grid-cols-[minmax(0,1fr),minmax(0,8ch),minmax(0,8ch)]"
             : "grid-cols-[minmax(0,1fr),minmax(0,8ch)]";
+
+    function handleFilter(value: string | null = "") {
+        if (!value) return;
+        setSearchParams({ filter: value });
+    }
     return (
         <Table>
             <TableHeader>
@@ -63,16 +75,25 @@ export default function TableCard({
                         width={barChartPercentages[key]}
                     >
                         <TableCell className="font-medium min-w-48 break-all">
-                            {item[0]}
+                            {onClick ? (
+                                <button
+                                    onClick={() => onClick(item[0] as string)}
+                                    className="hover:underline"
+                                >
+                                    {item[0]}
+                                </button>
+                            ) : (
+                                item[0]
+                            )}
                         </TableCell>
 
                         <TableCell className="text-right min-w-16">
-                            {countFormatter.format(item[1] as number)}
+                            {countFormatter.format(parseInt(item[1], 10))}
                         </TableCell>
 
-                        {item.length > 2 && (
+                        {item.length > 2 && item[2] !== undefined && (
                             <TableCell className="text-right min-w-16">
-                                {countFormatter.format(item[2] as number)}
+                                {countFormatter.format(parseInt(item[2], 10))}
                             </TableCell>
                         )}
                     </TableRow>
@@ -81,16 +102,3 @@ export default function TableCard({
         </Table>
     );
 }
-
-TableCard.propTypes = {
-    propertyName: PropTypes.string,
-    countByProperty: PropTypes.arrayOf(
-        PropTypes.arrayOf(
-            PropTypes.oneOfType([
-                PropTypes.string.isRequired,
-                PropTypes.number.isRequired,
-            ]).isRequired,
-        ).isRequired,
-    ).isRequired,
-    columnHeaders: PropTypes.array,
-};

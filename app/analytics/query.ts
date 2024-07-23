@@ -108,6 +108,14 @@ function generateEmptyRowsOverInterval(
     return initialRows;
 }
 
+function filtersToSql(filters: any) {
+    let filterStr = "";
+    if (filters && filters.path) {
+        filterStr += `AND ${ColumnMappings.path} = '${filters.path}'`;
+    }
+    return filterStr;
+}
+
 /**
  * NOTE: There are a bunch of "unsafe" SQL-like queries in here, in the sense that
  *       they are unparameterized raw SQL-like strings sent over HTTP. Cloudflare Analytics Engine
@@ -154,6 +162,7 @@ export class AnalyticsEngineAPI {
         intervalType: "DAY" | "HOUR",
         startDateTime: Date, // start date/time in local timezone
         tz?: string, // local timezone
+        filters?: any,
     ) {
         let intervalCount = 1;
 
@@ -171,6 +180,8 @@ export class AnalyticsEngineAPI {
             startDateTime,
             tz,
         );
+
+        const filterStr = filtersToSql(filters);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
@@ -196,6 +207,7 @@ export class AnalyticsEngineAPI {
             FROM metricsDataset
             WHERE timestamp > toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
+                ${filterStr}
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
 
@@ -246,11 +258,18 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCounts(siteId: string, interval: string, tz?: string) {
+    async getCounts(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters?: any,
+    ) {
         // defaults to 1 day if not specified
         const siteIdColumn = ColumnMappings["siteId"];
 
         const intervalSql = intervalToSql(interval, tz);
+
+        const filterStr = filtersToSql(filters);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
@@ -258,10 +277,12 @@ export class AnalyticsEngineAPI {
                 ${ColumnMappings.newSession} as isVisit
             FROM metricsDataset
             WHERE timestamp > ${intervalSql}
+                ${filterStr}
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
 
+        console.log(query);
         type SelectionSet = {
             count: number;
             isVisitor: number;

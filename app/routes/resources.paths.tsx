@@ -1,4 +1,4 @@
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useSearchParams } from "@remix-run/react";
 
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
@@ -30,6 +30,13 @@ export const PathsCard = ({
     siteId: string;
     interval: string;
 }) => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    function handleClick(path: string) {
+        setSearchParams((prev) => {
+            prev.set("path", path);
+            return prev;
+        });
+    }
     return (
         <PaginatedTableCard
             siteId={siteId}
@@ -37,6 +44,7 @@ export const PathsCard = ({
             columnHeaders={["Path", "Visitors", "Views"]}
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/paths"
+            onClick={handleClick}
         />
     );
 };
