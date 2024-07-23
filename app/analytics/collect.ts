@@ -78,9 +78,18 @@ export function collectRequestHandler(request: Request, env: Env) {
 
     // NOTE: location is derived from Cloudflare-specific request properties
     // see: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
-    const country = (request as RequestInit).cf?.country;
+    const cfIncomingRequestProperties = (request as RequestInit).cf;
+    const city = cfIncomingRequestProperties?.city;
+    if (typeof city === "string") {
+        data.city = city;
+    }
+    const country = cfIncomingRequestProperties?.country;
     if (typeof country === "string") {
         data.country = country;
+    }
+    const region = cfIncomingRequestProperties?.region;
+    if (typeof region === "string") {
+        data.region = region;
     }
 
     writeDataPoint(env.WEB_COUNTER_AE, data);
@@ -116,7 +125,9 @@ interface DataPoint {
     host?: string | undefined;
     userAgent?: string;
     path?: string;
+    city?: string;
     country?: string;
+    region?: string;
     referrer?: string;
     browserName?: string;
     deviceModel?: string;
@@ -144,6 +155,8 @@ export function writeDataPoint(
             data.browserName || "", // blob6
             data.deviceModel || "", // blob7
             data.siteId || "", // blob8
+            data.region || "", // blob9
+            data.city || "", // blob10
         ],
         doubles: [data.newVisitor || 0, data.newSession || 0],
     };

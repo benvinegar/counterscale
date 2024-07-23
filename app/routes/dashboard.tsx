@@ -19,6 +19,8 @@ import { ReferrerCard } from "./resources.referrer";
 import { PathsCard } from "./resources.paths";
 import { BrowserCard } from "./resources.browser";
 import { CountryCard } from "./resources.country";
+import { RegionCard } from "./resources.region";
+import { CityCard } from "./resources.city";
 import { DeviceCard } from "./resources.device";
 
 import TimeSeriesChart from "~/components/TimeSeriesChart";
@@ -319,15 +321,8 @@ export default function Dashboard() {
                         onFilterChange={handleFilterChange}
                     />
                 </div>
-                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <BrowserCard
-                        siteId={data.siteId}
-                        interval={data.interval}
-                        filters={data.filters}
-                        onFilterChange={handleFilterChange}
-                    />
-
-                    <CountryCard
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
@@ -340,6 +335,16 @@ export default function Dashboard() {
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
                     />
+                </div>
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <CountryCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                    />
+                    <RegionCard siteId={data.siteId} interval={data.interval} />
+                    <CityCard siteId={data.siteId} interval={data.interval} />
                 </div>
             </div>
         </div>
