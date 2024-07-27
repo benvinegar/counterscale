@@ -17,38 +17,41 @@ const PaginatedTableCard = ({
     interval: string;
     dataFetcher: any; // ignore type for now
     columnHeaders: string[];
-    filters: Record<string, string>;
+    filters?: Record<string, string>;
     loaderUrl: string;
-    onClick?: Function;
+    onClick?: (key: string) => void;
 }) => {
     const countsByProperty = dataFetcher.data?.countsByProperty || [];
     const page = dataFetcher.data?.page || 1;
 
-    // turn filters into query string
-    const filterString = filters
-        ? Object.entries(filters).map(([key, value]) => `&${key}=${value}`)
-        : "";
+    const loadData = (page: string | undefined = undefined) => {
+        // turn filters into query string
+        const filterString = filters
+            ? Object.entries(filters).map(([key, value]) => `&${key}=${value}`)
+            : "";
+
+        let url = `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`;
+        if (page) {
+            url += `&page=${page}`;
+        }
+
+        dataFetcher.load(url);
+    };
 
     useEffect(() => {
         if (dataFetcher.state === "idle") {
-            dataFetcher.load(
-                `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`,
-            );
+            loadData();
         }
     }, []);
 
     useEffect(() => {
         if (dataFetcher.state === "idle") {
-            dataFetcher.load(
-                `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`,
-            );
+            loadData();
         }
-    }, [siteId, interval]);
+    }, [siteId, interval, filters]);
 
     function handlePagination(page: number) {
-        dataFetcher.load(
-            `${loaderUrl}?site=${siteId}&interval=${interval}&page=${page}${filterString}`,
-        );
+        loadData(page.toString());
     }
 
     const hasMore = countsByProperty.length === 10;

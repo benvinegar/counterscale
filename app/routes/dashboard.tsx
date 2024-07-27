@@ -155,6 +155,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             intervalType,
             interval,
             tz,
+            filters,
         };
     } catch (err) {
         console.error(err);
@@ -285,7 +286,11 @@ export default function Dashboard() {
                     </Card>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <PathsCard siteId={data.siteId} interval={data.interval} />
+                    <PathsCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                    />
                     <ReferrerCard
                         siteId={data.siteId}
                         interval={data.interval}

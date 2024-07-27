@@ -6,7 +6,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function paramsFromUrl(url: string) {
-    console.log(url);
     const searchParams = new URL(url).searchParams;
     const params: Record<string, string> = {};
     searchParams.forEach((value, key) => {

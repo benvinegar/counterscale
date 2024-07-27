@@ -18,7 +18,6 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const url = new URL(request.url);
     const filters = getFiltersFromSearchParams(new URL(url).searchParams);
 
-    console.log(filters, site);
     return json({
         countsByProperty: await analyticsEngine.getCountByPath(
             site,
@@ -34,22 +33,22 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 export const PathsCard = ({
     siteId,
     interval,
+    filters,
 }: {
     siteId: string;
     interval: string;
+    filters: Record<string, string>;
 }) => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+
     function handleClick(path: string) {
         setSearchParams((prev) => {
             prev.set("path", path);
             return prev;
         });
-        const navigate = useNavigate();
         navigate(".", { replace: true });
     }
-
-    // convert searchParams to Record
-    const filters = getFiltersFromSearchParams(searchParams);
 
     return (
         <PaginatedTableCard

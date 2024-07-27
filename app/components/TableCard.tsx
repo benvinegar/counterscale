@@ -1,7 +1,3 @@
-import { useSearchParams } from "@remix-run/react";
-
-import PropTypes, { InferProps } from "prop-types";
-
 import {
     Table,
     TableBody,
@@ -32,10 +28,8 @@ export default function TableCard({
 }: {
     countByProperty: CountByProperty;
     columnHeaders: string[];
-    onClick?: Function;
+    onClick?: (key: string) => void;
 }) {
-    const [_, setSearchParams] = useSearchParams();
-
     const barChartPercentages = calculateCountPercentages(countByProperty);
 
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
@@ -45,10 +39,6 @@ export default function TableCard({
             ? "grid-cols-[minmax(0,1fr),minmax(0,8ch),minmax(0,8ch)]"
             : "grid-cols-[minmax(0,1fr),minmax(0,8ch)]";
 
-    function handleFilter(value: string | null = "") {
-        if (!value) return;
-        setSearchParams({ filter: value });
-    }
     return (
         <Table>
             <TableHeader>

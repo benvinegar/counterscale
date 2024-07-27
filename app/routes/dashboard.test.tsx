@@ -190,6 +190,7 @@ describe("Dashboard route", () => {
             const json = await response.json();
 
             expect(json).toEqual({
+                filters: {},
                 siteId: "test-siteid",
                 sites: ["test-siteid"],
                 views: 6,
@@ -241,6 +242,7 @@ describe("Dashboard route", () => {
             const json = await response.json();
 
             expect(json).toEqual({
+                filters: {},
                 siteId: "",
                 sites: [],
                 views: 0,
