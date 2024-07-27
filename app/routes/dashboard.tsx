@@ -23,6 +23,7 @@ import { DeviceCard } from "./resources.device";
 
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
+import { getFiltersFromSearchParams } from "~/lib/utils";
 
 export const meta: MetaFunction = () => {
     return [
@@ -69,13 +70,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const siteId = url.searchParams.get("site") || "";
     const actualSiteId = siteId == "@unknown" ? "" : siteId;
 
-    let path;
-    try {
-        path = url.searchParams.get("path") || "";
-    } catch (err) {
-        path = "";
-    }
+    const filters = getFiltersFromSearchParams(url.searchParams);
 
+    console.log(filters);
     const tz = context.cloudflare.cf.timezone as string;
 
     // initiate requests to AE in parallel
@@ -87,11 +84,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         `${MAX_RETENTION_DAYS}d`,
         tz,
     );
-
-    const filters: any = {};
-    if (path) {
-        filters["path"] = path;
-    }
 
     const counts = analyticsEngine.getCounts(
         actualSiteId,
@@ -196,6 +188,14 @@ export default function Dashboard() {
 
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
+    const handleFilterChange = (filters: Record<string, string>) => {
+        setSearchParams((prev) => {
+            for (const key in filters) {
+                prev.set(key, filters[key]);
+            }
+            return prev;
+        });
+    };
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
             <div className="w-full mb-4 flex gap-4">
@@ -290,10 +290,13 @@ export default function Dashboard() {
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
+                        onFilterChange={handleFilterChange}
                     />
                     <ReferrerCard
                         siteId={data.siteId}
                         interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">

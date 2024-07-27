@@ -14,17 +14,32 @@ export function paramsFromUrl(url: string) {
     return params;
 }
 
-export function getFiltersFromUrl(searchParams: URLSearchParams) {
-    let path;
-    try {
-        path = searchParams.get("path") || "";
-    } catch (err) {
-        path = "";
+interface SearchFilters {
+    path?: string;
+    referrer?: string;
+    device?: string;
+    country?: string;
+    browser?: string;
+}
+
+export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
+    const filters: SearchFilters = {};
+
+    if (searchParams.has("path")) {
+        filters.path = searchParams.get("path") || "";
+    }
+    if (searchParams.has("referrer")) {
+        filters.referrer = searchParams.get("referrer") || "";
+    }
+    if (searchParams.has("device")) {
+        filters.device = searchParams.get("device") || "";
+    }
+    if (searchParams.has("country")) {
+        filters.country = searchParams.get("country") || "";
+    }
+    if (searchParams.has("browser")) {
+        filters.browser = searchParams.get("browser") || "";
     }
 
-    const filters: any = {};
-    if (path) {
-        filters["path"] = path;
-    }
     return filters;
 }

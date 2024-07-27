@@ -113,6 +113,18 @@ function filtersToSql(filters: any) {
     if (filters && filters.path) {
         filterStr += `AND ${ColumnMappings.path} = '${filters.path}'`;
     }
+    if (filters && filters.referrer) {
+        filterStr += `AND ${ColumnMappings.referrer} = '${filters.referrer}'`;
+    }
+    if (filters && filters.browser) {
+        filterStr += `AND ${ColumnMappings.browserName} = '${filters.browser}'`;
+    }
+    if (filters && filters.country) {
+        filterStr += `AND ${ColumnMappings.country} = '${filters.country}'`;
+    }
+    if (filters && filters.device) {
+        filterStr += `AND ${ColumnMappings.deviceModel} = '${filters.device}'`;
+    }
     return filterStr;
 }
 
@@ -325,10 +337,13 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
+        filters: any = {},
         page: number = 1,
         limit: number = 10,
     ) {
         const intervalSql = intervalToSql(interval, tz);
+
+        const filterStr = filtersToSql(filters);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -337,10 +352,12 @@ export class AnalyticsEngineAPI {
             WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.newVisitor} = 1
                 AND ${ColumnMappings.siteId} = '${siteId}'
+                ${filterStr}
             GROUP BY ${_column}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
+        console.log(query);
         type SelectionSet = {
             count: number;
         } & Record<
@@ -408,7 +425,6 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
-        console.log(query);
         type SelectionSet = {
             readonly count: number;
             readonly isVisitor: number;
@@ -431,7 +447,6 @@ export class AnalyticsEngineAPI {
                     const responseData =
                         (await response.json()) as AnalyticsQueryResult<SelectionSet>;
 
-                    console.log(responseData);
                     // since CF AE doesn't support OFFSET clauses, we select up to LIMIT and
                     // then slice that into the individual requested page
                     const pageData = responseData.data.slice(
@@ -525,6 +540,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: any = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -532,6 +548,7 @@ export class AnalyticsEngineAPI {
             "referrer",
             interval,
             tz,
+            filters,
             page,
         );
     }

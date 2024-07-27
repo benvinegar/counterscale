@@ -1,10 +1,10 @@
-import { useFetcher, useSearchParams, useNavigate } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
 import {
-    getFiltersFromUrl as getFiltersFromSearchParams,
+    getFiltersFromSearchParams as getFiltersFromSearchParams,
     paramsFromUrl,
 } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
@@ -34,22 +34,13 @@ export const PathsCard = ({
     siteId,
     interval,
     filters,
+    onFilterChange,
 }: {
     siteId: string;
     interval: string;
     filters: Record<string, string>;
+    onFilterChange: (filters: Record<string, string>) => void;
 }) => {
-    const [, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
-
-    function handleClick(path: string) {
-        setSearchParams((prev) => {
-            prev.set("path", path);
-            return prev;
-        });
-        navigate(".", { replace: true });
-    }
-
     return (
         <PaginatedTableCard
             siteId={siteId}
@@ -58,7 +49,7 @@ export const PathsCard = ({
             dataFetcher={useFetcher<typeof loader>()}
             filters={filters}
             loaderUrl="/resources/paths"
-            onClick={handleClick}
+            onClick={(path) => onFilterChange({ ...filters, path })}
         />
     );
 };
