@@ -109,12 +109,12 @@ function generateEmptyRowsOverInterval(
 }
 
 function filtersToSql(filters: Record<string, string> = {}) {
-    const supportedFilters = [
+    const supportedFilters: Array<keyof typeof ColumnMappings> = [
         "path",
         "referrer",
-        "browser",
+        "browserName",
         "country",
-        "device",
+        "deviceModel",
     ];
 
     let filterStr = "";

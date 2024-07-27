@@ -17,9 +17,9 @@ export function paramsFromUrl(url: string) {
 interface SearchFilters {
     path?: string;
     referrer?: string;
-    device?: string;
+    deviceModel?: string;
     country?: string;
-    browser?: string;
+    browserName?: string;
 }
 
 export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
@@ -31,14 +31,14 @@ export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
     if (searchParams.has("referrer")) {
         filters.referrer = searchParams.get("referrer") || "";
     }
-    if (searchParams.has("device")) {
-        filters.device = searchParams.get("device") || "";
+    if (searchParams.has("deviceModel")) {
+        filters.deviceModel = searchParams.get("deviceModel") || "";
     }
     if (searchParams.has("country")) {
         filters.country = searchParams.get("country") || "";
     }
-    if (searchParams.has("browser")) {
-        filters.browser = searchParams.get("browser") || "";
+    if (searchParams.has("browserName")) {
+        filters.browserName = searchParams.get("browserName") || "";
     }
 
     return filters;

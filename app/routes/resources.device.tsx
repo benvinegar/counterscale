@@ -31,10 +31,12 @@ export const DeviceCard = ({
     siteId,
     interval,
     filters,
+    onFilterChange,
 }: {
     siteId: string;
     interval: string;
     filters: Record<string, string>;
+    onFilterChange: (filters: Record<string, string>) => void;
 }) => {
     return (
         <PaginatedTableCard
@@ -44,6 +46,9 @@ export const DeviceCard = ({
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/device"
             filters={filters}
+            onClick={(deviceModel) =>
+                onFilterChange({ ...filters, deviceModel })
+            }
         />
     );
 };

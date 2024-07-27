@@ -34,7 +34,6 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const url = new URL(request.url);
     const filters = getFiltersFromSearchParams(new URL(url).searchParams);
 
-    console.log("filters", filters);
     const countByCountry = await analyticsEngine.getCountByCountry(
         site,
         interval,
@@ -59,10 +58,12 @@ export const CountryCard = ({
     siteId,
     interval,
     filters,
+    onFilterChange,
 }: {
     siteId: string;
     interval: string;
     filters: Record<string, string>;
+    onFilterChange: (filters: Record<string, string>) => void;
 }) => {
     return (
         <PaginatedTableCard
@@ -72,6 +73,7 @@ export const CountryCard = ({
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/country"
             filters={filters}
+            onClick={(country) => onFilterChange({ ...filters, country })}
         />
     );
 };

@@ -303,18 +303,21 @@ export default function Dashboard() {
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
+                        onFilterChange={handleFilterChange}
                     />
 
                     <CountryCard
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
+                        onFilterChange={handleFilterChange}
                     />
 
                     <DeviceCard
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
+                        onFilterChange={handleFilterChange}
                     />
                 </div>
             </div>

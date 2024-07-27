@@ -31,10 +31,12 @@ export const BrowserCard = ({
     siteId,
     interval,
     filters,
+    onFilterChange,
 }: {
     siteId: string;
     interval: string;
     filters: Record<string, string>;
+    onFilterChange: (filters: Record<string, string>) => void;
 }) => {
     return (
         <PaginatedTableCard
@@ -44,6 +46,9 @@ export const BrowserCard = ({
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/browser"
             filters={filters}
+            onClick={(browserName) =>
+                onFilterChange({ ...filters, browserName })
+            }
         />
     );
 };
