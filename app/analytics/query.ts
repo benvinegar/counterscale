@@ -120,7 +120,7 @@ function filtersToSql(filters: Record<string, string> = {}) {
     let filterStr = "";
     supportedFilters.forEach((filter) => {
         if (Object.hasOwnProperty.call(filters, filter)) {
-            filterStr += `AND ${(ColumnMappings as any)[filter]} = '${filters[filter]}'`;
+            filterStr += `AND ${ColumnMappings[filter]} = '${filters[filter]}'`;
         }
     });
     return filterStr;
