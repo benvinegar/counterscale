@@ -27,7 +27,9 @@ const PaginatedTableCard = ({
     const loadData = (page: string | undefined = undefined) => {
         // turn filters into query string
         const filterString = filters
-            ? Object.entries(filters).map(([key, value]) => `&${key}=${value}`)
+            ? Object.entries(filters)
+                  .map(([key, value]) => `&${key}=${value}`)
+                  .join("")
             : "";
 
         let url = `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`;
