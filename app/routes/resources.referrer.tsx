@@ -17,7 +17,6 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const url = new URL(request.url);
     const filters = getFiltersFromSearchParams(new URL(url).searchParams);
 
-    console.log("filters", filters);
     return json({
         countsByProperty: await analyticsEngine.getCountByReferrer(
             site,

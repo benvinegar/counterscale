@@ -108,23 +108,21 @@ function generateEmptyRowsOverInterval(
     return initialRows;
 }
 
-function filtersToSql(filters: any) {
+function filtersToSql(filters: Record<string, string> = {}) {
+    const supportedFilters = [
+        "path",
+        "referrer",
+        "browser",
+        "country",
+        "device",
+    ];
+
     let filterStr = "";
-    if (filters && filters.path) {
-        filterStr += `AND ${ColumnMappings.path} = '${filters.path}'`;
-    }
-    if (filters && filters.referrer) {
-        filterStr += `AND ${ColumnMappings.referrer} = '${filters.referrer}'`;
-    }
-    if (filters && filters.browser) {
-        filterStr += `AND ${ColumnMappings.browserName} = '${filters.browser}'`;
-    }
-    if (filters && filters.country) {
-        filterStr += `AND ${ColumnMappings.country} = '${filters.country}'`;
-    }
-    if (filters && filters.device) {
-        filterStr += `AND ${ColumnMappings.deviceModel} = '${filters.device}'`;
-    }
+    supportedFilters.forEach((filter) => {
+        if (Object.hasOwnProperty.call(filters, filter)) {
+            filterStr += `AND ${(ColumnMappings as any)[filter]} = '${filters[filter]}'`;
+        }
+    });
     return filterStr;
 }
 
@@ -357,7 +355,6 @@ export class AnalyticsEngineAPI {
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
-        console.log(query);
         type SelectionSet = {
             count: number;
         } & Record<
@@ -525,6 +522,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: any = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -532,6 +530,7 @@ export class AnalyticsEngineAPI {
             "country",
             interval,
             tz,
+            filters,
             page,
         );
     }
@@ -556,6 +555,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: any = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -563,6 +563,7 @@ export class AnalyticsEngineAPI {
             "browserName",
             interval,
             tz,
+            filters,
             page,
         );
     }
@@ -571,6 +572,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: any = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -578,6 +580,7 @@ export class AnalyticsEngineAPI {
             "deviceModel",
             interval,
             tz,
+            filters,
             page,
         );
     }

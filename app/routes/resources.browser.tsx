@@ -3,7 +3,7 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import { paramsFromUrl } from "~/lib/utils";
+import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
@@ -12,11 +12,15 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
     const tz = context.cloudflare.cf.timezone as string;
 
+    const url = new URL(request.url);
+    const filters = getFiltersFromSearchParams(new URL(url).searchParams);
+
     return json({
         countsByProperty: await analyticsEngine.getCountByBrowser(
             site,
             interval,
             tz,
+            filters,
             Number(page),
         ),
         page: Number(page),
@@ -26,9 +30,11 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 export const BrowserCard = ({
     siteId,
     interval,
+    filters,
 }: {
     siteId: string;
     interval: string;
+    filters: Record<string, string>;
 }) => {
     return (
         <PaginatedTableCard
@@ -37,6 +43,7 @@ export const BrowserCard = ({
             columnHeaders={["Browser", "Visitors"]}
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/browser"
+            filters={filters}
         />
     );
 };

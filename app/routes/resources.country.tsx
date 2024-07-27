@@ -3,7 +3,7 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import { paramsFromUrl } from "~/lib/utils";
+import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 
 function convertCountryCodesToNames(
@@ -31,10 +31,15 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
     const tz = context.cloudflare.cf.timezone as string;
 
+    const url = new URL(request.url);
+    const filters = getFiltersFromSearchParams(new URL(url).searchParams);
+
+    console.log("filters", filters);
     const countByCountry = await analyticsEngine.getCountByCountry(
         site,
         interval,
         tz,
+        filters,
         Number(page),
     );
 
@@ -53,9 +58,11 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 export const CountryCard = ({
     siteId,
     interval,
+    filters,
 }: {
     siteId: string;
     interval: string;
+    filters: Record<string, string>;
 }) => {
     return (
         <PaginatedTableCard
@@ -64,6 +71,7 @@ export const CountryCard = ({
             columnHeaders={["Country", "Visitors"]}
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/country"
+            filters={filters}
         />
     );
 };

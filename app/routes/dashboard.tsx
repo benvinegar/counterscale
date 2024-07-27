@@ -72,7 +72,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     const filters = getFiltersFromSearchParams(url.searchParams);
 
-    console.log(filters);
     const tz = context.cloudflare.cf.timezone as string;
 
     // initiate requests to AE in parallel
@@ -303,14 +302,20 @@ export default function Dashboard() {
                     <BrowserCard
                         siteId={data.siteId}
                         interval={data.interval}
+                        filters={data.filters}
                     />
 
                     <CountryCard
                         siteId={data.siteId}
                         interval={data.interval}
+                        filters={data.filters}
                     />
 
-                    <DeviceCard siteId={data.siteId} interval={data.interval} />
+                    <DeviceCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                    />
                 </div>
             </div>
         </div>
