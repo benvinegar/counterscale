@@ -165,9 +165,13 @@ export default function Dashboard() {
     const loading = navigation.state === "loading";
 
     function changeSite(site: string) {
-        setSearchParams((prev) => {
-            prev.set("site", site);
-            return prev;
+        // intentionally not updating prev params; don't want search
+        // filters (e.g. referrer, path) to persist
+
+        // TODO: might revisit if this is considered unexpected behavior
+        setSearchParams({
+            site,
+            interval: data.interval,
         });
     }
 
