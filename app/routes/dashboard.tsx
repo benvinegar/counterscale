@@ -24,6 +24,7 @@ import { DeviceCard } from "./resources.device";
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
 import { getFiltersFromSearchParams } from "~/lib/utils";
+import { SearchFilters } from "~/lib/types";
 
 export const meta: MetaFunction = () => {
     return [
@@ -187,10 +188,12 @@ export default function Dashboard() {
 
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
-    const handleFilterChange = (filters: Record<string, string>) => {
+    const handleFilterChange = (filters: SearchFilters) => {
         setSearchParams((prev) => {
             for (const key in filters) {
-                prev.set(key, filters[key]);
+                if (Object.hasOwnProperty.call(filters, key)) {
+                    prev.set(key, (filters as any)[key]);
+                }
             }
             return prev;
         });

@@ -3,6 +3,7 @@ import TableCard from "~/components/TableCard";
 
 import { Card } from "./ui/card";
 import PaginationButtons from "./PaginationButtons";
+import { SearchFilters } from "~/lib/types";
 
 const PaginatedTableCard = ({
     siteId,
@@ -17,7 +18,7 @@ const PaginatedTableCard = ({
     interval: string;
     dataFetcher: any; // ignore type for now
     columnHeaders: string[];
-    filters?: Record<string, string>;
+    filters?: SearchFilters;
     loaderUrl: string;
     onClick?: (key: string) => void;
 }) => {

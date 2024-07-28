@@ -8,6 +8,7 @@ import {
     paramsFromUrl,
 } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
+import { SearchFilters } from "~/lib/types";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
@@ -38,8 +39,8 @@ export const PathsCard = ({
 }: {
     siteId: string;
     interval: string;
-    filters: Record<string, string>;
-    onFilterChange: (filters: Record<string, string>) => void;
+    filters: SearchFilters;
+    onFilterChange: (filters: SearchFilters) => void;
 }) => {
     return (
         <PaginatedTableCard

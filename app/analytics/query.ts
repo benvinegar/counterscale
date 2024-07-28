@@ -1,5 +1,7 @@
 import { ColumnMappingToType, ColumnMappings } from "./schema";
 
+import { SearchFilters } from "~/lib/types";
+
 import dayjs, { ManipulateType } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -108,8 +110,8 @@ function generateEmptyRowsOverInterval(
     return initialRows;
 }
 
-function filtersToSql(filters: Record<string, string> = {}) {
-    const supportedFilters: Array<keyof typeof ColumnMappings> = [
+function filtersToSql(filters: SearchFilters) {
+    const supportedFilters: Array<keyof SearchFilters> = [
         "path",
         "referrer",
         "browserName",
@@ -172,7 +174,7 @@ export class AnalyticsEngineAPI {
         intervalType: "DAY" | "HOUR",
         startDateTime: Date, // start date/time in local timezone
         tz?: string, // local timezone
-        filters?: any,
+        filters: SearchFilters = {},
     ) {
         let intervalCount = 1;
 
@@ -272,7 +274,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
-        filters?: any,
+        filters: SearchFilters = {},
     ) {
         // defaults to 1 day if not specified
         const siteIdColumn = ColumnMappings["siteId"];
@@ -335,7 +337,7 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
-        filters: any = {},
+        filters: SearchFilters = {},
         page: number = 1,
         limit: number = 10,
     ) {
@@ -400,7 +402,7 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
-        filters: any = {},
+        filters: SearchFilters = {},
         page: number = 1,
         limit: number = 10,
     ) {
@@ -480,7 +482,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
-        filters: any = {},
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         const allCountsResultPromise = this.getAllCountsByColumn(
@@ -501,21 +503,6 @@ export class AnalyticsEngineAPI {
             // sort by visitors
             return result.sort((a, b) => b[1] - a[1]);
         });
-    }
-
-    async getCountByUserAgent(
-        siteId: string,
-        interval: string,
-        tz?: string,
-        page: number = 1,
-    ) {
-        return this.getVisitorCountByColumn(
-            siteId,
-            "userAgent",
-            interval,
-            tz,
-            page,
-        );
     }
 
     async getCountByCountry(
