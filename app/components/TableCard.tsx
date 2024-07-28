@@ -59,8 +59,13 @@ export default function TableCard({
             </TableHeader>
             <TableBody>
                 {(countByProperty || []).map((item, index) => {
-                    const label = Array.isArray(item[0]) ? item[0][1] : item[0];
-                    const key = Array.isArray(item[0]) ? item[0][0] : item[0];
+                    const desc = item[0];
+
+                    // the description can be either a single string (that is both the key and the label),
+                    // or a tuple of type [key, label]
+                    const [key, label] = Array.isArray(desc)
+                        ? [desc[0], desc[1] || "(none)"]
+                        : [desc, desc || "(none)"];
 
                     return (
                         <TableRow

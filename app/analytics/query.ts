@@ -366,7 +366,7 @@ export class AnalyticsEngineAPI {
 
         const queryResult = this.query(query);
         const returnPromise = new Promise<
-            [ColumnMappingToType<typeof _column> | "(none)", number][]
+            [ColumnMappingToType<typeof _column>, number][]
         >((resolve, reject) =>
             (async () => {
                 const response = await queryResult;
@@ -387,8 +387,7 @@ export class AnalyticsEngineAPI {
 
                 resolve(
                     pageData.map((row) => {
-                        const key =
-                            row[_column] === "" ? "(none)" : row[_column];
+                        const key = row[_column];
                         return [key, row["count"]] as const;
                     }),
                 );
@@ -455,10 +454,7 @@ export class AnalyticsEngineAPI {
 
                     const result = pageData.reduce(
                         (acc, row) => {
-                            const key =
-                                row[_column] === ""
-                                    ? "(none)"
-                                    : (row[_column] as string);
+                            const key = row[_column] as string;
                             if (!Object.hasOwn(acc, key)) {
                                 acc[key] = {
                                     views: 0,
