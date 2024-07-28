@@ -17,6 +17,12 @@ module.exports = {
             },
         },
         extend: {
+            flexBasis: {
+                /* dashboard layout */
+                "1/2-gap-4": "calc(50% - (1/2 * 1rem))",
+                "1/4-gap-4": "calc(25% - (1/4 * 1rem))",
+                "1/5-gap-4": "calc(20% - (1/5 * 1rem))",
+            },
             colors: {
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",

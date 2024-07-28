@@ -213,8 +213,8 @@ export default function Dashboard() {
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-            <div className="w-full mb-4 flex gap-4">
-                <div className="w-1/2 sm:w-1/3 md:w-1/5">
+            <div className="w-full mb-4 flex gap-4 flex-wrap">
+                <div className="md:basis-1/5-gap-4 basis-1/2-gap-4">
                     <Select
                         defaultValue={data.siteId}
                         onValueChange={(site) => changeSite(site)}
@@ -236,7 +236,7 @@ export default function Dashboard() {
                     </Select>
                 </div>
 
-                <div className="w-1/2 sm:w-1/3 md:w-1/5">
+                <div className="md:basis-1/5-gap-4 basis-1/2-gap-4">
                     <Select
                         defaultValue={data.interval}
                         onValueChange={(interval) => changeInterval(interval)}
@@ -254,7 +254,7 @@ export default function Dashboard() {
                     </Select>
                 </div>
 
-                <div>
+                <div className="md:basis-1/2-gap-4 basis-full">
                     <SearchFilterBadges
                         filters={data.filters}
                         onFilterDelete={handleFilterDelete}
