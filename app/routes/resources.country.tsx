@@ -9,7 +9,7 @@ import { SearchFilters } from "~/lib/types";
 
 function convertCountryCodesToNames(
     countByCountry: [string, number][],
-): [string, number][] {
+): [[string, string], number][] {
     const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
     return countByCountry.map((countByBrowserRow) => {
         let countryName;
@@ -22,7 +22,7 @@ function convertCountryCodesToNames(
             countryName = "(unknown)";
         }
         const count = countByBrowserRow[1];
-        return [countryName, count];
+        return [[countByBrowserRow[0], countryName], count];
     });
 }
 

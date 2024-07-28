@@ -58,36 +58,43 @@ export default function TableCard({
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {(countByProperty || []).map((item, key) => (
-                    <TableRow
-                        key={item[0]}
-                        className={`group [&_td]:last:rounded-b-md ${gridCols}`}
-                        width={barChartPercentages[key]}
-                    >
-                        <TableCell className="font-medium min-w-48 break-all">
-                            {onClick ? (
-                                <button
-                                    onClick={() => onClick(item[0] as string)}
-                                    className="hover:underline"
-                                >
-                                    {item[0]}
-                                </button>
-                            ) : (
-                                item[0]
-                            )}
-                        </TableCell>
+                {(countByProperty || []).map((item, index) => {
+                    const label = Array.isArray(item[0]) ? item[0][1] : item[0];
+                    const key = Array.isArray(item[0]) ? item[0][0] : item[0];
 
-                        <TableCell className="text-right min-w-16">
-                            {countFormatter.format(parseInt(item[1], 10))}
-                        </TableCell>
-
-                        {item.length > 2 && item[2] !== undefined && (
-                            <TableCell className="text-right min-w-16">
-                                {countFormatter.format(parseInt(item[2], 10))}
+                    return (
+                        <TableRow
+                            key={item[0]}
+                            className={`group [&_td]:last:rounded-b-md ${gridCols}`}
+                            width={barChartPercentages[index]}
+                        >
+                            <TableCell className="font-medium min-w-48 break-all">
+                                {onClick ? (
+                                    <button
+                                        onClick={() => onClick(key as string)}
+                                        className="hover:underline"
+                                    >
+                                        {label}
+                                    </button>
+                                ) : (
+                                    label
+                                )}
                             </TableCell>
-                        )}
-                    </TableRow>
-                ))}
+
+                            <TableCell className="text-right min-w-16">
+                                {countFormatter.format(parseInt(item[1], 10))}
+                            </TableCell>
+
+                            {item.length > 2 && item[2] !== undefined && (
+                                <TableCell className="text-right min-w-16">
+                                    {countFormatter.format(
+                                        parseInt(item[2], 10),
+                                    )}
+                                </TableCell>
+                            )}
+                        </TableRow>
+                    );
+                })}
             </TableBody>
         </Table>
     );
