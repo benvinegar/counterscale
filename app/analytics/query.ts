@@ -509,7 +509,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
-        filters: any = {},
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -526,7 +526,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
-        filters: any = {},
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -542,7 +542,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
-        filters: any = {},
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -559,7 +559,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
-        filters: any = {},
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
