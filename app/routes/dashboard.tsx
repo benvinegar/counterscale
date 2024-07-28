@@ -25,6 +25,7 @@ import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
 import { getFiltersFromSearchParams } from "~/lib/utils";
 import { SearchFilters } from "~/lib/types";
+import SearchFilterBadges from "~/components/SearchFilterBadges";
 
 export const meta: MetaFunction = () => {
     return [
@@ -202,6 +203,14 @@ export default function Dashboard() {
             return prev;
         });
     };
+
+    const handleFilterDelete = (key: string) => {
+        setSearchParams((prev) => {
+            prev.delete(key);
+            return prev;
+        });
+    };
+
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
             <div className="w-full mb-4 flex gap-4">
@@ -243,6 +252,13 @@ export default function Dashboard() {
                             <SelectItem value="90d">90 days</SelectItem>
                         </SelectContent>
                     </Select>
+                </div>
+
+                <div>
+                    <SearchFilterBadges
+                        filters={data.filters}
+                        onFilterDelete={handleFilterDelete}
+                    />
                 </div>
             </div>
 
