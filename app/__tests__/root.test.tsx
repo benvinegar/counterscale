@@ -5,7 +5,7 @@ import "vitest-dom/extend-expect";
 import { render, waitFor, screen } from "@testing-library/react";
 import { createRemixStub } from "@remix-run/testing";
 
-import Root from "./root";
+import Root from "../root";
 
 describe("Root", () => {
     beforeAll(() => {

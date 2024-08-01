@@ -9,7 +9,7 @@ import {
     beforeAll,
 } from "vitest";
 
-import { AnalyticsEngineAPI, intervalToSql } from "./query";
+import { AnalyticsEngineAPI, intervalToSql } from "../query";
 
 function createFetchResponse<T>(data: T) {
     return {

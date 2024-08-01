@@ -28,7 +28,7 @@ export const loader = ({ context, request }: LoaderFunctionArgs) => {
     });
 };
 
-export const Layout = ({ children }: { children: React.ReactNode }) => {
+export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
     const data = useRouteLoaderData<typeof loader>("root") ?? {
         version: "unknown",
         origin: "counterscale.dev",

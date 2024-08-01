@@ -15,7 +15,7 @@ import "vitest-dom/extend-expect";
 import { createRemixStub } from "@remix-run/testing";
 import { render, screen, waitFor } from "@testing-library/react";
 
-import Dashboard, { loader } from "./dashboard";
+import Dashboard, { loader } from "../dashboard";
 import { AnalyticsEngineAPI } from "~/analytics/query";
 
 function createFetchResponse<T>(data: T) {

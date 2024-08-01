@@ -1,7 +1,7 @@
 import { Mock, describe, expect, test, vi, beforeEach } from "vitest";
 import httpMocks from "node-mocks-http";
 
-import { collectRequestHandler } from "./collect";
+import { collectRequestHandler } from "../collect";
 
 const defaultRequestParams = generateRequestParams({
     "user-agent":

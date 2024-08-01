@@ -1,4 +1,4 @@
-import { getFiltersFromSearchParams } from "./utils";
+import { getFiltersFromSearchParams } from "../utils";
 import { describe, test, expect } from "vitest";
 
 // test this getfiltersfromsearchparams function
