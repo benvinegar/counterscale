@@ -344,6 +344,9 @@ describe("Dashboard route", () => {
             ["2024-01-18 05:00:00", 0],
         ],
         intervalType: "day",
+        filters: {
+            path: "/lol",
+        },
     };
 
     test("renders with valid data", async () => {
