@@ -18,4 +18,4 @@ jobs:
             - uses: cloudflare/wrangler-action@v3
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-                  command: deploy --var VERSION:${{ github.sha }}
+                  command: pages deploy ./build/client --var VERSION:${{ github.sha }}
