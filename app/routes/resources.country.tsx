@@ -3,12 +3,13 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import { paramsFromUrl } from "~/lib/utils";
+import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
+import { SearchFilters } from "~/lib/types";
 
 function convertCountryCodesToNames(
     countByCountry: [string, number][],
-): [string, number][] {
+): [[string, string], number][] {
     const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
     return countByCountry.map((countByBrowserRow) => {
         let countryName;
@@ -21,7 +22,7 @@ function convertCountryCodesToNames(
             countryName = "(unknown)";
         }
         const count = countByBrowserRow[1];
-        return [countryName, count];
+        return [[countByBrowserRow[0], countryName], count];
     });
 }
 
@@ -31,10 +32,14 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
     const tz = context.cloudflare.cf.timezone as string;
 
+    const url = new URL(request.url);
+    const filters = getFiltersFromSearchParams(new URL(url).searchParams);
+
     const countByCountry = await analyticsEngine.getCountByCountry(
         site,
         interval,
         tz,
+        filters,
         Number(page),
     );
 
@@ -53,9 +58,13 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 export const CountryCard = ({
     siteId,
     interval,
+    filters,
+    onFilterChange,
 }: {
     siteId: string;
     interval: string;
+    filters: SearchFilters;
+    onFilterChange: (filters: SearchFilters) => void;
 }) => {
     return (
         <PaginatedTableCard
@@ -64,6 +73,8 @@ export const CountryCard = ({
             columnHeaders={["Country", "Visitors"]}
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/country"
+            filters={filters}
+            onClick={(country) => onFilterChange({ ...filters, country })}
         />
     );
 };

@@ -190,6 +190,7 @@ describe("Dashboard route", () => {
             const json = await response.json();
 
             expect(json).toEqual({
+                filters: {},
                 siteId: "test-siteid",
                 sites: ["test-siteid"],
                 views: 6,
@@ -241,6 +242,7 @@ describe("Dashboard route", () => {
             const json = await response.json();
 
             expect(json).toEqual({
+                filters: {},
                 siteId: "",
                 sites: [],
                 views: 0,
@@ -342,6 +344,9 @@ describe("Dashboard route", () => {
             ["2024-01-18 05:00:00", 0],
         ],
         intervalType: "day",
+        filters: {
+            path: "/lol",
+        },
     };
 
     test("renders with valid data", async () => {

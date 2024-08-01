@@ -1,5 +1,7 @@
 import { ColumnMappingToType, ColumnMappings } from "./schema";
 
+import { SearchFilters } from "~/lib/types";
+
 import dayjs, { ManipulateType } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -108,6 +110,24 @@ function generateEmptyRowsOverInterval(
     return initialRows;
 }
 
+function filtersToSql(filters: SearchFilters) {
+    const supportedFilters: Array<keyof SearchFilters> = [
+        "path",
+        "referrer",
+        "browserName",
+        "country",
+        "deviceModel",
+    ];
+
+    let filterStr = "";
+    supportedFilters.forEach((filter) => {
+        if (Object.hasOwnProperty.call(filters, filter)) {
+            filterStr += `AND ${ColumnMappings[filter]} = '${filters[filter]}'`;
+        }
+    });
+    return filterStr;
+}
+
 /**
  * NOTE: There are a bunch of "unsafe" SQL-like queries in here, in the sense that
  *       they are unparameterized raw SQL-like strings sent over HTTP. Cloudflare Analytics Engine
@@ -154,6 +174,7 @@ export class AnalyticsEngineAPI {
         intervalType: "DAY" | "HOUR",
         startDateTime: Date, // start date/time in local timezone
         tz?: string, // local timezone
+        filters: SearchFilters = {},
     ) {
         let intervalCount = 1;
 
@@ -171,6 +192,8 @@ export class AnalyticsEngineAPI {
             startDateTime,
             tz,
         );
+
+        const filterStr = filtersToSql(filters);
 
         // NOTE: when using toStartOfInterval, cannot group by other columns
         //       like double1 (isVisitor) or double2 (isSession/isVisit). This
@@ -196,6 +219,7 @@ export class AnalyticsEngineAPI {
             FROM metricsDataset
             WHERE timestamp > toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
+                ${filterStr}
             GROUP BY _bucket
             ORDER BY _bucket ASC`;
 
@@ -246,11 +270,18 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
-    async getCounts(siteId: string, interval: string, tz?: string) {
+    async getCounts(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+    ) {
         // defaults to 1 day if not specified
         const siteIdColumn = ColumnMappings["siteId"];
 
         const intervalSql = intervalToSql(interval, tz);
+
+        const filterStr = filtersToSql(filters);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
@@ -258,6 +289,7 @@ export class AnalyticsEngineAPI {
                 ${ColumnMappings.newSession} as isVisit
             FROM metricsDataset
             WHERE timestamp > ${intervalSql}
+                ${filterStr}
             AND ${siteIdColumn} = '${siteId}'
             GROUP BY isVisitor, isVisit
             ORDER BY isVisitor, isVisit ASC`;
@@ -305,10 +337,13 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
+        filters: SearchFilters = {},
         page: number = 1,
         limit: number = 10,
     ) {
         const intervalSql = intervalToSql(interval, tz);
+
+        const filterStr = filtersToSql(filters);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -317,6 +352,7 @@ export class AnalyticsEngineAPI {
             WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.newVisitor} = 1
                 AND ${ColumnMappings.siteId} = '${siteId}'
+                ${filterStr}
             GROUP BY ${_column}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
@@ -330,7 +366,7 @@ export class AnalyticsEngineAPI {
 
         const queryResult = this.query(query);
         const returnPromise = new Promise<
-            [ColumnMappingToType<typeof _column> | "(none)", number][]
+            [ColumnMappingToType<typeof _column>, number][]
         >((resolve, reject) =>
             (async () => {
                 const response = await queryResult;
@@ -351,8 +387,7 @@ export class AnalyticsEngineAPI {
 
                 resolve(
                     pageData.map((row) => {
-                        const key =
-                            row[_column] === "" ? "(none)" : row[_column];
+                        const key = row[_column];
                         return [key, row["count"]] as const;
                     }),
                 );
@@ -366,10 +401,13 @@ export class AnalyticsEngineAPI {
         column: T,
         interval: string,
         tz?: string,
+        filters: SearchFilters = {},
         page: number = 1,
         limit: number = 10,
     ) {
         const intervalSql = intervalToSql(interval, tz);
+
+        const filterStr = filtersToSql(filters);
 
         const _column = ColumnMappings[column];
         const query = `
@@ -380,6 +418,7 @@ export class AnalyticsEngineAPI {
             FROM metricsDataset
             WHERE timestamp > ${intervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
+                ${filterStr}
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
@@ -415,10 +454,7 @@ export class AnalyticsEngineAPI {
 
                     const result = pageData.reduce(
                         (acc, row) => {
-                            const key =
-                                row[_column] === ""
-                                    ? "(none)"
-                                    : (row[_column] as string);
+                            const key = row[_column] as string;
                             if (!Object.hasOwn(acc, key)) {
                                 acc[key] = {
                                     views: 0,
@@ -442,6 +478,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         const allCountsResultPromise = this.getAllCountsByColumn(
@@ -449,6 +486,7 @@ export class AnalyticsEngineAPI {
             "path",
             interval,
             tz,
+            filters,
             page,
         );
 
@@ -463,25 +501,11 @@ export class AnalyticsEngineAPI {
         });
     }
 
-    async getCountByUserAgent(
-        siteId: string,
-        interval: string,
-        tz?: string,
-        page: number = 1,
-    ) {
-        return this.getVisitorCountByColumn(
-            siteId,
-            "userAgent",
-            interval,
-            tz,
-            page,
-        );
-    }
-
     async getCountByCountry(
         siteId: string,
         interval: string,
         tz?: string,
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -489,6 +513,7 @@ export class AnalyticsEngineAPI {
             "country",
             interval,
             tz,
+            filters,
             page,
         );
     }
@@ -497,6 +522,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -504,6 +530,7 @@ export class AnalyticsEngineAPI {
             "referrer",
             interval,
             tz,
+            filters,
             page,
         );
     }
@@ -511,6 +538,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -518,6 +546,7 @@ export class AnalyticsEngineAPI {
             "browserName",
             interval,
             tz,
+            filters,
             page,
         );
     }
@@ -526,6 +555,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         interval: string,
         tz?: string,
+        filters: SearchFilters = {},
         page: number = 1,
     ) {
         return this.getVisitorCountByColumn(
@@ -533,6 +563,7 @@ export class AnalyticsEngineAPI {
             "deviceModel",
             interval,
             tz,
+            filters,
             page,
         );
     }

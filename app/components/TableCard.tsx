@@ -1,5 +1,3 @@
-import PropTypes, { InferProps } from "prop-types";
-
 import {
     Table,
     TableBody,
@@ -9,7 +7,7 @@ import {
     TableRow,
 } from "~/components/ui/table";
 
-type CountByProperty = [string, string][];
+type CountByProperty = [string, string, string?][];
 
 function calculateCountPercentages(countByProperty: CountByProperty) {
     const totalCount = countByProperty.reduce(
@@ -26,10 +24,13 @@ function calculateCountPercentages(countByProperty: CountByProperty) {
 export default function TableCard({
     countByProperty,
     columnHeaders,
-}: InferProps<typeof TableCard.propTypes>) {
-    const barChartPercentages = calculateCountPercentages(
-        countByProperty as CountByProperty,
-    );
+    onClick,
+}: {
+    countByProperty: CountByProperty;
+    columnHeaders: string[];
+    onClick?: (key: string) => void;
+}) {
+    const barChartPercentages = calculateCountPercentages(countByProperty);
 
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
@@ -37,6 +38,7 @@ export default function TableCard({
         (columnHeaders || []).length === 3
             ? "grid-cols-[minmax(0,1fr),minmax(0,8ch),minmax(0,8ch)]"
             : "grid-cols-[minmax(0,1fr),minmax(0,8ch)]";
+
     return (
         <Table>
             <TableHeader>
@@ -56,41 +58,49 @@ export default function TableCard({
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {(countByProperty || []).map((item, key) => (
-                    <TableRow
-                        key={item[0]}
-                        className={`group [&_td]:last:rounded-b-md ${gridCols}`}
-                        width={barChartPercentages[key]}
-                    >
-                        <TableCell className="font-medium min-w-48 break-all">
-                            {item[0]}
-                        </TableCell>
+                {(countByProperty || []).map((item, index) => {
+                    const desc = item[0];
 
-                        <TableCell className="text-right min-w-16">
-                            {countFormatter.format(item[1] as number)}
-                        </TableCell>
+                    // the description can be either a single string (that is both the key and the label),
+                    // or a tuple of type [key, label]
+                    const [key, label] = Array.isArray(desc)
+                        ? [desc[0], desc[1] || "(none)"]
+                        : [desc, desc || "(none)"];
 
-                        {item.length > 2 && (
-                            <TableCell className="text-right min-w-16">
-                                {countFormatter.format(item[2] as number)}
+                    return (
+                        <TableRow
+                            key={item[0]}
+                            className={`group [&_td]:last:rounded-b-md ${gridCols}`}
+                            width={barChartPercentages[index]}
+                        >
+                            <TableCell className="font-medium min-w-48 break-all">
+                                {onClick ? (
+                                    <button
+                                        onClick={() => onClick(key as string)}
+                                        className="hover:underline select-text"
+                                    >
+                                        {label}
+                                    </button>
+                                ) : (
+                                    label
+                                )}
                             </TableCell>
-                        )}
-                    </TableRow>
-                ))}
+
+                            <TableCell className="text-right min-w-16">
+                                {countFormatter.format(parseInt(item[1], 10))}
+                            </TableCell>
+
+                            {item.length > 2 && item[2] !== undefined && (
+                                <TableCell className="text-right min-w-16">
+                                    {countFormatter.format(
+                                        parseInt(item[2], 10),
+                                    )}
+                                </TableCell>
+                            )}
+                        </TableRow>
+                    );
+                })}
             </TableBody>
         </Table>
     );
 }
-
-TableCard.propTypes = {
-    propertyName: PropTypes.string,
-    countByProperty: PropTypes.arrayOf(
-        PropTypes.arrayOf(
-            PropTypes.oneOfType([
-                PropTypes.string.isRequired,
-                PropTypes.number.isRequired,
-            ]).isRequired,
-        ).isRequired,
-    ).isRequired,
-    columnHeaders: PropTypes.array,
-};

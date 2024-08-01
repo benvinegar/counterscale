@@ -9,6 +9,7 @@ export type ColumnMappingToType<
 /**
  * This maps logical column names to the actual column names in the data store.
  */
+
 export const ColumnMappings = {
     /**
      * blobs
