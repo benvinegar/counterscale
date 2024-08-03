@@ -236,7 +236,7 @@ export default function Dashboard() {
                     </Select>
                 </div>
 
-                <div className="lg:basis-1/5-gap-4 sm:basis-1/4-gap-4 basis-1/2-gap-4">
+                <div className="lg:basis-1/6-gap-4 sm:basis-1/5-gap-4 basis-1/3-gap-4">
                     <Select
                         defaultValue={data.interval}
                         onValueChange={(interval) => changeInterval(interval)}
@@ -265,18 +265,16 @@ export default function Dashboard() {
             <div className="transition" style={{ opacity: loading ? 0.6 : 1 }}>
                 <div className="w-full mb-4">
                     <Card>
-                        <CardContent className="pt-6">
+                        <div className="p-4 pl-6">
                             <div className="grid grid-cols-3 gap-10 items-end">
                                 <div>
-                                    <div className="text-sm sm:text-lg">
-                                        Views
-                                    </div>
+                                    <div className="text-md">Views</div>
                                     <div className="text-4xl">
                                         {countFormatter.format(data.views)}
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-sm sm:text-lg">
+                                    <div className="text-md sm:text-lg">
                                         Visits
                                     </div>
                                     <div className="text-4xl">
@@ -284,7 +282,7 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-sm sm:text-lg">
+                                    <div className="text-md sm:text-lg">
                                         Visitors
                                     </div>
                                     <div className="text-4xl">
@@ -292,13 +290,13 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             </div>
-                        </CardContent>
+                        </div>
                     </Card>
                 </div>
                 <div className="w-full mb-4">
                     <Card>
                         <CardContent>
-                            <div className="h-80 pt-6 -m-4 -ml-8 sm:m-0">
+                            <div className="h-72 pt-6 -m-4 -ml-8 sm:m-0">
                                 <TimeSeriesChart
                                     data={chartData}
                                     intervalType={data.intervalType}

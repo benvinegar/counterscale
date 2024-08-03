@@ -74,7 +74,7 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
                 <Links />
             </head>
             <body>
-                <div className="container mx-auto mt-4">{children}</div>
+                <div className="container mx-auto">{children}</div>
                 <ScrollRestoration />
                 <Scripts />
                 <script
@@ -91,31 +91,31 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
 export default function App() {
     const data = useLoaderData<typeof loader>();
     return (
-        <div>
-            <header className="border-b-2 mb-12 py-4">
+        <div className="mt-4">
+            <header className="border-b-2 mb-8 py-2">
                 <nav className="flex justify-between items-center">
                     <div className="flex items-center">
-                        <a href="/" className="text-xl sm:text-2xl font-bold">
+                        <a href="/" className="text-lg font-bold">
                             Counterscale
                         </a>
                         <img
-                            className="w-6 sm:w-8 ml-1"
+                            className="w-6 ml-1"
                             src="/favicon.png"
                             alt="Counterscale Icon"
                         />
                     </div>
-                    <div className="flex items-center font-small font-medium text-md sm:text-lg">
+                    <div className="flex items-center font-small font-medium text-md">
                         <a href="/dashboard">Dashboard</a>
                         <a
                             href="/admin-redirect"
                             target="_blank"
-                            className="hidden sm:inline-block ml-2 sm:ml-4"
+                            className="hidden sm:inline-block ml-2"
                         >
                             Admin
                         </a>
                         <a
                             href="https://github.com/benvinegar/counterscale"
-                            className="w-8 ml-2 sm:ml-4"
+                            className="w-6 ml-2"
                         >
                             <img
                                 src="/github-mark.svg"
