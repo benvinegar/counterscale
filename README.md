@@ -62,7 +62,7 @@ To start tracking website traffic on your web property, copy/paste the following
 </script>
 <script
     id="counterscale-script"
-    src="https://counterscale.{yoursubdomain}.workers.dev/tracker.js"
+    src="https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/tracker.js"
     defer
 ></script>
 ```
