@@ -23,6 +23,7 @@ module.exports = {
                 "1/3-gap-4": "calc(33.333333% - (1/3 * 1rem))",
                 "1/4-gap-4": "calc(25% - (1/4 * 1rem))",
                 "1/5-gap-4": "calc(20% - (1/5 * 1rem))",
+                "1/6-gap-4": "calc(16.666667% - (1/6 * 1rem))",
             },
             colors: {
                 border: "hsl(var(--border))",
