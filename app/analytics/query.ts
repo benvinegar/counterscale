@@ -115,7 +115,9 @@ function filtersToSql(filters: SearchFilters) {
         "path",
         "referrer",
         "browserName",
+        "city",
         "country",
+        "region",
         "deviceModel",
     ];
 
@@ -501,6 +503,23 @@ export class AnalyticsEngineAPI {
         });
     }
 
+    async getCountByCity(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "city",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
     async getCountByCountry(
         siteId: string,
         interval: string,
@@ -511,6 +530,23 @@ export class AnalyticsEngineAPI {
         return this.getVisitorCountByColumn(
             siteId,
             "country",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
+    async getCountByRegion(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ) {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "region",
             interval,
             tz,
             filters,

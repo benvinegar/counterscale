@@ -29,6 +29,8 @@ function generateRequestParams(headers: Record<string, string>) {
         // Cloudflare-specific request properties
         cf: {
             country: "US",
+            region: "Colorado",
+            city: "Denver",
         },
     };
 }
@@ -65,6 +67,8 @@ describe("collectRequestHandler", () => {
                 "Chrome", // browser name
                 "",
                 "example", // site id
+                "Colorado", // region
+                "Denver", // city
             ],
             doubles: [
                 1, // new visitor

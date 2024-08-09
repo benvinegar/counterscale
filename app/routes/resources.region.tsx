@@ -3,22 +3,21 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import PaginatedTableCard from "~/components/PaginatedTableCard";
-
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
+import PaginatedTableCard from "~/components/PaginatedTableCard";
 import { SearchFilters } from "~/lib/types";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
 
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
-    const tz = context.cloudflare.cf.timezone as string;
+    const tz = context.requestTimezone as string;
 
     const url = new URL(request.url);
     const filters = getFiltersFromSearchParams(new URL(url).searchParams);
 
     return json({
-        countsByProperty: await analyticsEngine.getCountByReferrer(
+        countsByProperty: await analyticsEngine.getCountByRegion(
             site,
             interval,
             tz,
@@ -29,7 +28,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     });
 }
 
-export const ReferrerCard = ({
+export const RegionCard = ({
     siteId,
     interval,
     filters,
@@ -44,11 +43,11 @@ export const ReferrerCard = ({
         <PaginatedTableCard
             siteId={siteId}
             interval={interval}
-            columnHeaders={["Referrer", "Visitors"]}
+            columnHeaders={["Region", "Visitors"]}
             dataFetcher={useFetcher<typeof loader>()}
-            loaderUrl="/resources/referrer"
+            loaderUrl="/resources/region"
             filters={filters}
-            onClick={(referrer) => onFilterChange({ ...filters, referrer })}
+            onClick={(region) => onFilterChange({ ...filters, region })}
         />
     );
 };

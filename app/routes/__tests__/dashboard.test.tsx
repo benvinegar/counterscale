@@ -302,7 +302,19 @@ describe("Dashboard route", () => {
                         },
                     },
                     {
+                        path: "/resources/city",
+                        loader: () => {
+                            return json({ countsByProperty: [] });
+                        },
+                    },
+                    {
                         path: "/resources/country",
+                        loader: () => {
+                            return json({ countsByProperty: [] });
+                        },
+                    },
+                    {
+                        path: "/resources/region",
                         loader: () => {
                             return json({ countsByProperty: [] });
                         },
@@ -323,7 +335,9 @@ describe("Dashboard route", () => {
         expect(screen.getByText("Path")).toBeInTheDocument();
         expect(screen.getByText("Referrer")).toBeInTheDocument();
         expect(screen.getByText("Browser")).toBeInTheDocument();
+        expect(screen.getByText("City")).toBeInTheDocument();
         expect(screen.getByText("Country")).toBeInTheDocument();
+        expect(screen.getByText("Region")).toBeInTheDocument();
         expect(screen.getByText("Device")).toBeInTheDocument();
     });
 
@@ -397,6 +411,18 @@ describe("Dashboard route", () => {
                         },
                     },
                     {
+                        path: "/resources/city",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["Chicago", 100],
+                                    ["Denver", 80],
+                                    ["San Diego", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
                         path: "/resources/country",
                         loader: () => {
                             return json({
@@ -404,6 +430,18 @@ describe("Dashboard route", () => {
                                     ["United States", 100],
                                     ["Canada", 80],
                                     ["United Kingdom", 60],
+                                ],
+                            });
+                        },
+                    },
+                    {
+                        path: "/resources/region",
+                        loader: () => {
+                            return json({
+                                countsByProperty: [
+                                    ["California", 100],
+                                    ["Colorado", 80],
+                                    ["Illinois", 60],
                                 ],
                             });
                         },
@@ -436,7 +474,9 @@ describe("Dashboard route", () => {
         expect(screen.getByText("/about")).toBeInTheDocument();
         expect(screen.getByText("Chrome")).toBeInTheDocument();
         expect(screen.getByText("google.com")).toBeInTheDocument();
+        expect(screen.getByText("Denver")).toBeInTheDocument();
         expect(screen.getByText("Canada")).toBeInTheDocument(); // assert converted CA -> Canada
+        expect(screen.getByText("California")).toBeInTheDocument();
         expect(screen.getByText("Mobile")).toBeInTheDocument();
     });
 });
