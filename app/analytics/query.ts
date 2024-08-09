@@ -115,7 +115,9 @@ function filtersToSql(filters: SearchFilters) {
         "path",
         "referrer",
         "browserName",
+        "city",
         "country",
+        "region",
         "deviceModel",
     ];
 

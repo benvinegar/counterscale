@@ -3,5 +3,7 @@ export interface SearchFilters {
     referrer?: string;
     deviceModel?: string;
     country?: string;
+    region?: string;
+    city?: string;
     browserName?: string;
 }

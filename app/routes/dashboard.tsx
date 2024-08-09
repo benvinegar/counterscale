@@ -343,8 +343,18 @@ export default function Dashboard() {
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
                     />
-                    <RegionCard siteId={data.siteId} interval={data.interval} />
-                    <CityCard siteId={data.siteId} interval={data.interval} />
+                    <RegionCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                    />
+                    <CityCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                    />
                 </div>
             </div>
         </div>
