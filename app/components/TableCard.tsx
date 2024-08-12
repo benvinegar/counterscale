@@ -73,7 +73,7 @@ export default function TableCard({
                             className={`group [&_td]:last:rounded-b-md ${gridCols}`}
                             width={barChartPercentages[index]}
                         >
-                            <TableCell className="font-medium min-w-48 break-all">
+                            <TableCell className="font-medium min-w-48 whitespace-normal relative">
                                 {onClick ? (
                                     <button
                                         onClick={() => onClick(key as string)}
@@ -84,6 +84,18 @@ export default function TableCard({
                                 ) : (
                                     label
                                 )}
+
+                                {/^https?:\/\//.test(label) ? (
+                                    <a
+                                        href={label}
+                                        target={"_blank"}
+                                        rel="noreferrer"
+                                        aria-hidden="true"
+                                        className="inline whitespace-nowrap before:content-[url(/img/external.svg)] before:absolute before:top-3.5 before:ml-1"
+                                    >
+                                        {" "}
+                                    </a>
+                                ) : null}
                             </TableCell>
 
                             <TableCell className="text-right min-w-16">
