@@ -100,7 +100,7 @@ export default function App() {
                         </a>
                         <img
                             className="w-6 ml-1"
-                            src="/favicon.png"
+                            src="/img/arrow.svg"
                             alt="Counterscale Icon"
                         />
                     </div>
