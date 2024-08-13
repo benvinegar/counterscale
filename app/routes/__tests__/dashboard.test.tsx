@@ -17,13 +17,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import Dashboard, { loader } from "../dashboard";
 import { AnalyticsEngineAPI } from "~/analytics/query";
-
-function createFetchResponse<T>(data: T) {
-    return {
-        ok: true,
-        json: () => new Promise<T>((resolve) => resolve(data)),
-    };
-}
+import { createFetchResponse, getDefaultContext } from "./testutils";
 
 describe("Dashboard route", () => {
     let fetch: Mock;
@@ -76,20 +70,7 @@ describe("Dashboard route", () => {
             );
 
             const response = await loader({
-                context: {
-                    analyticsEngine: new AnalyticsEngineAPI(
-                        "testAccountId",
-                        "testApiToken",
-                    ),
-                    cloudflare: {
-                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
-                        env: {
-                            CF_BEARER_TOKEN: "fake",
-                            CF_ACCOUNT_ID: "fake",
-                        },
-                        cf: {} as any,
-                    },
-                },
+                ...getDefaultContext(),
                 // @ts-expect-error we don't need to provide all the properties of the request object
                 request: {
                     url: "http://localhost:3000/dashboard", // no site query param
@@ -112,19 +93,7 @@ describe("Dashboard route", () => {
             );
 
             const response = await loader({
-                context: {
-                    analyticsEngine: new AnalyticsEngineAPI(
-                        "testAccountId",
-                        "testApiToken",
-                    ),
-                    cloudflare: {
-                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
-                        env: {
-                            CF_BEARER_TOKEN: "fake",
-                            CF_ACCOUNT_ID: "fake",
-                        },
-                    },
-                },
+                ...getDefaultContext(),
                 // @ts-expect-error we don't need to provide all the properties of the request object
                 request: {
                     url: "http://localhost:3000/dashboard", // no site query param
@@ -167,20 +136,7 @@ describe("Dashboard route", () => {
             vi.setSystemTime(new Date("2024-01-18T09:33:02").getTime());
 
             const response = await loader({
-                context: {
-                    analyticsEngine: new AnalyticsEngineAPI(
-                        "testAccountId",
-                        "testApiToken",
-                    ),
-                    cloudflare: {
-                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
-                        env: {
-                            CF_BEARER_TOKEN: "fake",
-                            CF_ACCOUNT_ID: "fake",
-                        },
-                        cf: {} as any,
-                    },
-                },
+                ...getDefaultContext(),
                 // @ts-expect-error we don't need to provide all the properties of the request object
                 request: {
                     url: "http://localhost:3000/dashboard?site=test-siteid",
@@ -219,20 +175,7 @@ describe("Dashboard route", () => {
             fetch.mockResolvedValueOnce(createFetchResponse({ data: [] })); // getViewsGroupedByInterval
 
             const response = await loader({
-                context: {
-                    analyticsEngine: new AnalyticsEngineAPI(
-                        "testAccountId",
-                        "testApiToken",
-                    ),
-                    cloudflare: {
-                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
-                        env: {
-                            CF_BEARER_TOKEN: "fake",
-                            CF_ACCOUNT_ID: "fake",
-                        },
-                        cf: {} as any,
-                    },
-                },
+                ...getDefaultContext(),
                 // @ts-expect-error we don't need to provide all the properties of the request object
                 request: {
                     url: "http://localhost:3000/dashboard?site=", // intentionally empty

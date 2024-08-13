@@ -3,7 +3,6 @@ import {
     vi,
     test,
     describe,
-    beforeAll,
     beforeEach,
     afterEach,
     expect,
@@ -11,23 +10,11 @@ import {
 } from "vitest";
 import "vitest-dom/extend-expect";
 
-import { getDefaultContext } from "./testutils";
+import { createFetchResponse, getDefaultContext } from "./testutils";
 import { loader } from "../resources.paths";
-
-function createFetchResponse<T>(data: T) {
-    return {
-        ok: true,
-        json: () => new Promise<T>((resolve) => resolve(data)),
-    };
-}
 
 describe("Resources/Paths route", () => {
     let fetch: Mock;
-
-    beforeAll(() => {
-        // polyfill needed for recharts (used by TimeSeriesChart)
-        global.ResizeObserver = require("resize-observer-polyfill");
-    });
 
     beforeEach(() => {
         fetch = global.fetch = vi.fn();
