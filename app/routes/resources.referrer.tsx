@@ -3,10 +3,9 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import { paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 
-import { getFiltersFromSearchParams } from "~/lib/utils";
+import { paramsFromUrl, getFiltersFromSearchParams } from "~/lib/utils";
 import { SearchFilters } from "~/lib/types";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {

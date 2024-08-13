@@ -388,7 +388,7 @@ export class AnalyticsEngineAPI {
                 resolve(
                     pageData.map((row) => {
                         const key = row[_column];
-                        return [key, row["count"]] as const;
+                        return [key, Number(row["count"])] as const;
                     }),
                 );
             })(),
@@ -404,7 +404,7 @@ export class AnalyticsEngineAPI {
         filters: SearchFilters = {},
         page: number = 1,
         limit: number = 10,
-    ) {
+    ): Promise<Record<string, AnalyticsCountResult>> {
         const intervalSql = intervalToSql(interval, tz);
 
         const filterStr = filtersToSql(filters);
@@ -480,7 +480,7 @@ export class AnalyticsEngineAPI {
         tz?: string,
         filters: SearchFilters = {},
         page: number = 1,
-    ) {
+    ): Promise<[path: string, visitors: number, views: number][]> {
         const allCountsResultPromise = this.getAllCountsByColumn(
             siteId,
             "path",
@@ -507,7 +507,7 @@ export class AnalyticsEngineAPI {
         tz?: string,
         filters: SearchFilters = {},
         page: number = 1,
-    ) {
+    ): Promise<[country: string, visitors: number][]> {
         return this.getVisitorCountByColumn(
             siteId,
             "country",
@@ -524,7 +524,7 @@ export class AnalyticsEngineAPI {
         tz?: string,
         filters: SearchFilters = {},
         page: number = 1,
-    ) {
+    ): Promise<[referrer: string, visitors: number][]> {
         return this.getVisitorCountByColumn(
             siteId,
             "referrer",
@@ -534,13 +534,14 @@ export class AnalyticsEngineAPI {
             page,
         );
     }
+
     async getCountByBrowser(
         siteId: string,
         interval: string,
         tz?: string,
         filters: SearchFilters = {},
         page: number = 1,
-    ) {
+    ): Promise<[browser: string, visitors: number][]> {
         return this.getVisitorCountByColumn(
             siteId,
             "browserName",
@@ -557,7 +558,7 @@ export class AnalyticsEngineAPI {
         tz?: string,
         filters: SearchFilters = {},
         page: number = 1,
-    ) {
+    ): Promise<[deviceModel: string, visitors: number][]> {
         return this.getVisitorCountByColumn(
             siteId,
             "deviceModel",
