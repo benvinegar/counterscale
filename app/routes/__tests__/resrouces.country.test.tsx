@@ -10,10 +10,10 @@ import {
 } from "vitest";
 import "vitest-dom/extend-expect";
 
-import { loader } from "../resources.referrer";
+import { loader } from "../resources.country";
 import { createFetchResponse, getDefaultContext } from "./testutils";
 
-describe("Resources/Referrer route", () => {
+describe("Resources/Country route", () => {
     let fetch: Mock;
 
     beforeEach(() => {
@@ -29,8 +29,8 @@ describe("Resources/Referrer route", () => {
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
                     data: [
-                        { blob5: "/", count: "5" },
-                        { blob5: "/example", count: "1" },
+                        { blob4: "CA", count: "5" },
+                        { blob4: "US", count: "1" },
                     ],
                 }),
             );
@@ -39,7 +39,7 @@ describe("Resources/Referrer route", () => {
                 ...getDefaultContext(),
                 // @ts-expect-error we don't need to provide all the properties of the request object
                 request: {
-                    url: "http://localhost:3000/resources/referrer", // no site query param
+                    url: "http://localhost:3000/resources/country", // no site query param
                 },
             });
 
@@ -49,8 +49,8 @@ describe("Resources/Referrer route", () => {
             const json = await response.json();
             expect(json).toEqual({
                 countsByProperty: [
-                    ["/", 5],
-                    ["/example", 1],
+                    [["CA", "Canada"], 5],
+                    [["US", "United States"], 1],
                 ],
                 page: 1,
             });
