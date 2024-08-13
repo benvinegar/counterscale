@@ -19,6 +19,7 @@ export function getDefaultContext() {
                     CF_BEARER_TOKEN: "fake",
                     CF_ACCOUNT_ID: "fake",
                 },
+                // eslint-disable-next-line
                 cf: {} as any,
             },
         },
