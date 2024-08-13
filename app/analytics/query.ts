@@ -480,7 +480,7 @@ export class AnalyticsEngineAPI {
         tz?: string,
         filters: SearchFilters = {},
         page: number = 1,
-    ) {
+    ): Promise<[path: string, visitors: number, views: number][]> {
         const allCountsResultPromise = this.getAllCountsByColumn(
             siteId,
             "path",
