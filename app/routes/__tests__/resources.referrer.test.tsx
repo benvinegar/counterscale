@@ -11,8 +11,8 @@ import {
 } from "vitest";
 import "vitest-dom/extend-expect";
 
+import { loader } from "../resources.referrer";
 import { getDefaultContext } from "./testutils";
-import { loader } from "../resources.paths";
 
 function createFetchResponse<T>(data: T) {
     return {
@@ -21,7 +21,7 @@ function createFetchResponse<T>(data: T) {
     };
 }
 
-describe("Resources/Paths route", () => {
+describe("Resources/Referrer route", () => {
     let fetch: Mock;
 
     beforeAll(() => {
@@ -41,27 +41,8 @@ describe("Resources/Paths route", () => {
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
                     data: [
-                        { blob3: "/", isVisitor: 0, isVisit: 0, count: "5" },
-                        { blob3: "/", isVisitor: 0, isVisit: 1, count: "1" },
-                        { blob3: "/", isVisitor: 1, isVisit: 1, count: "2" },
-                        {
-                            blob3: "/example",
-                            isVisitor: 0,
-                            isVisit: 0,
-                            count: "4",
-                        },
-                        {
-                            blob3: "/example",
-                            isVisitor: 0,
-                            isVisit: 1,
-                            count: "6",
-                        },
-                        {
-                            blob3: "/example",
-                            isVisitor: 1,
-                            isVisit: 1,
-                            count: "2",
-                        },
+                        { blob5: "/", count: "5" },
+                        { blob5: "/example", count: "1" },
                     ],
                 }),
             );
@@ -80,8 +61,8 @@ describe("Resources/Paths route", () => {
             const json = await response.json();
             expect(json).toEqual({
                 countsByProperty: [
-                    ["/", 2, 8],
-                    ["/example", 2, 12],
+                    ["/", 5],
+                    ["/example", 1],
                 ],
                 page: 1,
             });
