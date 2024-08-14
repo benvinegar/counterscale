@@ -257,11 +257,13 @@ export default function Dashboard() {
                     </Select>
                 </div>
 
-                <div className="basis-auto">
-                    <SearchFilterBadges
-                        filters={data.filters}
-                        onFilterDelete={handleFilterDelete}
-                    />
+                <div className="basis-auto flex">
+                    <div className="m-auto">
+                        <SearchFilterBadges
+                            filters={data.filters}
+                            onFilterDelete={handleFilterDelete}
+                        />
+                    </div>
                 </div>
             </div>
 

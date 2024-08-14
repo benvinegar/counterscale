@@ -19,7 +19,7 @@ const SearchFilterBadges: React.FC<SearchFiltersProps> = ({
             {Object.entries(filters).map(([key, value]) => (
                 <div
                     key={key}
-                    className="bg-primary text-primary-foreground rounded-full px-2 py-1"
+                    className="bg-primary text-primary-foreground rounded-full px-2 py-1 text-sm"
                 >
                     {key}:&quot;{value}&quot;
                     {/* radix ui cross1 svg */}
