@@ -29,8 +29,20 @@ describe("Resources/Referrer route", () => {
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
                     data: [
-                        { blob5: "/", count: "5" },
-                        { blob5: "/example", count: "1" },
+                        { blob5: "/", isVisitor: 0, isVisit: 0, count: "5" },
+                        { blob5: "/", isVisitor: 1, isVisit: 1, count: "1" },
+                        {
+                            blob5: "/example",
+                            isVisitor: 0,
+                            isVisit: 1,
+                            count: "2",
+                        },
+                        {
+                            blob5: "/example",
+                            isVisitor: 1,
+                            isVisit: 1,
+                            count: "1",
+                        },
                     ],
                 }),
             );
@@ -49,8 +61,8 @@ describe("Resources/Referrer route", () => {
             const json = await response.json();
             expect(json).toEqual({
                 countsByProperty: [
-                    ["/", 5],
-                    ["/example", 1],
+                    ["/", 1, 6],
+                    ["/example", 1, 3],
                 ],
                 page: 1,
             });

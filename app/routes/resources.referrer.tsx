@@ -44,7 +44,7 @@ export const ReferrerCard = ({
         <PaginatedTableCard
             siteId={siteId}
             interval={interval}
-            columnHeaders={["Referrer", "Visitors"]}
+            columnHeaders={["Referrer", "Visitors", "Views"]}
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/referrer"
             filters={filters}
