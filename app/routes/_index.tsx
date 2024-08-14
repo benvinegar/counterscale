@@ -39,10 +39,20 @@ export default function Index() {
                     </span>
                 </div>
                 <div className="max-w-md">
-                    <img
-                        src="/counterscale-logo.webp"
-                        alt="CounterScale Logo"
-                    />
+                    <picture>
+                        <source
+                            media="(prefers-color-scheme: dark)"
+                            srcSet="/counterscale-logo-dark.webp"
+                        />
+                        <source
+                            media="(prefers-color-scheme: light)"
+                            srcSet="/counterscale-logo.webp"
+                        />
+                        <img
+                            src="/counterscale-logo.webp"
+                            alt="CounterScale Logo"
+                        />
+                    </picture>
                 </div>
             </div>
 
