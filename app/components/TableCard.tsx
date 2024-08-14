@@ -77,7 +77,7 @@ export default function TableCard({
                                 {onClick ? (
                                     <button
                                         onClick={() => onClick(key as string)}
-                                        className="hover:underline select-text"
+                                        className="hover:underline select-text text-left"
                                     >
                                         {label}
                                     </button>
