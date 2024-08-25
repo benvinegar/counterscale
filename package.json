@@ -18,7 +18,7 @@
         "test-ci": "TZ=EST vitest run --coverage",
         "typecheck": "tsc",
         "prepare": "husky install",
-        "types:gen": "wrangler types"
+        "types:gen": "wrangler types --env-interface CloudflareEnv env-cf.d.ts"
     },
     "dependencies": {
         "@cloudflare/kv-asset-handler": "^0.3.4",

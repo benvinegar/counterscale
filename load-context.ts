@@ -2,11 +2,11 @@ import { type AppLoadContext } from "@remix-run/cloudflare";
 import { type PlatformProxy } from "wrangler";
 import { AnalyticsEngineAPI } from "./app/analytics/query";
 
-interface ExtendedEnv extends Env {
+interface Env extends CloudflareEnv {
     CF_PAGES_COMMIT_SHA: string;
 }
 
-type Cloudflare = Omit<PlatformProxy<ExtendedEnv>, "dispose">;
+type Cloudflare = Omit<PlatformProxy<Env>, "dispose">;
 
 declare module "@remix-run/cloudflare" {
     interface AppLoadContext {
