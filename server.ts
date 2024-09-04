@@ -1,4 +1,7 @@
-import type { RequestInit } from "@cloudflare/workers-types";
+import type {
+    RequestInit,
+    Request as WorkerRequest,
+} from "@cloudflare/workers-types";
 
 import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
 import type { AppLoadContext } from "@remix-run/cloudflare";
@@ -28,7 +31,10 @@ export default {
             const url = new URL(request.url);
 
             if (url.pathname.startsWith("/collect")) {
-                return collectRequestHandler(request, env);
+                return collectRequestHandler(
+                    request as unknown as WorkerRequest,
+                    env,
+                );
             }
 
             const ttl = url.pathname.startsWith("/build/")

@@ -215,4 +215,26 @@ describe("collectRequestHandler", () => {
             ],
         );
     });
+
+    test("a PATCH request should return 405", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as CFAnalyticsEngine,
+        } as Environment;
+
+        const request = httpMocks.createRequest({
+            method: "PATCH",
+            url: "https://example.com",
+            // Cloudflare-specific request properties
+            cf: {
+                country: "US",
+            },
+        });
+
+        const response = collectRequestHandler(request, env);
+
+        expect(response.status).toBe(405);
+        expect(response.statusText).toBe("Method Not Allowed");
+    });
 });
