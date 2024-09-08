@@ -3,6 +3,11 @@ import figlet from "figlet";
 import shell from "shelljs";
 import chalk from "chalk";
 import ora from "ora";
+import path from "node:path";
+
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const silent = false;
 
@@ -18,8 +23,36 @@ console.log(
     ),
 );
 
+// async function promptDotDirectory() {
+//     await inquirer
+//         .prompt([
+//             {
+//                 type: "inquirer-fuzzy-path",
+//                 name: "dotDirectory",
+//                 message: "Where should ./counterscale go?",
+//                 default: "~/",
+//             },
+//         ])
+//         .then((answers) => {
+//             if (answers.dotDirectory) {
+//                 shell.mkdir(os.path.join(__dirname, "..", ".counterscale"));
+//             }
+//         });
+// }
+
+function createDotDirectory() {
+    if (!shell.test("-d", path.join(__dirname, "..", ".counterscale"))) {
+        shell.mkdir(path.join(__dirname, "..", ".counterscale"));
+        return true;
+    }
+    return false;
+}
+
 function fetchCloudflareSecrets() {
-    const spinner = ora("Fetching Cloudflare config ...");
+    const spinner = ora({
+        text: "Fetching Cloudflare config ...",
+        hideCursor: false,
+    });
     spinner.start();
 
     const child = shell.exec("npx wrangler secret list", {
@@ -69,8 +102,6 @@ async function getCloudflareSecrets() {
     });
     return secrets;
 }
-
-const secrets = await getCloudflareSecrets();
 
 async function promptCloudFlareSecrets() {
     let answers;
@@ -124,6 +155,16 @@ async function promptDeploy() {
             }
         });
 }
+
+if (createDotDirectory()) {
+    console.log(
+        chalk
+            .rgb(243, 227, 190)
+            .bold("Created .counterscale directory in project root"),
+    );
+}
+const secrets = await getCloudflareSecrets();
+
 if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
     console.log(
         chalk.rgb(243, 227, 190).bold("Cloudflare secrets already set!"),
