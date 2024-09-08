@@ -1,25 +1,28 @@
 {
-  "private": true,
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint"
-  },
-  "devDependencies": {
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.3.2",
-    "turbo": "latest",
-    "wrangler": "^3.61.0"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.9.5"
-  },
-  "workspaces": [
-    "packages/*",
-    "@counterscale/tracker"
-  ],
-  "packageManager": "npm@10.0.0",
-  "prettier": {
-    "tabWidth": 4
-  }
+    "private": true,
+    "scripts": {
+        "build": "turbo run build",
+        "dev": "turbo run dev",
+        "lint": "turbo run lint"
+    },
+    "devDependencies": {
+        "eslint-config-prettier": "^9.1.0",
+        "figlet": "^1.7.0",
+        "inquirer": "^10.2.1",
+        "prettier": "^3.3.2",
+        "shelljs": "^0.8.5",
+        "turbo": "latest",
+        "wrangler": "^3.61.0"
+    },
+    "optionalDependencies": {
+        "@rollup/rollup-linux-x64-gnu": "4.9.5"
+    },
+    "workspaces": [
+        "packages/*",
+        "@counterscale/tracker"
+    ],
+    "packageManager": "npm@10.0.0",
+    "prettier": {
+        "tabWidth": 4
+    }
 }
