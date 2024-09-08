@@ -53,6 +53,7 @@
         "@vitest/coverage-istanbul": "2.1",
         "@vitest/coverage-v8": "2.1",
         "autoprefixer": "^10.4.19",
+        "chalk": "^5.3.0",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-import-resolver-typescript": "^3.6.1",
