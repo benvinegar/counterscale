@@ -9,6 +9,7 @@
         "eslint-config-prettier": "^9.1.0",
         "figlet": "^1.7.0",
         "inquirer": "^10.2.1",
+        "ora": "^8.1.0",
         "prettier": "^3.3.2",
         "shelljs": "^0.8.5",
         "turbo": "latest",

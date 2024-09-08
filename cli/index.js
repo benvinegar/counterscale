@@ -2,6 +2,7 @@ import inquirer from "inquirer";
 import figlet from "figlet";
 import shell from "shelljs";
 import chalk from "chalk";
+import ora from "ora";
 
 const silent = false;
 
@@ -17,17 +18,46 @@ console.log(
     ),
 );
 
-function getCloudflareSecrets() {
-    const results = shell.exec("npx wrangler secret list", { silent: true });
-    if (results.code !== 0) {
-        console.error("Error: Wrangler not installed");
+function fetchCloudflareSecrets() {
+    const spinner = ora("Fetching Cloudflare config ...");
+    spinner.start();
+
+    const child = shell.exec("npx wrangler secret list", {
+        silent: true,
+        async: true,
+    });
+
+    return new Promise((resolve, reject) => {
+        child.stdout.on("data", function (data) {
+            spinner.stop();
+            resolve(data);
+        });
+        child.on("exit", function () {
+            spinner.stop();
+        });
+
+        child.on("error", function (err) {
+            spinner.stop();
+            reject(err);
+        });
+    });
+}
+
+async function getCloudflareSecrets() {
+    let rawSecrets;
+    try {
+        rawSecrets = await fetchCloudflareSecrets();
+        // rawSecrets = "[]";
+    } catch (err) {
+        console.error("Wrangler failed:", err);
         shell.exit(1);
     }
+    // const rawSecrets = await getCloudflareSecrets();
 
     // parse wrangler secrets json output
     let secretsList;
     try {
-        secretsList = JSON.parse(results.stdout);
+        secretsList = JSON.parse(rawSecrets);
     } catch (err) {
         console.error("Error: Unable to parse wrangler secrets");
         shell.exit(1);
@@ -40,13 +70,9 @@ function getCloudflareSecrets() {
     return secrets;
 }
 
-const secrets = getCloudflareSecrets();
+const secrets = await getCloudflareSecrets();
 
-if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
-    console.log(
-        chalk.rgb(243, 227, 190).bold("Cloudflare secrets already set!"),
-    );
-} else {
+async function promptCloudFlareSecrets() {
     let answers;
     try {
         answers = await inquirer.prompt([
@@ -82,17 +108,28 @@ if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
     }
 }
 
-inquirer
-    .prompt([
-        {
-            type: "confirm",
-            name: "deploy",
-            message: "Do you want to deploy the site now?",
-            default: false,
-        },
-    ])
-    .then((answers) => {
-        if (answers.deploy) {
-            shell.exec("npm run deploy", { silent });
-        }
-    });
+async function promptDeploy() {
+    inquirer
+        .prompt([
+            {
+                type: "confirm",
+                name: "deploy",
+                message: "Do you want to deploy the site now?",
+                default: false,
+            },
+        ])
+        .then((answers) => {
+            if (answers.deploy) {
+                shell.exec("npm run deploy", { silent });
+            }
+        });
+}
+if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
+    console.log(
+        chalk.rgb(243, 227, 190).bold("Cloudflare secrets already set!"),
+    );
+} else {
+    await promptCloudFlareSecrets();
+}
+
+await promptDeploy();
