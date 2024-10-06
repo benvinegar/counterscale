@@ -95,6 +95,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     let intervalType: "DAY" | "HOUR" = "DAY";
     switch (interval) {
         case "today":
+        case "yesterday":
         case "1d":
             intervalType = "HOUR";
             break;
@@ -109,6 +110,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     let localDateTime = dayjs().utc();
     if (interval === "today") {
         localDateTime = localDateTime.tz(tz).startOf("day");
+    } else if (interval === "yesterday") {
+        localDateTime = localDateTime.tz(tz).startOf("day").subtract(1, "day");
     } else {
         const daysAgo = Number(interval.split("d")[0]);
         if (intervalType === "DAY") {
@@ -125,6 +128,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
+        interval,
         intervalType,
         localDateTime.toDate(),
         tz,
@@ -249,6 +253,7 @@ export default function Dashboard() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="yesterday">Yesterday</SelectItem>
                             <SelectItem value="1d">24 hours</SelectItem>
                             <SelectItem value="7d">7 days</SelectItem>
                             <SelectItem value="30d">30 days</SelectItem>
