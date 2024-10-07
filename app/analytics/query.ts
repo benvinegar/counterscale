@@ -242,8 +242,8 @@ export class AnalyticsEngineAPI {
             /* output as UTC */
             toDateTime(_bucket, 'Etc/UTC') as bucket
             FROM metricsDataset
-            WHERE timestamp >= toDateTime('${localStartTime.utc().format("YYYY-MM-DD HH:mm:ss")}') 
-								AND timestamp < toDateTime('${localEndTime.utc().format("YYYY-MM-DD HH:mm:ss")}')
+            WHERE timestamp >= toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}') 
+								AND timestamp < toDateTime('${localEndTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
             GROUP BY _bucket
