@@ -221,7 +221,7 @@ export class AnalyticsEngineAPI {
         //         to generate empty buckets in JS (generateEmptyRowsOverInterval)
         //         and merge them with the results.
 
-        const localStartTime = dayjs(startDateTime).tz(tz);
+        const localStartTime = dayjs(startDateTime).tz(tz).utc();
 
         let localEndTime;
         if (interval === "yesterday") {
