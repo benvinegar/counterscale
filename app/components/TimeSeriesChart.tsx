@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import PropTypes, { InferProps } from "prop-types";
 
 import {
@@ -14,6 +15,17 @@ export default function TimeSeriesChart({
     data,
     intervalType,
 }: InferProps<typeof TimeSeriesChart.propTypes>) {
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
+        setIsDarkMode(mediaQuery?.matches ?? false);
+        const handleChange = (e: MediaQueryListEvent) =>
+            setIsDarkMode(e.matches);
+        mediaQuery?.addEventListener("change", handleChange);
+        return () => mediaQuery?.removeEventListener("change", handleChange);
+    }, []);
+
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {
         return null;
@@ -60,6 +72,14 @@ export default function TimeSeriesChart({
         });
     }
 
+    const chartColors = {
+        background: isDarkMode ? "hsl(222.2 84% 3.9%)" : "hsl(42 69% 88%)",
+        text: isDarkMode ? "hsl(210 20% 55%)" : "hsl(164 14% 21%)",
+        grid: isDarkMode ? "#222" : "#ccc",
+        areaStroke: isDarkMode ? "hsl(217.2 32.6% 37.5%)" : "#F46A3D",
+        areaFill: isDarkMode ? "hsl(220deg 39.76% 16.27%)" : "#F99C35",
+    };
+
     return (
         <ResponsiveContainer width="100%" height="100%">
             <AreaChart
@@ -73,17 +93,35 @@ export default function TimeSeriesChart({
                     bottom: 0,
                 }}
             >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={xAxisDateFormatter} />
+                <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={chartColors.grid}
+                />
+                <XAxis
+                    dataKey="date"
+                    tickFormatter={xAxisDateFormatter}
+                    stroke={chartColors.text}
+                />
 
                 {/* manually setting maxViews vs using recharts "dataMax" key cause it doesnt seem to work */}
-                <YAxis dataKey="views" domain={[0, maxViews]} />
-                <Tooltip labelFormatter={tooltipDateFormatter} />
+                <YAxis
+                    dataKey="views"
+                    domain={[0, maxViews]}
+                    stroke={chartColors.text}
+                />
+                <Tooltip
+                    labelFormatter={tooltipDateFormatter}
+                    contentStyle={{
+                        backgroundColor: chartColors.background,
+                        color: chartColors.text,
+                        borderColor: chartColors.grid,
+                    }}
+                />
                 <Area
                     dataKey="views"
-                    stroke="#F46A3D"
+                    stroke={chartColors.areaStroke}
                     strokeWidth="2"
-                    fill="#F99C35"
+                    fill={chartColors.areaFill}
                 />
             </AreaChart>
         </ResponsiveContainer>
