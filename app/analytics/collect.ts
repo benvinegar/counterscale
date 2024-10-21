@@ -2,6 +2,9 @@ import { UAParser } from "ua-parser-js";
 
 import type { RequestInit } from "@cloudflare/workers-types";
 
+// Cookieless visitor/session tracking
+// Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
+
 function checkVisitorSession(ifModifiedSince: string | null): {
     newVisitor: boolean;
     newSession: boolean;
