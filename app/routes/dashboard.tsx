@@ -108,10 +108,12 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     // get start date in the past by subtracting interval * type
 
     let localDateTime = dayjs().utc();
+    let localEndDateTime: dayjs.Dayjs | undefined;
     if (interval === "today") {
         localDateTime = localDateTime.tz(tz).startOf("day");
     } else if (interval === "yesterday") {
         localDateTime = localDateTime.tz(tz).startOf("day").subtract(1, "day");
+        localEndDateTime = localDateTime.endOf("day").add(2, "ms");
     } else {
         const daysAgo = Number(interval.split("d")[0]);
         if (intervalType === "DAY") {
@@ -128,9 +130,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
-        interval,
         intervalType,
         localDateTime.toDate(),
+        localEndDateTime?.toDate(),
         tz,
         filters,
     );

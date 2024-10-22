@@ -84,9 +84,9 @@ describe("AnalyticsEngineAPI", () => {
 
             const result1 = await api.getViewsGroupedByInterval(
                 "example.com",
-                "30d",
                 "DAY",
                 new Date("2024-01-11 00:00:00"), // local time (because tz also passed)
+                undefined,
                 "America/New_York",
             );
 
@@ -105,9 +105,9 @@ describe("AnalyticsEngineAPI", () => {
 
             const result2 = await api.getViewsGroupedByInterval(
                 "example.com",
-                "30d",
                 "DAY",
                 new Date("2024-01-13 00:00:00"), // local time (because tz also passed)
+                undefined,
                 "America/New_York",
             );
             expect(result2).toEqual([
@@ -148,9 +148,9 @@ describe("AnalyticsEngineAPI", () => {
 
         const result1 = await api.getViewsGroupedByInterval(
             "example.com",
-            "1d",
             "HOUR",
             new Date("2024-01-17 05:00:00"), // local time (because tz also passed)
+            undefined,
             "America/New_York",
         );
 

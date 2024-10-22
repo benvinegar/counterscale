@@ -83,9 +83,9 @@ export function intervalToSql(interval: string, tz?: string) {
  *
  * */
 function generateEmptyRowsOverInterval(
-    interval: string,
     intervalType: "DAY" | "HOUR",
     startDateTime: Date,
+    endDateTime: Date,
     tz?: string,
 ): { [key: string]: number } {
     if (!tz) {
@@ -106,12 +106,7 @@ function generateEmptyRowsOverInterval(
     //       out how to get vitest/mock dates to recreate DST changes.
     //       See: https://github.com/benvinegar/counterscale/pull/62
 
-    let endIntervalDate = Date.now();
-    if (interval === "yesterday") {
-        endIntervalDate = startDateTime.getTime() + 25 * 60 * 60 * 1000;
-    }
-
-    while (startDateTime.getTime() < endIntervalDate) {
+    while (startDateTime.getTime() < endDateTime.getTime()) {
         const key = dayjs(startDateTime).utc().format("YYYY-MM-DD HH:mm:ss");
         initialRows[key] = 0;
 
@@ -185,9 +180,9 @@ export class AnalyticsEngineAPI {
 
     async getViewsGroupedByInterval(
         siteId: string,
-        interval: string,
         intervalType: "DAY" | "HOUR",
         startDateTime: Date, // start date/time in local timezone
+        endDateTime?: Date, // end date/time in local timezone
         tz?: string, // local timezone
         filters: SearchFilters = {},
     ) {
@@ -201,11 +196,13 @@ export class AnalyticsEngineAPI {
                 break;
         }
 
+        if (!endDateTime) endDateTime = new Date();
+
         // note interval count hard-coded to hours at the moment
         const initialRows = generateEmptyRowsOverInterval(
-            interval,
             intervalType,
             startDateTime,
+            endDateTime,
             tz,
         );
 
@@ -222,16 +219,7 @@ export class AnalyticsEngineAPI {
         //         and merge them with the results.
 
         const localStartTime = dayjs(startDateTime).tz(tz).utc();
-
-        let localEndTime;
-        if (interval === "yesterday") {
-            localEndTime = dayjs(startDateTime)
-                .tz(tz)
-                .add(1, "day")
-                .startOf("day");
-        } else {
-            localEndTime = dayjs().tz(tz);
-        }
+        const localEndTime = dayjs(endDateTime).tz(tz).utc();
 
         const query = `
             SELECT SUM(_sample_interval) as count,
