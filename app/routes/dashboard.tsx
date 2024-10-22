@@ -128,11 +128,13 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         }
     }
 
+    if (!localEndDateTime) localEndDateTime = dayjs(new Date()).utc().tz(tz);
+
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
         intervalType,
         localDateTime.toDate(),
-        localEndDateTime?.toDate(),
+        localEndDateTime.toDate(),
         tz,
         filters,
     );

@@ -86,7 +86,7 @@ describe("AnalyticsEngineAPI", () => {
                 "example.com",
                 "DAY",
                 new Date("2024-01-11 00:00:00"), // local time (because tz also passed)
-                undefined,
+                new Date(),
                 "America/New_York",
             );
 
@@ -107,7 +107,7 @@ describe("AnalyticsEngineAPI", () => {
                 "example.com",
                 "DAY",
                 new Date("2024-01-13 00:00:00"), // local time (because tz also passed)
-                undefined,
+                new Date(),
                 "America/New_York",
             );
             expect(result2).toEqual([
@@ -150,7 +150,7 @@ describe("AnalyticsEngineAPI", () => {
             "example.com",
             "HOUR",
             new Date("2024-01-17 05:00:00"), // local time (because tz also passed)
-            undefined,
+            new Date(),
             "America/New_York",
         );
 

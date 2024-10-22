@@ -182,7 +182,7 @@ export class AnalyticsEngineAPI {
         siteId: string,
         intervalType: "DAY" | "HOUR",
         startDateTime: Date, // start date/time in local timezone
-        endDateTime?: Date, // end date/time in local timezone
+        endDateTime: Date, // end date/time in local timezone
         tz?: string, // local timezone
         filters: SearchFilters = {},
     ) {
@@ -195,8 +195,6 @@ export class AnalyticsEngineAPI {
                 intervalCount = 1;
                 break;
         }
-
-        if (!endDateTime) endDateTime = new Date();
 
         // note interval count hard-coded to hours at the moment
         const initialRows = generateEmptyRowsOverInterval(
