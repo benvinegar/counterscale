@@ -326,7 +326,7 @@ describe("AnalyticsEngineAPI", () => {
                     "double1 as isVisitor, " +
                     "double2 as isVisit, " +
                     "SUM(_sample_interval) as count " +
-                    "FROM metricsDataset WHERE timestamp < NOW() AND timestamp >= NOW() - INTERVAL '7' DAY AND blob8 = 'example.com' AND blob4 = 'CA' " +
+                    "FROM metricsDataset WHERE timestamp >= NOW() - INTERVAL '7' DAY AND timestamp < NOW() AND blob8 = 'example.com' AND blob4 = 'CA' " +
                     "GROUP BY blob4, double1, double2 " +
                     "ORDER BY count DESC LIMIT 10",
             );

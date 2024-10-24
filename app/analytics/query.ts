@@ -367,7 +367,7 @@ export class AnalyticsEngineAPI {
         const query = `
             SELECT ${_column}, SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp < ${endIntervalSql} AND timestamp >= ${startIntervalSql}
+            WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 AND ${ColumnMappings.newVisitor} = 1
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
@@ -437,7 +437,7 @@ export class AnalyticsEngineAPI {
                 ${ColumnMappings.newSession} as isVisit,
                 SUM(_sample_interval) as count
             FROM metricsDataset
-            WHERE timestamp < ${endIntervalSql} AND timestamp >= ${startIntervalSql}
+            WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
             GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
@@ -614,7 +614,7 @@ export class AnalyticsEngineAPI {
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.siteId} as siteId
             FROM metricsDataset
-            WHERE timestamp < ${endIntervalSql} AND timestamp >= ${startIntervalSql}
+            WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
             GROUP BY siteId
             ORDER BY count DESC
             LIMIT ${limit}
