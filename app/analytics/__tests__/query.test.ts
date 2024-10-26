@@ -86,6 +86,7 @@ describe("AnalyticsEngineAPI", () => {
                 "example.com",
                 "DAY",
                 new Date("2024-01-11 00:00:00"), // local time (because tz also passed)
+                new Date(),
                 "America/New_York",
             );
 
@@ -106,6 +107,7 @@ describe("AnalyticsEngineAPI", () => {
                 "example.com",
                 "DAY",
                 new Date("2024-01-13 00:00:00"), // local time (because tz also passed)
+                new Date(),
                 "America/New_York",
             );
             expect(result2).toEqual([
@@ -148,6 +150,7 @@ describe("AnalyticsEngineAPI", () => {
             "example.com",
             "HOUR",
             new Date("2024-01-17 05:00:00"), // local time (because tz also passed)
+            new Date(),
             "America/New_York",
         );
 
@@ -323,7 +326,7 @@ describe("AnalyticsEngineAPI", () => {
                     "double1 as isVisitor, " +
                     "double2 as isVisit, " +
                     "SUM(_sample_interval) as count " +
-                    "FROM metricsDataset WHERE timestamp > NOW() - INTERVAL '7' DAY AND blob8 = 'example.com' AND blob4 = 'CA' " +
+                    "FROM metricsDataset WHERE timestamp >= NOW() - INTERVAL '7' DAY AND timestamp < NOW() AND blob8 = 'example.com' AND blob4 = 'CA' " +
                     "GROUP BY blob4, double1, double2 " +
                     "ORDER BY count DESC LIMIT 10",
             );
@@ -345,17 +348,41 @@ describe("intervalToSql", () => {
 
     // test intervalToSql
     test("should return the proper sql interval for 1d, 30d, 90d, etc (days)", () => {
-        expect(intervalToSql("1d")).toBe("NOW() - INTERVAL '1' DAY");
-        expect(intervalToSql("30d")).toBe("NOW() - INTERVAL '30' DAY");
-        expect(intervalToSql("90d")).toBe("NOW() - INTERVAL '90' DAY");
+        expect(intervalToSql("1d")).toStrictEqual({
+            startIntervalSql: "NOW() - INTERVAL '1' DAY",
+            endIntervalSql: "NOW()",
+        });
+        expect(intervalToSql("30d")).toStrictEqual({
+            startIntervalSql: "NOW() - INTERVAL '30' DAY",
+            endIntervalSql: "NOW()",
+        });
+        expect(intervalToSql("90d")).toStrictEqual({
+            startIntervalSql: "NOW() - INTERVAL '90' DAY",
+            endIntervalSql: "NOW()",
+        });
     });
 
     test("should return the proper tz-adjusted sql interval for 'today'", () => {
-        expect(intervalToSql("today", "America/New_York")).toBe(
-            "toDateTime('2024-04-29 04:00:00')",
-        );
-        expect(intervalToSql("today", "America/Los_Angeles")).toBe(
-            "toDateTime('2024-04-29 07:00:00')",
+        expect(intervalToSql("today", "America/New_York")).toStrictEqual({
+            startIntervalSql: "toDateTime('2024-04-29 04:00:00')",
+            endIntervalSql: "NOW()",
+        });
+        expect(intervalToSql("today", "America/Los_Angeles")).toStrictEqual({
+            startIntervalSql: "toDateTime('2024-04-29 07:00:00')",
+            endIntervalSql: "NOW()",
+        });
+    });
+
+    test("should return the proper tz-adjusted sql interval for 'yesterday'", () => {
+        expect(intervalToSql("yesterday", "America/New_York")).toStrictEqual({
+            startIntervalSql: "toDateTime('2024-04-28 04:00:00')",
+            endIntervalSql: "toDateTime('2024-04-29 04:00:00')",
+        });
+        expect(intervalToSql("yesterday", "America/Los_Angeles")).toStrictEqual(
+            {
+                startIntervalSql: "toDateTime('2024-04-28 07:00:00')",
+                endIntervalSql: "toDateTime('2024-04-29 07:00:00')",
+            },
         );
     });
 });
