@@ -117,43 +117,27 @@ export function collectRequestHandler(request: Request, env: Env) {
                 return new Response("Invalid request", { status: 400 });
             }
 
-            if (
-                !body.siteId ||
-                !body.host ||
-                !body.userAgent ||
-                !body.path ||
-                !body.country ||
-                !body.referrer ||
-                !body.browserName ||
-                !body.deviceModel ||
-                !body.ifModifiedSince
-            ) {
-                return new Response("Missing required fields", { status: 400 });
-            }
-
-            const userAgent = body.userAgent || undefined;
+            const userAgent =
+                body.ua || request.headers.get("user-agent") || undefined;
             const parsedUserAgent = new UAParser(userAgent);
-
             parsedUserAgent.getBrowser().name;
 
-            const { newVisitor, newSession } = checkVisitorSession(
-                body.ifModifiedSince,
-            );
+            const ifModifiedSince =
+                body.ims || request.headers.get("if-modified-since");
+            const { newVisitor, newSession } =
+                checkVisitorSession(ifModifiedSince);
 
             const data: DataPoint = {
-                siteId: body.siteId,
-                host: body.host,
-                path: body.path,
-                country: body.country,
-                referrer: body.referrer,
+                siteId: body.sid,
+                host: body.h,
+                userAgent: body.ua,
+                path: body.p,
+                country: body.c,
+                referrer: body.r,
+                browserName: body.bn || parsedUserAgent.getBrowser().name,
+                deviceModel: body.dm || parsedUserAgent.getDevice().model,
                 newVisitor: newVisitor ? 1 : 0,
                 newSession: newSession ? 1 : 0,
-                // user agent stuff
-                userAgent: userAgent,
-                browserName:
-                    body.browserName || parsedUserAgent.getBrowser().name,
-                deviceModel:
-                    body.deviceModel || parsedUserAgent.getDevice().model,
             };
 
             writeDataPoint(env.WEB_COUNTER_AE, data);
@@ -170,15 +154,15 @@ export function collectRequestHandler(request: Request, env: Env) {
 }
 
 interface PostRequestBody {
-    siteId: string;
-    host: string;
-    userAgent: string;
-    path: string;
-    country: string;
-    referrer: string;
-    browserName: string;
-    deviceModel: string;
-    ifModifiedSince: string;
+    sid?: string; // site id
+    h?: string; // host
+    ua?: string; // user agent
+    p?: string; // path
+    c?: string; // country
+    r?: string; // referrer
+    bn?: string; // browser name
+    dm?: string; // device model
+    ims?: string; // if modified since
 }
 
 interface DataPoint {
