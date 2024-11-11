@@ -30,6 +30,7 @@ import {
 import { SearchFilters } from "~/lib/types";
 import SearchFilterBadges from "~/components/SearchFilterBadges";
 import { TimeSeriesCard } from "./resources.timeseries";
+import { StatsCard } from "./resources.stats";
 
 export const meta: MetaFunction = () => {
     return [
@@ -87,13 +88,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         `${MAX_RETENTION_DAYS}d`,
     );
 
-    const counts = analyticsEngine.getCounts(
-        actualSiteId,
-        interval,
-        context.cloudflare.cf.timezone as string,
-        filters,
-    );
-
     const intervalType = getIntervalType(interval);
 
     // await all requests to AE then return the results
@@ -105,9 +99,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             sites: (await sitesByHits).map(
                 ([site, _]: [string, number]) => site,
             ),
-            views: (await counts).views,
-            visits: (await counts).visits,
-            visitors: (await counts).visitors,
             intervalType,
             interval,
             filters,
@@ -226,34 +217,12 @@ export default function Dashboard() {
 
             <div className="transition" style={{ opacity: loading ? 0.6 : 1 }}>
                 <div className="w-full mb-4">
-                    <Card>
-                        <div className="p-4 pl-6">
-                            <div className="grid grid-cols-3 gap-10 items-end">
-                                <div>
-                                    <div className="text-md">Views</div>
-                                    <div className="text-4xl">
-                                        {countFormatter.format(data.views)}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-md sm:text-lg">
-                                        Visits
-                                    </div>
-                                    <div className="text-4xl">
-                                        {countFormatter.format(data.visits)}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-md sm:text-lg">
-                                        Visitors
-                                    </div>
-                                    <div className="text-4xl">
-                                        {countFormatter.format(data.visitors)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
+                    <StatsCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        timezone={userTimezone}
+                    />
                 </div>
                 <div className="w-full mb-4">
                     <TimeSeriesCard
