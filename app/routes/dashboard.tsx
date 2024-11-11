@@ -23,9 +23,15 @@ import { DeviceCard } from "./resources.device";
 
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import dayjs from "dayjs";
-import { getFiltersFromSearchParams } from "~/lib/utils";
+import {
+    getDateTimeRange,
+    getFiltersFromSearchParams,
+    getIntervalType,
+    getUserTimezone,
+} from "~/lib/utils";
 import { SearchFilters } from "~/lib/types";
 import SearchFilterBadges from "~/components/SearchFilterBadges";
+import { TimeSeriesCard } from "./resources.timeseries";
 
 export const meta: MetaFunction = () => {
     return [
@@ -92,49 +98,15 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         tz,
         filters,
     );
-    let intervalType: "DAY" | "HOUR" = "DAY";
-    switch (interval) {
-        case "today":
-        case "yesterday":
-        case "1d":
-            intervalType = "HOUR";
-            break;
-        case "7d":
-        case "30d":
-        case "90d":
-            intervalType = "DAY";
-            break;
-    }
-    // get start date in the past by subtracting interval * type
 
-    let localDateTime = dayjs().utc();
-    let localEndDateTime: dayjs.Dayjs | undefined;
-    if (interval === "today") {
-        localDateTime = localDateTime.tz(tz).startOf("day");
-    } else if (interval === "yesterday") {
-        localDateTime = localDateTime.tz(tz).startOf("day").subtract(1, "day");
-        localEndDateTime = localDateTime.endOf("day").add(2, "ms");
-    } else {
-        const daysAgo = Number(interval.split("d")[0]);
-        if (intervalType === "DAY") {
-            localDateTime = localDateTime
-                .subtract(daysAgo, "day")
-                .tz(tz)
-                .startOf("day");
-        } else if (intervalType === "HOUR") {
-            localDateTime = localDateTime
-                .subtract(daysAgo, "day")
-                .startOf("hour");
-        }
-    }
-
-    if (!localEndDateTime) localEndDateTime = dayjs().utc().tz(tz);
+    const intervalType = getIntervalType(interval);
+    const { startDate, endDate } = getDateTimeRange(interval, tz);
 
     const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
         actualSiteId,
         intervalType,
-        localDateTime.toDate(),
-        localEndDateTime.toDate(),
+        startDate,
+        endDate,
         tz,
         filters,
     );
@@ -151,7 +123,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             views: (await counts).views,
             visits: (await counts).visits,
             visitors: (await counts).visitors,
-            // countByReferrer: await countByReferrer,
             viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
             interval,
@@ -221,6 +192,8 @@ export default function Dashboard() {
             return prev;
         });
     };
+
+    const userTimezone = getUserTimezone();
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
@@ -308,16 +281,11 @@ export default function Dashboard() {
                     </Card>
                 </div>
                 <div className="w-full mb-4">
-                    <Card>
-                        <CardContent>
-                            <div className="h-72 pt-6 -m-4 -ml-8 sm:m-0">
-                                <TimeSeriesChart
-                                    data={chartData}
-                                    intervalType={data.intervalType}
-                                ></TimeSeriesChart>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <TimeSeriesCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                    />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <PathsCard

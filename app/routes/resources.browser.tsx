@@ -3,7 +3,11 @@ import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 
-import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
+import {
+    getFiltersFromSearchParams,
+    paramsFromUrl,
+    getUserTimezone,
+} from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 import { SearchFilters } from "~/lib/types";
 
@@ -39,6 +43,8 @@ export const BrowserCard = ({
     filters: SearchFilters;
     onFilterChange: (filters: SearchFilters) => void;
 }) => {
+    const userTimezone = getUserTimezone();
+
     return (
         <PaginatedTableCard
             siteId={siteId}
@@ -50,6 +56,7 @@ export const BrowserCard = ({
             onClick={(browserName) =>
                 onFilterChange({ ...filters, browserName })
             }
+            timezone={userTimezone}
         />
     );
 };
