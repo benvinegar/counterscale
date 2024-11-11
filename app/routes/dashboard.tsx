@@ -89,7 +89,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     //                will show up in the dropdown.
     const sitesByHits = analyticsEngine.getSitesOrderedByHits(
         `${MAX_RETENTION_DAYS}d`,
-        tz,
     );
 
     const counts = analyticsEngine.getCounts(
