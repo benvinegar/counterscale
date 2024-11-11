@@ -33,8 +33,16 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
             filters,
         );
 
+    const chartData: { date: string; views: number }[] = [];
+    viewsGroupedByInterval.forEach((row) => {
+        chartData.push({
+            date: row[0],
+            views: row[1],
+        });
+    });
+
     return json({
-        chartData: viewsGroupedByInterval,
+        chartData: chartData,
         intervalType: intervalType,
     });
 }

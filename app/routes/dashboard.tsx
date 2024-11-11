@@ -162,14 +162,6 @@ export default function Dashboard() {
         });
     }
 
-    const chartData: { date: string; views: number }[] = [];
-    data.viewsGroupedByInterval.forEach((row) => {
-        chartData.push({
-            date: row[0],
-            views: row[1],
-        });
-    });
-
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
     const handleFilterChange = (filters: SearchFilters) => {
