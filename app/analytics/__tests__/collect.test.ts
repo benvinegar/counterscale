@@ -3,6 +3,7 @@ import { Mock, describe, expect, test, vi, beforeEach } from "vitest";
 import httpMocks from "node-mocks-http";
 
 import { collectRequestHandler } from "../collect";
+import { AnalyticsEngineDataset } from "@cloudflare/workers-types";
 
 const defaultRequestParams = generateRequestParams({
     "user-agent":
@@ -215,5 +216,27 @@ describe("collectRequestHandler", () => {
                 1, // new session because > 30 minutes passed
             ],
         );
+    });
+
+    test("a PATCH request should return 405", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as AnalyticsEngineDataset,
+        } as Env;
+
+        const request = httpMocks.createRequest({
+            method: "PATCH",
+            url: "https://example.com",
+            // Cloudflare-specific request properties
+            cf: {
+                country: "US",
+            },
+        });
+
+        const response = collectRequestHandler(request as any, env);
+
+        expect(response.status).toBe(405);
+        expect(response.statusText).toBe("Method not allowed");
     });
 });
