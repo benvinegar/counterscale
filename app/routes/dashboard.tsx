@@ -306,6 +306,7 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
 
                     <DeviceCard
