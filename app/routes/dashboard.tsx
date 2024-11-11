@@ -21,8 +21,6 @@ import { BrowserCard } from "./resources.browser";
 import { CountryCard } from "./resources.country";
 import { DeviceCard } from "./resources.device";
 
-import TimeSeriesChart from "~/components/TimeSeriesChart";
-import dayjs from "dayjs";
 import {
     getDateTimeRange,
     getFiltersFromSearchParams,
@@ -80,8 +78,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
     const filters = getFiltersFromSearchParams(url.searchParams);
 
-    const tz = context.cloudflare.cf.timezone as string;
-
     // initiate requests to AE in parallel
 
     // sites by hits: This is to populate the "sites" dropdown. We query the full retention
@@ -94,21 +90,11 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     const counts = analyticsEngine.getCounts(
         actualSiteId,
         interval,
-        tz,
+        context.cloudflare.cf.timezone as string,
         filters,
     );
 
     const intervalType = getIntervalType(interval);
-    const { startDate, endDate } = getDateTimeRange(interval, tz);
-
-    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
-        actualSiteId,
-        intervalType,
-        startDate,
-        endDate,
-        tz,
-        filters,
-    );
 
     // await all requests to AE then return the results
 
@@ -122,10 +108,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
             views: (await counts).views,
             visits: (await counts).visits,
             visitors: (await counts).visitors,
-            viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
             interval,
-            tz,
             filters,
         };
     } catch (err) {
@@ -285,12 +269,14 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
                     <ReferrerCard
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
@@ -299,6 +285,7 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
 
                     <CountryCard
@@ -314,6 +301,7 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
                 </div>
             </div>

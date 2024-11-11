@@ -37,7 +37,7 @@ const PaginatedTableCard = ({
                   .join("")
             : "";
 
-        let url = `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`;
+        let url = `${loaderUrl}?site=${siteId}&interval=${interval}&timezone=${timezone}${filterString}`;
         if (page) {
             url += `&page=${page}`;
         }

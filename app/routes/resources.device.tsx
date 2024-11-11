@@ -11,10 +11,10 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
 
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
-    const tz = context.cloudflare.cf.timezone as string;
 
     const url = new URL(request.url);
-    const filters = getFiltersFromSearchParams(new URL(url).searchParams);
+    const tz = url.searchParams.get("timezone") || "UTC";
+    const filters = getFiltersFromSearchParams(url.searchParams);
 
     return json({
         countsByProperty: await analyticsEngine.getCountByDevice(
@@ -33,11 +33,13 @@ export const DeviceCard = ({
     interval,
     filters,
     onFilterChange,
+    timezone,
 }: {
     siteId: string;
     interval: string;
     filters: SearchFilters;
     onFilterChange: (filters: SearchFilters) => void;
+    timezone: string;
 }) => {
     return (
         <PaginatedTableCard
@@ -50,6 +52,7 @@ export const DeviceCard = ({
             onClick={(deviceModel) =>
                 onFilterChange({ ...filters, deviceModel })
             }
+            timezone={timezone}
         />
     );
 };

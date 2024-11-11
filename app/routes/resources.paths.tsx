@@ -36,11 +36,13 @@ export const PathsCard = ({
     interval,
     filters,
     onFilterChange,
+    timezone,
 }: {
     siteId: string;
     interval: string;
     filters: SearchFilters;
     onFilterChange: (filters: SearchFilters) => void;
+    timezone: string;
 }) => {
     return (
         <PaginatedTableCard
@@ -51,6 +53,7 @@ export const PathsCard = ({
             filters={filters}
             loaderUrl="/resources/paths"
             onClick={(path) => onFilterChange({ ...filters, path })}
+            timezone={timezone}
         />
     );
 };

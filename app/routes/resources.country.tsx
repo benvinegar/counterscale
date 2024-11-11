@@ -48,14 +48,12 @@ export const CountryCard = ({
     onFilterChange: (filters: SearchFilters) => void;
     timezone: string;
 }) => {
-    const dataFetcher = useFetcher<typeof loader>();
-
     return (
         <PaginatedTableCard
             siteId={siteId}
             interval={interval}
             columnHeaders={["Country", "Visitors"]}
-            dataFetcher={dataFetcher}
+            dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/country"
             filters={filters}
             onClick={(country) => onFilterChange({ ...filters, country })}
