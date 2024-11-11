@@ -15,9 +15,8 @@ import { SearchFilters } from "~/lib/types";
 export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
     const { interval, site } = paramsFromUrl(request.url);
-    const tz = context.cloudflare.cf.timezone as string;
-
     const url = new URL(request.url);
+    const tz = url.searchParams.get("timezone") || "UTC";
     const filters = getFiltersFromSearchParams(url.searchParams);
 
     const intervalType = getIntervalType(interval);
@@ -51,10 +50,12 @@ export const TimeSeriesCard = ({
     siteId,
     interval,
     filters,
+    timezone,
 }: {
     siteId: string;
     interval: string;
     filters: SearchFilters;
+    timezone: string;
 }) => {
     const dataFetcher = useFetcher<typeof loader>();
     const { chartData, intervalType } = dataFetcher.data || {};
@@ -67,10 +68,10 @@ export const TimeSeriesCard = ({
                       .join("")
                 : "";
 
-            const url = `/resources/timeseries?site=${siteId}&interval=${interval}${filterString}`;
+            const url = `/resources/timeseries?site=${siteId}&interval=${interval}&timezone=${timezone}${filterString}`;
             dataFetcher.load(url);
         }
-    }, [siteId, interval, filters]);
+    }, [siteId, interval, filters, timezone]);
 
     return (
         <Card>
@@ -80,6 +81,7 @@ export const TimeSeriesCard = ({
                         <TimeSeriesChart
                             data={chartData}
                             intervalType={intervalType}
+                            timezone={timezone}
                         />
                     )}
                 </div>

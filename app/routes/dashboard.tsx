@@ -277,6 +277,7 @@ export default function Dashboard() {
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
+                        timezone={userTimezone}
                     />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
