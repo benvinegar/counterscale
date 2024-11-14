@@ -73,6 +73,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     }
 
     const siteId = url.searchParams.get("site") || "";
+    const actualSiteId = siteId === "@unknown" ? "" : siteId;
+
     const filters = getFiltersFromSearchParams(url.searchParams);
 
     // initiate requests to AE in parallel
@@ -91,7 +93,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     let out;
     try {
         out = {
-            siteId: siteId,
+            siteId: actualSiteId,
             sites: (await sitesByHits).map(
                 ([site, _]: [string, number]) => site,
             ),
