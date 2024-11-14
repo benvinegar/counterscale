@@ -1,4 +1,3 @@
-import { Card, CardContent } from "~/components/ui/card";
 import {
     Select,
     SelectContent,
@@ -22,7 +21,6 @@ import { CountryCard } from "./resources.country";
 import { DeviceCard } from "./resources.device";
 
 import {
-    getDateTimeRange,
     getFiltersFromSearchParams,
     getIntervalType,
     getUserTimezone,
@@ -75,8 +73,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     }
 
     const siteId = url.searchParams.get("site") || "";
-    const actualSiteId = siteId == "@unknown" ? "" : siteId;
-
     const filters = getFiltersFromSearchParams(url.searchParams);
 
     // initiate requests to AE in parallel
@@ -135,8 +131,6 @@ export default function Dashboard() {
             return prev;
         });
     }
-
-    const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
     const handleFilterChange = (filters: SearchFilters) => {
         setSearchParams((prev) => {
