@@ -5,6 +5,25 @@ import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 import { SearchFilters } from "~/lib/types";
 
+function convertCountryCodesToNames(
+    countByCountry: [string, number][],
+): [[string, string], number][] {
+    const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+    return countByCountry.map((countByBrowserRow) => {
+        let countryName;
+        try {
+            // throws an exception if country code isn't valid
+            //   use try/catch to be defensive and not explode if an invalid
+            //   country code gets insrted into Analytics Engine
+            countryName = regionNames.of(countByBrowserRow[0])!; // "United States"
+        } catch (err) {
+            countryName = "(unknown)";
+        }
+        const count = countByBrowserRow[1];
+        return [[countByBrowserRow[0], countryName], count];
+    });
+}
+
 export async function loader({ context, request }: LoaderFunctionArgs) {
     const { analyticsEngine } = context;
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
@@ -24,10 +43,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     // NOTE: this must be done ONLY on server otherwise hydration mismatches
     //       can occur because Intl.DisplayNames produces different results
     //       in different browsers (see https://github.com/benvinegar/counterscale/issues/72)
-    const countsByProperty = countsByCountry.map(([code, count]) => [
-        convertCountryCodesToNames(code),
-        count,
-    ]);
+    const countsByProperty = convertCountryCodesToNames(countsByCountry);
 
     return json({
         countsByProperty,
@@ -61,19 +77,3 @@ export const CountryCard = ({
         />
     );
 };
-
-// Helper function to convert country codes to names
-function convertCountryCodesToNames(countryCode: string): string {
-    try {
-        return (
-            new Intl.DisplayNames(["en"], { type: "region" }).of(
-                countryCode.toUpperCase(),
-            ) || countryCode
-        );
-    } catch (e) {
-        // throws an exception if country code isn't valid
-        //   use try/catch to be defensive and not explode if an invalid
-        //   country code gets insrted into Analytics Engine
-        return "(unknown)";
-    }
-}
