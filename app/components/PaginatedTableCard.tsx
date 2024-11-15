@@ -5,6 +5,17 @@ import { Card } from "./ui/card";
 import PaginationButtons from "./PaginationButtons";
 import { SearchFilters } from "~/lib/types";
 
+interface PaginatedTableCardProps {
+    siteId: string;
+    interval: string;
+    dataFetcher: any;
+    columnHeaders: string[];
+    filters?: SearchFilters;
+    loaderUrl: string;
+    onClick?: (key: string) => void;
+    timezone?: string;
+}
+
 const PaginatedTableCard = ({
     siteId,
     interval,
@@ -13,15 +24,8 @@ const PaginatedTableCard = ({
     filters,
     loaderUrl,
     onClick,
-}: {
-    siteId: string;
-    interval: string;
-    dataFetcher: any; // ignore type for now
-    columnHeaders: string[];
-    filters?: SearchFilters;
-    loaderUrl: string;
-    onClick?: (key: string) => void;
-}) => {
+    timezone,
+}: PaginatedTableCardProps) => {
     const countsByProperty = dataFetcher.data?.countsByProperty || [];
     const page = dataFetcher.data?.page || 1;
 
@@ -33,7 +37,7 @@ const PaginatedTableCard = ({
                   .join("")
             : "";
 
-        let url = `${loaderUrl}?site=${siteId}&interval=${interval}${filterString}`;
+        let url = `${loaderUrl}?site=${siteId}&interval=${interval}&timezone=${timezone}${filterString}`;
         if (page) {
             url += `&page=${page}`;
         }

@@ -1,4 +1,3 @@
-import { Card, CardContent } from "~/components/ui/card";
 import {
     Select,
     SelectContent,
@@ -21,11 +20,15 @@ import { BrowserCard } from "./resources.browser";
 import { CountryCard } from "./resources.country";
 import { DeviceCard } from "./resources.device";
 
-import TimeSeriesChart from "~/components/TimeSeriesChart";
-import dayjs from "dayjs";
-import { getFiltersFromSearchParams } from "~/lib/utils";
+import {
+    getFiltersFromSearchParams,
+    getIntervalType,
+    getUserTimezone,
+} from "~/lib/utils";
 import { SearchFilters } from "~/lib/types";
 import SearchFilterBadges from "~/components/SearchFilterBadges";
+import { TimeSeriesCard } from "./resources.timeseries";
+import { StatsCard } from "./resources.stats";
 
 export const meta: MetaFunction = () => {
     return [
@@ -70,11 +73,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     }
 
     const siteId = url.searchParams.get("site") || "";
-    const actualSiteId = siteId == "@unknown" ? "" : siteId;
+    const actualSiteId = siteId === "@unknown" ? "" : siteId;
 
     const filters = getFiltersFromSearchParams(url.searchParams);
-
-    const tz = context.cloudflare.cf.timezone as string;
 
     // initiate requests to AE in parallel
 
@@ -83,79 +84,21 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     //                will show up in the dropdown.
     const sitesByHits = analyticsEngine.getSitesOrderedByHits(
         `${MAX_RETENTION_DAYS}d`,
-        tz,
     );
 
-    const counts = analyticsEngine.getCounts(
-        actualSiteId,
-        interval,
-        tz,
-        filters,
-    );
-    let intervalType: "DAY" | "HOUR" = "DAY";
-    switch (interval) {
-        case "today":
-        case "yesterday":
-        case "1d":
-            intervalType = "HOUR";
-            break;
-        case "7d":
-        case "30d":
-        case "90d":
-            intervalType = "DAY";
-            break;
-    }
-    // get start date in the past by subtracting interval * type
-
-    let localDateTime = dayjs().utc();
-    let localEndDateTime: dayjs.Dayjs | undefined;
-    if (interval === "today") {
-        localDateTime = localDateTime.tz(tz).startOf("day");
-    } else if (interval === "yesterday") {
-        localDateTime = localDateTime.tz(tz).startOf("day").subtract(1, "day");
-        localEndDateTime = localDateTime.endOf("day").add(2, "ms");
-    } else {
-        const daysAgo = Number(interval.split("d")[0]);
-        if (intervalType === "DAY") {
-            localDateTime = localDateTime
-                .subtract(daysAgo, "day")
-                .tz(tz)
-                .startOf("day");
-        } else if (intervalType === "HOUR") {
-            localDateTime = localDateTime
-                .subtract(daysAgo, "day")
-                .startOf("hour");
-        }
-    }
-
-    if (!localEndDateTime) localEndDateTime = dayjs().utc().tz(tz);
-
-    const viewsGroupedByInterval = analyticsEngine.getViewsGroupedByInterval(
-        actualSiteId,
-        intervalType,
-        localDateTime.toDate(),
-        localEndDateTime.toDate(),
-        tz,
-        filters,
-    );
+    const intervalType = getIntervalType(interval);
 
     // await all requests to AE then return the results
 
     let out;
     try {
         out = {
-            siteId: siteId,
+            siteId: actualSiteId,
             sites: (await sitesByHits).map(
                 ([site, _]: [string, number]) => site,
             ),
-            views: (await counts).views,
-            visits: (await counts).visits,
-            visitors: (await counts).visitors,
-            // countByReferrer: await countByReferrer,
-            viewsGroupedByInterval: await viewsGroupedByInterval,
             intervalType,
             interval,
-            tz,
             filters,
         };
     } catch (err) {
@@ -191,16 +134,6 @@ export default function Dashboard() {
         });
     }
 
-    const chartData: { date: string; views: number }[] = [];
-    data.viewsGroupedByInterval.forEach((row) => {
-        chartData.push({
-            date: row[0],
-            views: row[1],
-        });
-    });
-
-    const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
-
     const handleFilterChange = (filters: SearchFilters) => {
         setSearchParams((prev) => {
             for (const key in filters) {
@@ -221,6 +154,8 @@ export default function Dashboard() {
             return prev;
         });
     };
+
+    const userTimezone = getUserTimezone();
 
     return (
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
@@ -278,46 +213,20 @@ export default function Dashboard() {
 
             <div className="transition" style={{ opacity: loading ? 0.6 : 1 }}>
                 <div className="w-full mb-4">
-                    <Card>
-                        <div className="p-4 pl-6">
-                            <div className="grid grid-cols-3 gap-10 items-end">
-                                <div>
-                                    <div className="text-md">Views</div>
-                                    <div className="text-4xl">
-                                        {countFormatter.format(data.views)}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-md sm:text-lg">
-                                        Visits
-                                    </div>
-                                    <div className="text-4xl">
-                                        {countFormatter.format(data.visits)}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-md sm:text-lg">
-                                        Visitors
-                                    </div>
-                                    <div className="text-4xl">
-                                        {countFormatter.format(data.visitors)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
+                    <StatsCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        timezone={userTimezone}
+                    />
                 </div>
                 <div className="w-full mb-4">
-                    <Card>
-                        <CardContent>
-                            <div className="h-72 pt-6 -m-4 -ml-8 sm:m-0">
-                                <TimeSeriesChart
-                                    data={chartData}
-                                    intervalType={data.intervalType}
-                                ></TimeSeriesChart>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <TimeSeriesCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        timezone={userTimezone}
+                    />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <PathsCard
@@ -325,12 +234,14 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
                     <ReferrerCard
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
@@ -339,6 +250,7 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
 
                     <CountryCard
@@ -346,6 +258,7 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
 
                     <DeviceCard
@@ -353,6 +266,7 @@ export default function Dashboard() {
                         interval={data.interval}
                         filters={data.filters}
                         onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
                     />
                 </div>
             </div>

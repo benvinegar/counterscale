@@ -13,6 +13,7 @@ import {
 export default function TimeSeriesChart({
     data,
     intervalType,
+    timezone,
 }: InferProps<typeof TimeSeriesChart.propTypes>) {
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {
@@ -51,13 +52,15 @@ export default function TimeSeriesChart({
         // convert from utc to local time
         dateObj.setMinutes(dateObj.getMinutes() - dateObj.getTimezoneOffset());
 
-        return dateObj.toLocaleString("en-us", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-        });
+        return (
+            dateObj.toLocaleString("en-us", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+            }) + ` ${timezone}`
+        );
     }
 
     return (
@@ -97,4 +100,5 @@ TimeSeriesChart.propTypes = {
         }).isRequired,
     ).isRequired,
     intervalType: PropTypes.string,
+    timezone: PropTypes.string,
 };

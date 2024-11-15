@@ -600,15 +600,12 @@ export class AnalyticsEngineAPI {
         );
     }
 
-    async getSitesOrderedByHits(interval: string, tz?: string, limit?: number) {
+    async getSitesOrderedByHits(interval: string, limit?: number) {
         // defaults to 1 day if not specified
 
         limit = limit || 10;
 
-        const { startIntervalSql, endIntervalSql } = intervalToSql(
-            interval,
-            tz,
-        );
+        const { startIntervalSql, endIntervalSql } = intervalToSql(interval);
 
         const query = `
             SELECT SUM(_sample_interval) as count,
