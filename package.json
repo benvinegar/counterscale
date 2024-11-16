@@ -71,7 +71,7 @@
         "typescript": "^5.4.5",
         "vite": "^5.3.1",
         "vite-tsconfig-paths": "^4.3.2",
-        "vitest": "^1.6.0",
+        "vitest": "2.1",
         "vitest-dom": "^0.1.1",
         "wrangler": "^3.61.0"
     },
