@@ -2,7 +2,7 @@ import { ColumnMappingToType, ColumnMappings } from "./schema";
 
 import { SearchFilters } from "~/lib/types";
 
-import dayjs, { ManipulateType } from "dayjs";
+import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 
@@ -94,26 +94,28 @@ function generateEmptyRowsOverInterval(
 
     const initialRows: { [key: string]: number } = {};
 
-    // NOTE: Need to explicitly use dayjs to increment by 1 day/1 hour/etc, because
-    //       dayjs will respect and adjust for daylight savings time boundaries.
-    //
-    //       For example, in 2024, Daylight Savings Time began on 3/10/24 at 2:00 AM.
-    //       In UTC, before the switch, America/New_York was 5 hours behind UTC (+5:00).
-    //       But after the switch, it becomes 4 hours behind UTC (+4:00). Dayjs
-    //       accounts for this difference.
-    //
-    //       There is no unit test affirming this behavior, because I could not figure
-    //       out how to get vitest/mock dates to recreate DST changes.
-    //       See: https://github.com/benvinegar/counterscale/pull/62
-
     while (startDateTime.getTime() < endDateTime.getTime()) {
         const key = dayjs(startDateTime).utc().format("YYYY-MM-DD HH:mm:ss");
         initialRows[key] = 0;
 
-        startDateTime = dayjs(startDateTime)
-            // increment by either DAY or HOUR
-            .add(1, intervalType.toLowerCase() as ManipulateType)
-            .toDate();
+        if (intervalType === "DAY") {
+            // WARNING: Daylight savings hack. Cloudflare Workers uses a different Date
+            //          implementation than Node 20.x, which doesn't seem to respect DST
+            //          boundaries the same way(see: https://github.com/benvinegar/counterscale/issues/108).
+            //
+            //          To work around this, we add 25 hours to the start date/time, then get the
+            //          start of the day, then convert it back to a Date object. This works in both
+            //          Node 20.x and Cloudflare Workers environments.
+            startDateTime = dayjs(startDateTime)
+                .add(25, "hours")
+                .tz(tz)
+                .startOf("day")
+                .toDate();
+        } else if (intervalType === "HOUR") {
+            startDateTime = dayjs(startDateTime).add(1, "hour").toDate();
+        } else {
+            throw new Error("Invalid interval type");
+        }
     }
 
     return initialRows;
