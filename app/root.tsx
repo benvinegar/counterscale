@@ -22,7 +22,7 @@ export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 export const loader = ({ context, request }: LoaderFunctionArgs) => {
     const url = new URL(request.url);
     return json({
-        version: context.cloudflare.env.CF_PAGES_COMMIT_SHA,
+        version: context.cloudflare?.env?.CF_PAGES_COMMIT_SHA,
         origin: url.origin,
         url: request.url,
     });

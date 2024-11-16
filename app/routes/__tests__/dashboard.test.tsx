@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { json } from "@remix-run/node";
+import { json, LoaderFunctionArgs } from "@remix-run/node";
 import {
     vi,
     test,
@@ -36,29 +36,57 @@ describe("Dashboard route", () => {
     });
 
     describe("loader", () => {
-        test("throws an exception if no Cloudflare credentials are provided", async () => {
-            // empty strings
-            await expect(
-                loader({
-                    context: {
-                        analyticsEngine: new AnalyticsEngineAPI(
-                            "testAccountId",
-                            "testApiToken",
-                        ),
-                        cloudflare: {
-                            // @ts-expect-error we don't need to provide all the properties of the cloudflare object
-                            env: {
-                                CF_BEARER_TOKEN: "",
-                                CF_ACCOUNT_ID: "",
-                            },
+        test("throws a 501 Response if no Cloudflare credentials are provided", async () => {
+            const mockLoaderParams: LoaderFunctionArgs = {
+                context: {
+                    analyticsEngine: new AnalyticsEngineAPI(
+                        "testAccountId",
+                        "testApiToken",
+                    ),
+                    cloudflare: {
+                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
+                        env: {
+                            CF_ACCOUNT_ID: "",
+                            CF_BEARER_TOKEN: "",
                         },
                     },
-                    // @ts-expect-error we don't need to provide all the properties of the request object
-                    request: {
-                        url: "http://localhost:3000/dashboard",
-                    },
-                }),
-            ).rejects.toThrow("Missing Cloudflare credentials");
+                },
+                // @ts-expect-error we don't need to provide all the properties of the request object
+                request: {
+                    url: "http://localhost:3000/dashboard",
+                },
+            };
+
+            try {
+                await loader(mockLoaderParams);
+            } catch (error) {
+                expect(error).toBeInstanceOf(Response);
+                const response = error as Response;
+                expect(await response.text()).toBe(
+                    "Missing credentials: CF_ACCOUNT_ID is not set.",
+                );
+                expect(response.status).toBe(501);
+            }
+
+            // run it again, this time with account ID present, but bearer token absent
+            mockLoaderParams.context.cloudflare = {
+                // @ts-expect-error we don't need to provide all the properties of the cloudflare object
+                env: {
+                    CF_ACCOUNT_ID: "testAccountId",
+                    CF_BEARER_TOKEN: "",
+                },
+            };
+
+            try {
+                await loader(mockLoaderParams);
+            } catch (error) {
+                expect(error).toBeInstanceOf(Response);
+                const response = error as Response;
+                expect(await response.text()).toBe(
+                    "Missing credentials: CF_BEARER_TOKEN is not set.",
+                );
+                expect(response.status).toBe(501);
+            }
         });
 
         test("redirects to ?site=siteId if no siteId is provided via query string", async () => {

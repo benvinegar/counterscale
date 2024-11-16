@@ -9,8 +9,10 @@ import {
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
 import {
+    isRouteErrorResponse,
     useLoaderData,
     useNavigation,
+    useRouteError,
     useSearchParams,
 } from "@remix-run/react";
 
@@ -41,13 +43,16 @@ const MAX_RETENTION_DAYS = 90;
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     // NOTE: probably duped from getLoadContext / need to de-duplicate
-    if (
-        !context.cloudflare.env.CF_BEARER_TOKEN ||
-        !context.cloudflare.env.CF_ACCOUNT_ID
-    ) {
-        throw new Error("Missing Cloudflare credentials");
+    if (!context.cloudflare?.env?.CF_ACCOUNT_ID) {
+        throw new Response("Missing credentials: CF_ACCOUNT_ID is not set.", {
+            status: 501,
+        });
     }
-
+    if (!context.cloudflare?.env?.CF_BEARER_TOKEN) {
+        throw new Response("Missing credentials: CF_BEARER_TOKEN is not set.", {
+            status: 501,
+        });
+    }
     const { analyticsEngine } = context;
 
     const url = new URL(request.url);
@@ -270,6 +275,24 @@ export default function Dashboard() {
                     />
                 </div>
             </div>
+        </div>
+    );
+}
+
+export function ErrorBoundary() {
+    const error = useRouteError();
+
+    const errorTitle = isRouteErrorResponse(error) ? error.status : "Error";
+    const errorBody = isRouteErrorResponse(error)
+        ? error.data
+        : error instanceof Error
+          ? error.message
+          : "Unknown error";
+
+    return (
+        <div className="border-2 rounded p-4 bg-card">
+            <h1 className="text-2xl font-bold">{errorTitle}</h1>
+            <p className="text-lg">{errorBody}</p>
         </div>
     );
 }
