@@ -34,31 +34,25 @@ export const StatsCard = ({
     timezone: string;
 }) => {
     const dataFetcher = useFetcher<typeof loader>();
+
     const { views, visits, visitors } = dataFetcher.data || {};
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
-    const loadData = () => {
-        const filterString = filters
-            ? Object.entries(filters)
-                  .map(([key, value]) => `&${key}=${value}`)
-                  .join("")
-            : "";
-
-        const url = `/resources/stats?site=${siteId}&interval=${interval}&timezone=${timezone}${filterString}`;
-        dataFetcher.load(url);
-    };
-
     useEffect(() => {
-        if (dataFetcher.state === "idle") {
-            loadData();
-        }
-    }, []);
+        if (dataFetcher.state !== "idle") return;
 
-    useEffect(() => {
-        if (dataFetcher.state === "idle") {
-            loadData();
-        }
-    }, [siteId, interval, filters]);
+        const params = {
+            site: siteId,
+            interval,
+            timezone,
+            ...filters,
+        };
+
+        dataFetcher.submit(params, {
+            method: "get",
+            action: `/resources/stats`,
+        });
+    }, [dataFetcher, siteId, interval, filters, timezone]);
 
     return (
         <Card>
