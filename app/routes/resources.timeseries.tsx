@@ -72,7 +72,7 @@ export const TimeSeriesCard = ({
             method: "get",
             action: `/resources/timeseries`,
         });
-        // NOTE: dataFetcher is intentionally omitted from the useEffectdependency array
+        // NOTE: dataFetcher is intentionally omitted from the useEffect dependency array
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [siteId, interval, filters, timezone]);
 

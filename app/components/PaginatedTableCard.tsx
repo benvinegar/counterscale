@@ -42,7 +42,7 @@ const PaginatedTableCard = ({
             method: "get",
             action: loaderUrl,
         });
-        // NOTE: dataFetcher is intentionally omitted from the useEffectdependency array
+        // NOTE: dataFetcher is intentionally omitted from the useEffect dependency array
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loaderUrl, siteId, interval, filters, timezone, page]); //
 
