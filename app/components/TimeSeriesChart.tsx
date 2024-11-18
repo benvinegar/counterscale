@@ -64,7 +64,7 @@ export default function TimeSeriesChart({
     }
 
     return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={100}>
             <AreaChart
                 width={500}
                 height={400}

@@ -1,6 +1,5 @@
-import { getFiltersFromSearchParams } from "../utils";
+import { getFiltersFromSearchParams, getDateTimeRange } from "../utils";
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
-import { getDateTimeRange } from "../utils";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
