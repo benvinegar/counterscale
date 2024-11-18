@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import TableCard from "~/components/TableCard";
 
 import { Card } from "./ui/card";
@@ -27,38 +27,27 @@ const PaginatedTableCard = ({
     timezone,
 }: PaginatedTableCardProps) => {
     const countsByProperty = dataFetcher.data?.countsByProperty || [];
-    const page = dataFetcher.data?.page || 1;
-
-    const loadData = (page: string | undefined = undefined) => {
-        // turn filters into query string
-        const filterString = filters
-            ? Object.entries(filters)
-                  .map(([key, value]) => `&${key}=${value}`)
-                  .join("")
-            : "";
-
-        let url = `${loaderUrl}?site=${siteId}&interval=${interval}&timezone=${timezone}${filterString}`;
-        if (page) {
-            url += `&page=${page}`;
-        }
-
-        dataFetcher.load(url);
-    };
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
-        if (dataFetcher.state === "idle") {
-            loadData();
-        }
-    }, []);
+        const params = {
+            site: siteId,
+            interval,
+            timezone,
+            ...filters,
+            page,
+        };
 
-    useEffect(() => {
-        if (dataFetcher.state === "idle") {
-            loadData();
-        }
-    }, [siteId, interval, filters]);
+        dataFetcher.submit(params, {
+            method: "get",
+            action: loaderUrl,
+        });
+        // NOTE: dataFetcher is intentionally omitted from the useEffect dependency array
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loaderUrl, siteId, interval, filters, timezone, page]); //
 
     function handlePagination(page: number) {
-        loadData(page.toString());
+        setPage(page);
     }
 
     const hasMore = countsByProperty.length === 10;
