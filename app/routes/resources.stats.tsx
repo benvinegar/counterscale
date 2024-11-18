@@ -39,8 +39,6 @@ export const StatsCard = ({
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
     useEffect(() => {
-        if (dataFetcher.state !== "idle") return;
-
         const params = {
             site: siteId,
             interval,
@@ -52,7 +50,9 @@ export const StatsCard = ({
             method: "get",
             action: `/resources/stats`,
         });
-    }, [dataFetcher, siteId, interval, filters, timezone]);
+        // NOTE: dataFetcher is intentionally omitted from the useEffectdependency array
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [siteId, interval, filters, timezone]);
 
     return (
         <Card>

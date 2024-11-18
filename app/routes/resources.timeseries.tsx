@@ -60,28 +60,21 @@ export const TimeSeriesCard = ({
     const dataFetcher = useFetcher<typeof loader>();
     const { chartData, intervalType } = dataFetcher.data || {};
 
-    const loadData = () => {
-        const filterString = filters
-            ? Object.entries(filters)
-                  .map(([key, value]) => `&${key}=${value}`)
-                  .join("")
-            : "";
-
-        const url = `/resources/timeseries?site=${siteId}&interval=${interval}&timezone=${timezone}${filterString}`;
-        dataFetcher.load(url);
-    };
-
     useEffect(() => {
-        if (dataFetcher.state === "idle") {
-            loadData();
-        }
-    }, []);
+        const params = {
+            site: siteId,
+            interval,
+            timezone,
+            ...filters,
+        };
 
-    useEffect(() => {
-        if (dataFetcher.state === "idle") {
-            loadData();
-        }
-    }, [siteId, interval, filters]);
+        dataFetcher.submit(params, {
+            method: "get",
+            action: `/resources/timeseries`,
+        });
+        // NOTE: dataFetcher is intentionally omitted from the useEffectdependency array
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [siteId, interval, filters, timezone]);
 
     return (
         <Card>
