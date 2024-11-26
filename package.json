@@ -77,5 +77,14 @@
     },
     "engines": {
         "node": ">=20.0.0"
+    },
+    "prettier": {
+        "tabWidth": 4
+    },
+    "postcss": {
+        "plugins": {
+            "tailwindcss": {},
+            "autoprefixer": {}
+        }
     }
 }
