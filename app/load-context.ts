@@ -1,6 +1,6 @@
 import { type AppLoadContext } from "@remix-run/cloudflare";
 import { type PlatformProxy } from "wrangler";
-import { AnalyticsEngineAPI } from "./app/analytics/query";
+import { AnalyticsEngineAPI } from "./analytics/query";
 
 interface ExtendedEnv extends Env {
     CF_PAGES_COMMIT_SHA: string;
