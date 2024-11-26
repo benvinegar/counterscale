@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import styles from "./globals.css?url";
 import {
     json,
