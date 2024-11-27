@@ -23,7 +23,7 @@ const PaginationButtons: React.FC<PaginationButtonsProps> = ({
                 className={
                     page > 1
                         ? `text-primary hover:cursor-pointer`
-                        : `text-orange-300`
+                        : `text-orange-300 dark:text-gray-700`
                 }
             >
                 <ArrowLeft />
@@ -35,7 +35,7 @@ const PaginationButtons: React.FC<PaginationButtonsProps> = ({
                 className={
                     hasMore
                         ? "text-primary hover:cursor-pointer"
-                        : "text-orange-300"
+                        : "text-orange-300 dark:text-gray-700"
                 }
             >
                 <ArrowRight />
