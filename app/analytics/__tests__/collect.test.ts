@@ -70,6 +70,7 @@ describe("collectRequestHandler", () => {
             doubles: [
                 1, // new visitor
                 1, // new session
+                1, // new visit, so bounce
             ],
             indexes: [
                 "example", // site id is index
@@ -95,6 +96,7 @@ describe("collectRequestHandler", () => {
             [
                 1, // new visitor
                 1, // new session
+                1, // new visit, so bounce
             ],
         );
     });
@@ -123,6 +125,7 @@ describe("collectRequestHandler", () => {
             [
                 0, // NOT a new visitor
                 0, // NOT a new session
+                0, // NOT first or second visit
             ],
         );
     });
@@ -157,6 +160,7 @@ describe("collectRequestHandler", () => {
                 1, // new visitor because a new day began
                 0, // NOT a new session because continuation of earlier session (< 30 mins)
                 // (session logic doesn't care if a new day began or not)
+                1, // new visitor so bounce counted
             ],
         );
     });
@@ -185,6 +189,7 @@ describe("collectRequestHandler", () => {
             [
                 1, // new visitor because > 30 days passed
                 1, // new session because > 30 minutes passed
+                1, // new visitor so bounce
             ],
         );
     });
@@ -213,6 +218,76 @@ describe("collectRequestHandler", () => {
             [
                 1, // new visitor because > 24 hours passed
                 1, // new session because > 30 minutes passed
+                1, // new visitor so bounce
+            ],
+        );
+    });
+
+    test("if-modified-since is one second after midnight", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as AnalyticsEngineDataset,
+        } as Env;
+
+        // midnight
+        const midnight = new Date(Math.floor(Date.now() / 8.64e7) * 8.64e7);
+        // set system time to midnight to see how the bounce works at the margin
+        vi.setSystemTime(midnight.getTime());
+        // increment to one second after midnight
+        midnight.setSeconds(midnight.getSeconds() + 1);
+
+        const request = httpMocks.createRequest(
+            // @ts-expect-error - we're mocking the request object
+            generateRequestParams({
+                "if-modified-since": midnight.toUTCString(),
+            }),
+        );
+
+        collectRequestHandler(request as any, env);
+
+        const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
+        expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
+            "doubles",
+            [
+                0, // new visitor because > 24 hours passed
+                0, // new session because > 30 minutes passed
+                -1, // new visitor so bounce
+            ],
+        );
+    });
+
+    test("if-modified-since is two seconds after midnight", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as AnalyticsEngineDataset,
+        } as Env;
+
+        // midnight
+        const midnight = new Date(Math.floor(Date.now() / 8.64e7) * 8.64e7);
+        // set system to one second after midnight
+        midnight.setSeconds(midnight.getSeconds() + 1);
+        vi.setSystemTime(midnight.getTime());
+        // increment to two seconds after midnight
+        midnight.setSeconds(midnight.getSeconds() + 1);
+
+        const request = httpMocks.createRequest(
+            // @ts-expect-error - we're mocking the request object
+            generateRequestParams({
+                "if-modified-since": midnight.toUTCString(),
+            }),
+        );
+
+        collectRequestHandler(request as any, env);
+
+        const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
+        expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
+            "doubles",
+            [
+                0, // new visitor because > 24 hours passed
+                0, // new session because > 30 minutes passed
+                0, // new visitor so bounce
             ],
         );
     });

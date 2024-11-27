@@ -5,6 +5,44 @@ import type { RequestInit } from "@cloudflare/workers-types";
 // Cookieless visitor/session tracking
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
 
+function getMidnightDate(): Date {
+    const now = Date.now();
+    // number of milliseconds in a day
+    const day = 8.64e7;
+
+    return new Date(Math.floor(now / day) * day);
+}
+
+function getNextModifiedDate(current: Date | null): Date {
+    const midnight = getMidnightDate();
+
+    // check if new day, if it is then set to midnight
+    let next = current ? current : midnight;
+    next = midnight.getTime() - next.getTime() > 0 ? midnight : next;
+
+    // increment counter
+    next.setSeconds(next.getSeconds() + 1);
+    return next;
+}
+
+function getBounce(current: Date | null): number {
+    if (!current) {
+        return 0;
+    }
+
+    const midnight = getMidnightDate();
+    const visits = (current.getTime() - midnight.getTime()) / 1000 - 1;
+
+    switch (visits) {
+        case 0:
+            return 1;
+        case 1:
+            return -1;
+        default:
+            return 0;
+    }
+}
+
 function checkVisitorSession(ifModifiedSince: string | null): {
     newVisitor: boolean;
     newSession: boolean;
@@ -62,9 +100,11 @@ export function collectRequestHandler(request: Request, env: Env) {
 
     parsedUserAgent.getBrowser().name;
 
-    const { newVisitor, newSession } = checkVisitorSession(
-        request.headers.get("if-modified-since"),
-    );
+    const ifModifiedSince = request.headers.get("if-modified-since");
+    const { newVisitor, newSession } = checkVisitorSession(ifModifiedSince);
+    const modifiedDate = ifModifiedSince
+        ? getNextModifiedDate(new Date(ifModifiedSince))
+        : getNextModifiedDate(null);
 
     const data: DataPoint = {
         siteId: params.sid,
@@ -73,6 +113,7 @@ export function collectRequestHandler(request: Request, env: Env) {
         referrer: params.r,
         newVisitor: newVisitor ? 1 : 0,
         newSession: newSession ? 1 : 0,
+        bounce: newVisitor ? 1 : getBounce(modifiedDate),
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
@@ -104,7 +145,7 @@ export function collectRequestHandler(request: Request, env: Env) {
             Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
-            "Last-Modified": new Date().toUTCString(),
+            "Last-Modified": modifiedDate.toUTCString(),
             Tk: "N", // not tracking
         },
         status: 200,
@@ -127,6 +168,7 @@ interface DataPoint {
     // doubles
     newVisitor: number;
     newSession: number;
+    bounce: number;
 }
 
 // NOTE: Cloudflare Analytics Engine has limits on total number of bytes, number of fields, etc.
@@ -148,7 +190,7 @@ export function writeDataPoint(
             data.deviceModel || "", // blob7
             data.siteId || "", // blob8
         ],
-        doubles: [data.newVisitor || 0, data.newSession || 0],
+        doubles: [data.newVisitor || 0, data.newSession || 0, data.bounce],
     };
 
     if (!analyticsEngine) {
