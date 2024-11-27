@@ -250,9 +250,9 @@ describe("collectRequestHandler", () => {
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
             "doubles",
             [
-                0, // new visitor because > 24 hours passed
-                0, // new session because > 30 minutes passed
-                -1, // new visitor so bounce
+                0, // NOT a new visitor
+                0, // NOT a new session
+                -1, // First visit after the initial visit so decrement bounce
             ],
         );
     });
@@ -285,9 +285,9 @@ describe("collectRequestHandler", () => {
         expect((writeDataPoint as Mock).mock.calls[0][0]).toHaveProperty(
             "doubles",
             [
-                0, // new visitor because > 24 hours passed
-                0, // new session because > 30 minutes passed
-                0, // new visitor so bounce
+                0, // NOT a new visitor
+                0, // NOT a new session
+                0, // After the second visit so no bounce
             ],
         );
     });
