@@ -5,33 +5,33 @@ import type { RequestInit } from "@cloudflare/workers-types";
 // Cookieless visitor/session tracking
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
 
-function getNextModifiedDate(current: Date | null): Date {
+function getNextModifiedDate(current: Date | null, newVisit: boolean): Date {
     // in case date is an 'Invalid Date'
     if (current && isNaN(current.getTime())) {
         current = null;
     }
 
-    const now = new Date();
+    const today = new Date();
 
-    if (!current) {
-        now.setMilliseconds(0);
-        return now;
+    if (!current || newVisit) {
+        today.setMilliseconds(0);
+        return today;
     }
 
     // update bounce
     switch (current.getMilliseconds()) {
         case 0:
-            now.setMilliseconds(1);
+            today.setMilliseconds(1);
             break;
         case 1:
-            now.setMilliseconds(2);
+            today.setMilliseconds(2);
             break;
         default:
-            now.setMilliseconds(3);
+            today.setMilliseconds(3);
             break;
     }
 
-    return now;
+    return today;
 }
 
 function getBounce(current: Date): number {
@@ -106,6 +106,7 @@ export function collectRequestHandler(request: Request, env: Env) {
     const { newVisitor, newSession } = checkVisitorSession(ifModifiedSince);
     const modifiedDate = getNextModifiedDate(
         ifModifiedSince ? new Date(ifModifiedSince) : null,
+        newVisitor,
     );
 
     const data: DataPoint = {
@@ -115,7 +116,7 @@ export function collectRequestHandler(request: Request, env: Env) {
         referrer: params.r,
         newVisitor: newVisitor ? 1 : 0,
         newSession: newSession ? 1 : 0,
-        bounce: newVisitor ? 1 : getBounce(modifiedDate),
+        bounce: getBounce(modifiedDate),
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
