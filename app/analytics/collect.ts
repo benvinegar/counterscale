@@ -12,6 +12,10 @@ function getMidnightDate(): Date {
 }
 
 function getNextModifiedDate(current: Date | null): Date {
+    if (current && isNaN(current.getTime())) {
+        current = null;
+    }
+
     const midnight = getMidnightDate();
 
     // check if new day, if it is then set to midnight
