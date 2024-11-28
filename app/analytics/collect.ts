@@ -5,38 +5,37 @@ import type { RequestInit } from "@cloudflare/workers-types";
 // Cookieless visitor/session tracking
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
 
-function getMidnightDate(): Date {
-    const midnight = new Date();
-    midnight.setHours(0, 0, 0, 0);
-    return midnight;
-}
-
 function getNextModifiedDate(current: Date | null): Date {
     // in case date is an 'Invalid Date'
     if (current && isNaN(current.getTime())) {
         current = null;
     }
 
-    const midnight = getMidnightDate();
+    const now = new Date();
 
-    // check if new day, if it is then set to midnight
-    let next = current ? current : midnight;
-    next = midnight.getTime() - next.getTime() > 0 ? midnight : next;
-
-    // increment counter
-    next.setSeconds(next.getSeconds() + 1);
-    return next;
-}
-
-function getBounce(current: Date | null): number {
     if (!current) {
-        return 0;
+        now.setMilliseconds(0);
+        return now;
     }
 
-    const midnight = getMidnightDate();
-    const visits = (current.getTime() - midnight.getTime()) / 1000 - 1;
+    // update bounce
+    switch (current.getMilliseconds()) {
+        case 0:
+            now.setMilliseconds(1);
+            break;
+        case 1:
+            now.setMilliseconds(2);
+            break;
+        default:
+            now.setMilliseconds(3);
+            break;
+    }
 
-    switch (visits) {
+    return now;
+}
+
+function getBounce(current: Date): number {
+    switch (current.getMilliseconds()) {
         case 0:
             return 1;
         case 1:
@@ -148,7 +147,7 @@ export function collectRequestHandler(request: Request, env: Env) {
             Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
-            "Last-Modified": modifiedDate.toUTCString(),
+            "Last-Modified": modifiedDate.toISOString(),
             Tk: "N", // not tracking
         },
         status: 200,

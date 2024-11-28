@@ -108,12 +108,15 @@ describe("collectRequestHandler", () => {
             } as AnalyticsEngineDataset,
         } as Env;
 
+        const fiveMinutes = new Date(
+            Date.now() - 5 * 60 * 1000, // 5 mins ago
+        );
+        fiveMinutes.setMilliseconds(1);
+
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
-                "if-modified-since": new Date(
-                    Date.now() - 5 * 60 * 1000, // 5 mins ago
-                ).toUTCString(),
+                "if-modified-since": fiveMinutes.toISOString(),
             }),
         );
 
@@ -147,7 +150,7 @@ describe("collectRequestHandler", () => {
             generateRequestParams({
                 "if-modified-since": new Date(
                     Date.now() - 25 * 60 * 1000, // 25 minutes ago
-                ).toUTCString(),
+                ).toISOString(),
             }),
         );
 
@@ -177,7 +180,7 @@ describe("collectRequestHandler", () => {
             generateRequestParams({
                 "if-modified-since": new Date(
                     Date.now() - 31 * 24 * 60 * 60 * 1000, // 31 days ago
-                ).toUTCString(),
+                ).toISOString(),
             }),
         );
 
@@ -206,7 +209,7 @@ describe("collectRequestHandler", () => {
             generateRequestParams({
                 "if-modified-since": new Date(
                     Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
-                ).toUTCString(),
+                ).toISOString(),
             }),
         );
 
@@ -223,27 +226,20 @@ describe("collectRequestHandler", () => {
         );
     });
 
-    test("if-modified-since is one second after midnight", () => {
+    test("if-modified-since has zero milliseconds", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
             } as AnalyticsEngineDataset,
         } as Env;
 
-        const midnight = new Date();
-        midnight.setHours(0, 0, 0, 0);
-
-        vi.setSystemTime(midnight.getTime());
-
-        const midnightPlusOneSecond = new Date(midnight.getTime());
-        midnightPlusOneSecond.setSeconds(
-            midnightPlusOneSecond.getSeconds() + 1,
-        );
+        const now = new Date();
+        now.setMilliseconds(0);
 
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
-                "if-modified-since": midnightPlusOneSecond.toUTCString(),
+                "if-modified-since": now.toISOString(),
             }),
         );
 
@@ -260,29 +256,20 @@ describe("collectRequestHandler", () => {
         );
     });
 
-    test("if-modified-since is two seconds after midnight", () => {
+    test("if-modified-since has one millisecond", () => {
         const env = {
             WEB_COUNTER_AE: {
                 writeDataPoint: vi.fn(),
             } as AnalyticsEngineDataset,
         } as Env;
 
-        const midnightPlusOneSecond = new Date();
-        midnightPlusOneSecond.setHours(0, 0, 1, 0);
-
-        vi.setSystemTime(midnightPlusOneSecond.getTime());
-
-        const midnightPlusTwoSeconds = new Date(
-            midnightPlusOneSecond.getTime(),
-        );
-        midnightPlusTwoSeconds.setSeconds(
-            midnightPlusTwoSeconds.getSeconds() + 1,
-        );
+        const now = new Date();
+        now.setMilliseconds(1);
 
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
-                "if-modified-since": midnightPlusTwoSeconds.toUTCString(),
+                "if-modified-since": now.toISOString(),
             }),
         );
 
