@@ -6,11 +6,9 @@ import type { RequestInit } from "@cloudflare/workers-types";
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
 
 function getMidnightDate(): Date {
-    const now = Date.now();
-    // number of milliseconds in a day
-    const day = 8.64e7;
-
-    return new Date(Math.floor(now / day) * day);
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    return midnight;
 }
 
 function getNextModifiedDate(current: Date | null): Date {
@@ -102,9 +100,9 @@ export function collectRequestHandler(request: Request, env: Env) {
 
     const ifModifiedSince = request.headers.get("if-modified-since");
     const { newVisitor, newSession } = checkVisitorSession(ifModifiedSince);
-    const modifiedDate = ifModifiedSince
-        ? getNextModifiedDate(new Date(ifModifiedSince))
-        : getNextModifiedDate(null);
+    const modifiedDate = getNextModifiedDate(
+        ifModifiedSince ? new Date(ifModifiedSince) : null,
+    );
 
     const data: DataPoint = {
         siteId: params.sid,

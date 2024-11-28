@@ -230,17 +230,20 @@ describe("collectRequestHandler", () => {
             } as AnalyticsEngineDataset,
         } as Env;
 
-        // midnight
-        const midnight = new Date(Math.floor(Date.now() / 8.64e7) * 8.64e7);
-        // set system time to midnight to see how the bounce works at the margin
+        const midnight = new Date();
+        midnight.setHours(0, 0, 0, 0);
+
         vi.setSystemTime(midnight.getTime());
-        // increment to one second after midnight
-        midnight.setSeconds(midnight.getSeconds() + 1);
+
+        const midnightPlusOneSecond = new Date(midnight.getTime());
+        midnightPlusOneSecond.setSeconds(
+            midnightPlusOneSecond.getSeconds() + 1,
+        );
 
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
-                "if-modified-since": midnight.toUTCString(),
+                "if-modified-since": midnightPlusOneSecond.toUTCString(),
             }),
         );
 
@@ -264,18 +267,22 @@ describe("collectRequestHandler", () => {
             } as AnalyticsEngineDataset,
         } as Env;
 
-        // midnight
-        const midnight = new Date(Math.floor(Date.now() / 8.64e7) * 8.64e7);
-        // set system to one second after midnight
-        midnight.setSeconds(midnight.getSeconds() + 1);
-        vi.setSystemTime(midnight.getTime());
-        // increment to two seconds after midnight
-        midnight.setSeconds(midnight.getSeconds() + 1);
+        const midnightPlusOneSecond = new Date();
+        midnightPlusOneSecond.setHours(0, 0, 1, 0);
+
+        vi.setSystemTime(midnightPlusOneSecond.getTime());
+
+        const midnightPlusTwoSeconds = new Date(
+            midnightPlusOneSecond.getTime(),
+        );
+        midnightPlusTwoSeconds.setSeconds(
+            midnightPlusTwoSeconds.getSeconds() + 1,
+        );
 
         const request = httpMocks.createRequest(
             // @ts-expect-error - we're mocking the request object
             generateRequestParams({
-                "if-modified-since": midnight.toUTCString(),
+                "if-modified-since": midnightPlusTwoSeconds.toUTCString(),
             }),
         );
 
