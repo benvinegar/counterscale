@@ -12,6 +12,7 @@ function getMidnightDate(): Date {
 }
 
 function getNextModifiedDate(current: Date | null): Date {
+    // in case date is an 'Invalid Date'
     if (current && isNaN(current.getTime())) {
         current = null;
     }
