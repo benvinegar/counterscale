@@ -187,7 +187,7 @@ describe("AnalyticsEngineAPI", () => {
     });
 
     describe("getCounts", () => {
-        test("should return an object with view, visit, and visitor counts", async () => {
+        test("should return an object with view, visit, visitor, and bounce counts", async () => {
             fetch.mockResolvedValue(
                 createFetchResponse({
                     data: [
@@ -195,19 +195,19 @@ describe("AnalyticsEngineAPI", () => {
                             count: 3,
                             isVisit: 1,
                             isVisitor: 0,
-                            bounce: 1,
+                            isBounce: 1,
                         },
                         {
                             count: 2,
                             isVisit: 0,
                             isVisitor: 0,
-                            bounce: 0,
+                            isBounce: 0,
                         },
                         {
                             count: 1,
                             isVisit: 0,
                             isVisitor: 1,
-                            bounce: -1,
+                            isBounce: -1,
                         },
                     ],
                 }),
@@ -329,7 +329,7 @@ describe("AnalyticsEngineAPI", () => {
                 "SELECT blob4, " +
                     "double1 as isVisitor, " +
                     "double2 as isVisit, " +
-                    "double3 as bounce, " +
+                    "double3 as isBounce, " +
                     "SUM(_sample_interval) as count " +
                     "FROM metricsDataset WHERE timestamp >= NOW() - INTERVAL '7' DAY AND timestamp < NOW() AND blob8 = 'example.com' AND blob4 = 'CA' " +
                     "GROUP BY blob4, double1, double2, double3 " +

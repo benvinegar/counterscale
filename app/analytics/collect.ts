@@ -11,30 +11,36 @@ function getNextModifiedDate(current: Date | null, newVisit: boolean): Date {
         current = null;
     }
 
-    const today = new Date();
+    const nextModifiedDate = new Date();
 
     if (!current || newVisit) {
-        today.setMilliseconds(0);
-        return today;
+        nextModifiedDate.setMilliseconds(0);
+        return nextModifiedDate;
     }
 
-    // update bounce
+    // update bounce (tracked in milliseconds)
+    // 3 states of bounce: bounce (0), no bounce (1), done (2)
     switch (current.getMilliseconds()) {
+        // if was bounce move to no bounce
         case 0:
-            today.setMilliseconds(1);
+            nextModifiedDate.setMilliseconds(1);
             break;
+        // if was no bounce move to done
         case 1:
-            today.setMilliseconds(2);
+            nextModifiedDate.setMilliseconds(2);
             break;
+        // set value 3 to indicate done with bounce
         default:
-            today.setMilliseconds(3);
+            nextModifiedDate.setMilliseconds(3);
             break;
     }
 
-    return today;
+    return nextModifiedDate;
 }
 
 function getBounce(current: Date): number {
+    // get bounce value (tracked in milliseconds, see getNextModifiedDate)
+    // bounce (1), no bounce (-1), done (0)
     switch (current.getMilliseconds()) {
         case 0:
             return 1;

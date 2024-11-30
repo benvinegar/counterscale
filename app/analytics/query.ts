@@ -25,7 +25,7 @@ interface AnalyticsCountResult {
 }
 
 /** Given an AnalyticsCountResult object, and an object representing a row returned from
- *  CF Analytics Engine w/ counts grouped by isVisitor and isVisit, accumulate view,
+ *  CF Analytics Engine w/ counts grouped by isVisitor, isVisit, and isBounce, accumulate view,
  *  visit, and visitor counts.
  */
 function accumulateCountsFromRowResult(
@@ -34,7 +34,7 @@ function accumulateCountsFromRowResult(
         count: number;
         isVisitor: number;
         isVisit: number;
-        bounce: number;
+        isBounce: number;
     },
 ) {
     if (row.isVisit == 1) {
@@ -43,9 +43,8 @@ function accumulateCountsFromRowResult(
     if (row.isVisitor == 1) {
         counts.visitors += Number(row.count);
     }
-    if (row.bounce && row.bounce != 0) {
-        // bounce is either 1 or -1
-        counts.bounces += Number(row.count) * row.bounce;
+    if (row.isBounce == 1 || row.isBounce == -1) {
+        counts.bounces += Number(row.count) * row.isBounce;
     }
     counts.views += Number(row.count);
 }
@@ -310,19 +309,19 @@ export class AnalyticsEngineAPI {
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.newVisitor} as isVisitor,
                 ${ColumnMappings.newSession} as isVisit,
-                ${ColumnMappings.bounce} as bounce
+                ${ColumnMappings.bounce} as isBounce
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 ${filterStr}
             AND ${siteIdColumn} = '${siteId}'
-            GROUP BY isVisitor, isVisit, bounce
-            ORDER BY isVisitor, isVisit, bounce ASC`;
+            GROUP BY isVisitor, isVisit, isBounce
+            ORDER BY isVisitor, isVisit, isBounce ASC`;
 
         type SelectionSet = {
             count: number;
             isVisitor: number;
             isVisit: number;
-            bounce: number;
+            isBounce: number;
         };
 
         const queryResult = this.query(query);
@@ -446,7 +445,7 @@ export class AnalyticsEngineAPI {
             SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,
                 ${ColumnMappings.newSession} as isVisit,
-                ${ColumnMappings.bounce} as bounce,
+                ${ColumnMappings.bounce} as isBounce,
                 SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
@@ -460,7 +459,7 @@ export class AnalyticsEngineAPI {
             readonly count: number;
             readonly isVisitor: number;
             readonly isVisit: number;
-            readonly bounce: number;
+            readonly isBounce: number;
         } & Record<
             (typeof ColumnMappings)[T],
             ColumnMappingToType<(typeof ColumnMappings)[T]>
