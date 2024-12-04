@@ -32,4 +32,7 @@ export const ColumnMappings = {
 
     // this record is a new session (resets after 30m inactivity)
     newSession: "double2",
+
+    // this record is the bounce value
+    bounce: "double3",
 } as const;

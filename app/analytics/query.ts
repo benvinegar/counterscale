@@ -21,6 +21,7 @@ interface AnalyticsCountResult {
     views: number;
     visits: number;
     visitors: number;
+    bounces: number;
 }
 
 /** Given an AnalyticsCountResult object, and an object representing a row returned from
@@ -33,6 +34,7 @@ function accumulateCountsFromRowResult(
         count: number;
         isVisitor: number;
         isVisit: number;
+        bounce: number;
     },
 ) {
     if (row.isVisit == 1) {
@@ -40,6 +42,10 @@ function accumulateCountsFromRowResult(
     }
     if (row.isVisitor == 1) {
         counts.visitors += Number(row.count);
+    }
+    if (row.bounce && row.bounce != 0) {
+        // bounce is either 1 or -1
+        counts.bounces += Number(row.count) * row.bounce;
     }
     counts.views += Number(row.count);
 }
@@ -230,7 +236,7 @@ export class AnalyticsEngineAPI {
             /* output as UTC */
             toDateTime(_bucket, 'Etc/UTC') as bucket
             FROM metricsDataset
-            WHERE timestamp >= toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}') 
+            WHERE timestamp >= toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}')
 								AND timestamp < toDateTime('${localEndTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
@@ -303,18 +309,20 @@ export class AnalyticsEngineAPI {
         const query = `
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.newVisitor} as isVisitor,
-                ${ColumnMappings.newSession} as isVisit
+                ${ColumnMappings.newSession} as isVisit,
+                ${ColumnMappings.bounce} as bounce
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 ${filterStr}
             AND ${siteIdColumn} = '${siteId}'
-            GROUP BY isVisitor, isVisit
-            ORDER BY isVisitor, isVisit ASC`;
+            GROUP BY isVisitor, isVisit, bounce
+            ORDER BY isVisitor, isVisit, bounce ASC`;
 
         type SelectionSet = {
             count: number;
             isVisitor: number;
             isVisit: number;
+            bounce: number;
         };
 
         const queryResult = this.query(query);
@@ -335,6 +343,7 @@ export class AnalyticsEngineAPI {
                         views: 0,
                         visitors: 0,
                         visits: 0,
+                        bounces: 0,
                     };
 
                     // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but
@@ -437,12 +446,13 @@ export class AnalyticsEngineAPI {
             SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,
                 ${ColumnMappings.newSession} as isVisit,
+                ${ColumnMappings.bounce} as bounce,
                 SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
-            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
+            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}, ${ColumnMappings.bounce}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
@@ -450,6 +460,7 @@ export class AnalyticsEngineAPI {
             readonly count: number;
             readonly isVisitor: number;
             readonly isVisit: number;
+            readonly bounce: number;
         } & Record<
             (typeof ColumnMappings)[T],
             ColumnMappingToType<(typeof ColumnMappings)[T]>
@@ -483,6 +494,7 @@ export class AnalyticsEngineAPI {
                                     views: 0,
                                     visitors: 0,
                                     visits: 0,
+                                    bounces: 0,
                                 } as AnalyticsCountResult;
                             }
 

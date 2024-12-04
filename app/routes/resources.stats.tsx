@@ -19,6 +19,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
         views: counts.views,
         visits: counts.visits,
         visitors: counts.visitors,
+        bounces: counts.bounces,
     });
 }
 
@@ -35,7 +36,7 @@ export const StatsCard = ({
 }) => {
     const dataFetcher = useFetcher<typeof loader>();
 
-    const { views, visits, visitors } = dataFetcher.data || {};
+    const { views, visits, visitors, bounces } = dataFetcher.data || {};
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
     useEffect(() => {
@@ -74,6 +75,12 @@ export const StatsCard = ({
                         <div className="text-md sm:text-lg">Visitors</div>
                         <div className="text-4xl">
                             {visitors ? countFormatter.format(visitors) : "-"}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-md sm:text-lg">Bounces</div>
+                        <div className="text-4xl">
+                            {bounces ? countFormatter.format(bounces) : "-"}
                         </div>
                     </div>
                 </div>

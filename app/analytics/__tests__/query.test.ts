@@ -195,16 +195,19 @@ describe("AnalyticsEngineAPI", () => {
                             count: 3,
                             isVisit: 1,
                             isVisitor: 0,
+                            bounce: 1,
                         },
                         {
                             count: 2,
                             isVisit: 0,
                             isVisitor: 0,
+                            bounce: 0,
                         },
                         {
                             count: 1,
                             isVisit: 0,
                             isVisitor: 1,
+                            bounce: -1,
                         },
                     ],
                 }),
@@ -218,6 +221,7 @@ describe("AnalyticsEngineAPI", () => {
                 views: 6,
                 visits: 3,
                 visitors: 1,
+                bounces: 2,
             });
         });
     });
@@ -325,9 +329,10 @@ describe("AnalyticsEngineAPI", () => {
                 "SELECT blob4, " +
                     "double1 as isVisitor, " +
                     "double2 as isVisit, " +
+                    "double3 as bounce, " +
                     "SUM(_sample_interval) as count " +
                     "FROM metricsDataset WHERE timestamp >= NOW() - INTERVAL '7' DAY AND timestamp < NOW() AND blob8 = 'example.com' AND blob4 = 'CA' " +
-                    "GROUP BY blob4, double1, double2 " +
+                    "GROUP BY blob4, double1, double2, double3 " +
                     "ORDER BY count DESC LIMIT 10",
             );
             expect(await result).toEqual({
@@ -335,6 +340,7 @@ describe("AnalyticsEngineAPI", () => {
                     views: 3,
                     visitors: 0,
                     visits: 0,
+                    bounces: 0,
                 },
             });
         });
