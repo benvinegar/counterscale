@@ -5,43 +5,38 @@ import type { RequestInit } from "@cloudflare/workers-types";
 // Cookieless visitor/session tracking
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
 
-function getNextModifiedDate(current: Date | null, newVisit: boolean): Date {
+function getMidnightDate(): Date {
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    return midnight;
+}
+
+function getNextModifiedDate(current: Date | null): Date {
     // in case date is an 'Invalid Date'
     if (current && isNaN(current.getTime())) {
         current = null;
     }
 
-    const nextModifiedDate = new Date();
+    const midnight = getMidnightDate();
 
-    if (!current || newVisit) {
-        nextModifiedDate.setMilliseconds(0);
-        return nextModifiedDate;
-    }
+    // check if new day, if it is then set to midnight
+    let next = current ? current : midnight;
+    next = midnight.getTime() - next.getTime() > 0 ? midnight : next;
 
-    // update bounce (tracked in milliseconds)
-    // 3 states of bounce: bounce (0), no bounce (1), done (2)
-    switch (current.getMilliseconds()) {
-        // if was bounce move to no bounce
-        case 0:
-            nextModifiedDate.setMilliseconds(1);
-            break;
-        // if was no bounce move to done
-        case 1:
-            nextModifiedDate.setMilliseconds(2);
-            break;
-        // set value 3 to indicate done with bounce
-        default:
-            nextModifiedDate.setMilliseconds(3);
-            break;
-    }
-
-    return nextModifiedDate;
+    // increment counter
+    next.setSeconds(next.getSeconds() + 1);
+    return next;
 }
 
-function getBounce(current: Date): number {
-    // get bounce value (tracked in milliseconds, see getNextModifiedDate)
-    // bounce (1), no bounce (-1), done (0)
-    switch (current.getMilliseconds()) {
+function getBounce(current: Date | null): number {
+    if (!current) {
+        return 0;
+    }
+
+    const midnight = getMidnightDate();
+    const visits = (current.getTime() - midnight.getTime()) / 1000 - 1;
+
+    switch (visits) {
         case 0:
             return 1;
         case 1:
@@ -112,7 +107,6 @@ export function collectRequestHandler(request: Request, env: Env) {
     const { newVisitor, newSession } = checkVisitorSession(ifModifiedSince);
     const modifiedDate = getNextModifiedDate(
         ifModifiedSince ? new Date(ifModifiedSince) : null,
-        newVisitor,
     );
 
     const data: DataPoint = {
@@ -122,7 +116,7 @@ export function collectRequestHandler(request: Request, env: Env) {
         referrer: params.r,
         newVisitor: newVisitor ? 1 : 0,
         newSession: newSession ? 1 : 0,
-        bounce: getBounce(modifiedDate),
+        bounce: newVisitor ? 1 : getBounce(modifiedDate),
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
@@ -154,7 +148,7 @@ export function collectRequestHandler(request: Request, env: Env) {
             Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
-            "Last-Modified": modifiedDate.toISOString(),
+            "Last-Modified": modifiedDate.toUTCString(),
             Tk: "N", // not tracking
         },
         status: 200,
