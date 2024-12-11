@@ -48,12 +48,9 @@ function getBounce(current: Date | null): number {
 
 function checkVisitorSession(ifModifiedSince: string | null): {
     newVisitor: boolean;
-    newSession: boolean;
 } {
     let newVisitor = true;
-    let newSession = true;
 
-    const minutesUntilSessionResets = 30;
     if (ifModifiedSince) {
         // check today is a new day vs ifModifiedSince
         const today = new Date();
@@ -66,18 +63,9 @@ function checkVisitorSession(ifModifiedSince: string | null): {
             // if ifModifiedSince is today, this is not a new visitor
             newVisitor = false;
         }
-
-        // check ifModifiedSince is less than 30 mins ago
-        if (
-            Date.now() - new Date(ifModifiedSince).getTime() <
-            minutesUntilSessionResets * 60 * 1000
-        ) {
-            // this is a continuation of the same session
-            newSession = false;
-        }
     }
 
-    return { newVisitor, newSession };
+    return { newVisitor };
 }
 
 function extractParamsFromQueryString(requestUrl: string): {
@@ -104,7 +92,7 @@ export function collectRequestHandler(request: Request, env: Env) {
     parsedUserAgent.getBrowser().name;
 
     const ifModifiedSince = request.headers.get("if-modified-since");
-    const { newVisitor, newSession } = checkVisitorSession(ifModifiedSince);
+    const { newVisitor } = checkVisitorSession(ifModifiedSince);
     const modifiedDate = getNextModifiedDate(
         ifModifiedSince ? new Date(ifModifiedSince) : null,
     );
@@ -115,7 +103,7 @@ export function collectRequestHandler(request: Request, env: Env) {
         path: params.p,
         referrer: params.r,
         newVisitor: newVisitor ? 1 : 0,
-        newSession: newSession ? 1 : 0,
+        newSession: 0, // dead column
         bounce: newVisitor ? 1 : getBounce(modifiedDate),
         // user agent stuff
         userAgent: userAgent,

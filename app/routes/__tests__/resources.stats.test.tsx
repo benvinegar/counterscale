@@ -5,7 +5,6 @@ describe("resources.stats loader", () => {
     test("returns formatted stats from analytics engine", async () => {
         const mockGetCounts = vi.fn().mockResolvedValue({
             views: 1000,
-            visits: 500,
             visitors: 250,
         });
 
@@ -31,7 +30,6 @@ describe("resources.stats loader", () => {
 
         expect(data).toEqual({
             views: 1000,
-            visits: 500,
             visitors: 250,
         });
     });

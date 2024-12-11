@@ -187,25 +187,22 @@ describe("AnalyticsEngineAPI", () => {
     });
 
     describe("getCounts", () => {
-        test("should return an object with view, visit, and visitor counts", async () => {
+        test("should return an object with view, visitor, and bounce counts", async () => {
             fetch.mockResolvedValue(
                 createFetchResponse({
                     data: [
                         {
                             count: 3,
-                            isVisit: 1,
                             isVisitor: 0,
                             isBounce: 1,
                         },
                         {
                             count: 2,
-                            isVisit: 0,
                             isVisitor: 0,
                             isBounce: 0,
                         },
                         {
                             count: 1,
-                            isVisit: 0,
                             isVisitor: 1,
                             isBounce: -1,
                         },
@@ -219,7 +216,6 @@ describe("AnalyticsEngineAPI", () => {
             expect(fetch).toHaveBeenCalled();
             expect(await result).toEqual({
                 views: 6,
-                visits: 3,
                 visitors: 1,
                 bounces: 2,
             });
@@ -328,18 +324,16 @@ describe("AnalyticsEngineAPI", () => {
             ).toEqual(
                 "SELECT blob4, " +
                     "double1 as isVisitor, " +
-                    "double2 as isVisit, " +
                     "double3 as isBounce, " +
                     "SUM(_sample_interval) as count " +
                     "FROM metricsDataset WHERE timestamp >= NOW() - INTERVAL '7' DAY AND timestamp < NOW() AND blob8 = 'example.com' AND blob4 = 'CA' " +
-                    "GROUP BY blob4, double1, double2, double3 " +
+                    "GROUP BY blob4, double1, double3 " +
                     "ORDER BY count DESC LIMIT 10",
             );
             expect(await result).toEqual({
                 CA: {
                     views: 3,
                     visitors: 0,
-                    visits: 0,
                     bounces: 0,
                 },
             });

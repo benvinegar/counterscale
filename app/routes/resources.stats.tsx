@@ -17,7 +17,6 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 
     return json({
         views: counts.views,
-        visits: counts.visits,
         visitors: counts.visitors,
         bounces: counts.bounces,
     });
@@ -36,7 +35,7 @@ export const StatsCard = ({
 }) => {
     const dataFetcher = useFetcher<typeof loader>();
 
-    const { views, visits, visitors, bounces } = dataFetcher.data || {};
+    const { views, visitors, bounces } = dataFetcher.data || {};
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
     useEffect(() => {
@@ -63,12 +62,6 @@ export const StatsCard = ({
                         <div className="text-md">Views</div>
                         <div className="text-4xl">
                             {views ? countFormatter.format(views) : "-"}
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-md sm:text-lg">Visits</div>
-                        <div className="text-4xl">
-                            {visits ? countFormatter.format(visits) : "-"}
                         </div>
                     </div>
                     <div>

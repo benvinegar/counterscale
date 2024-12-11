@@ -69,7 +69,7 @@ describe("collectRequestHandler", () => {
             ],
             doubles: [
                 1, // new visitor
-                1, // new session
+                0, // DEAD COLUMN (was session)
                 1, // new visit, so bounce
             ],
             indexes: [
@@ -95,7 +95,7 @@ describe("collectRequestHandler", () => {
             "doubles",
             [
                 1, // new visitor
-                1, // new session
+                0, // DEAD COLUMN (was session)
                 1, // new visit, so bounce
             ],
         );
@@ -124,7 +124,7 @@ describe("collectRequestHandler", () => {
             "doubles",
             [
                 0, // NOT a new visitor
-                0, // NOT a new session
+                0, // DEAD COLUMN (was session)
                 0, // NOT first or second visit
             ],
         );
@@ -158,8 +158,7 @@ describe("collectRequestHandler", () => {
             "doubles",
             [
                 1, // new visitor because a new day began
-                0, // NOT a new session because continuation of earlier session (< 30 mins)
-                // (session logic doesn't care if a new day began or not)
+                0, // DEAD COLUMN (was session)
                 1, // new visitor so bounce counted
             ],
         );
@@ -188,7 +187,7 @@ describe("collectRequestHandler", () => {
             "doubles",
             [
                 1, // new visitor because > 30 days passed
-                1, // new session because > 30 minutes passed
+                0, // DEAD COLUMN (was session)
                 1, // new visitor so bounce
             ],
         );
@@ -217,7 +216,7 @@ describe("collectRequestHandler", () => {
             "doubles",
             [
                 1, // new visitor because > 24 hours passed
-                1, // new session because > 30 minutes passed
+                0, // DEAD COLUMN (was session)
                 1, // new visitor so bounce
             ],
         );
@@ -254,7 +253,7 @@ describe("collectRequestHandler", () => {
             "doubles",
             [
                 0, // NOT a new visitor
-                0, // NOT a new session
+                0, // DEAD COLUMN (was session)
                 -1, // First visit after the initial visit so decrement bounce
             ],
         );
@@ -293,7 +292,7 @@ describe("collectRequestHandler", () => {
             "doubles",
             [
                 0, // NOT a new visitor
-                0, // NOT a new session
+                0, // DEAD COLUMN (was session)
                 0, // After the second visit so no bounce
             ],
         );

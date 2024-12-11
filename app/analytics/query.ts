@@ -19,13 +19,12 @@ interface AnalyticsQueryResult<
 
 interface AnalyticsCountResult {
     views: number;
-    visits: number;
     visitors: number;
     bounces: number;
 }
 
 /** Given an AnalyticsCountResult object, and an object representing a row returned from
- *  CF Analytics Engine w/ counts grouped by isVisitor and isVisit, accumulate view,
+ *  CF Analytics Engine w/ counts grouped by isVisitor, accumulate view,
  *  visit, and visitor counts.
  */
 function accumulateCountsFromRowResult(
@@ -33,13 +32,9 @@ function accumulateCountsFromRowResult(
     row: {
         count: number;
         isVisitor: number;
-        isVisit: number;
         isBounce: number;
     },
 ) {
-    if (row.isVisit == 1) {
-        counts.visits += Number(row.count);
-    }
     if (row.isVisitor == 1) {
         counts.visitors += Number(row.count);
     }
@@ -214,9 +209,8 @@ export class AnalyticsEngineAPI {
 
         const filterStr = filtersToSql(filters);
 
-        // NOTE: when using toStartOfInterval, cannot group by other columns
-        //       like double1 (isVisitor) or double2 (isSession/isVisit). This
-        //       is just a limitation of Cloudflare Analytics Engine.
+        // NOTE: when using toStartOfInterval, cannot group by other columns like double1 (isVisitor).
+        //       This is just a limitation of Cloudflare Analytics Engine.
         //       -- but you can filter on them (using WHERE)
 
         // NOTE 2: Since CF AE doesn't support COALESCE, this query will not return
@@ -309,19 +303,17 @@ export class AnalyticsEngineAPI {
         const query = `
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.newVisitor} as isVisitor,
-                ${ColumnMappings.newSession} as isVisit,
                 ${ColumnMappings.bounce} as isBounce
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 ${filterStr}
             AND ${siteIdColumn} = '${siteId}'
-            GROUP BY isVisitor, isVisit, isBounce
-            ORDER BY isVisitor, isVisit, isBounce ASC`;
+            GROUP BY isVisitor, isBounce
+            ORDER BY isVisitor, isBounce ASC`;
 
         type SelectionSet = {
             count: number;
             isVisitor: number;
-            isVisit: number;
             isBounce: number;
         };
 
@@ -342,7 +334,6 @@ export class AnalyticsEngineAPI {
                     const counts: AnalyticsCountResult = {
                         views: 0,
                         visitors: 0,
-                        visits: 0,
                         bounces: 0,
                     };
 
@@ -445,21 +436,19 @@ export class AnalyticsEngineAPI {
         const query = `
             SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,
-                ${ColumnMappings.newSession} as isVisit,
                 ${ColumnMappings.bounce} as isBounce,
                 SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
-            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}, ${ColumnMappings.bounce}
+            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.bounce}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
         type SelectionSet = {
             readonly count: number;
             readonly isVisitor: number;
-            readonly isVisit: number;
             readonly isBounce: number;
         } & Record<
             (typeof ColumnMappings)[T],
@@ -493,7 +482,6 @@ export class AnalyticsEngineAPI {
                                 acc[key] = {
                                     views: 0,
                                     visitors: 0,
-                                    visits: 0,
                                     bounces: 0,
                                 } as AnalyticsCountResult;
                             }
