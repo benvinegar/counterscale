@@ -55,60 +55,117 @@ function extractParamsFromQueryString(requestUrl: string): {
 }
 
 export function collectRequestHandler(request: Request, env: Env) {
-    const params = extractParamsFromQueryString(request.url);
+    switch (request.method) {
+        case "GET": {
+            const params = extractParamsFromQueryString(request.url);
 
-    const userAgent = request.headers.get("user-agent") || undefined;
-    const parsedUserAgent = new UAParser(userAgent);
+            const userAgent = request.headers.get("user-agent") || undefined;
+            const parsedUserAgent = new UAParser(userAgent);
 
-    parsedUserAgent.getBrowser().name;
+            parsedUserAgent.getBrowser().name;
 
-    const { newVisitor, newSession } = checkVisitorSession(
-        request.headers.get("if-modified-since"),
-    );
+            const { newVisitor, newSession } = checkVisitorSession(
+                request.headers.get("if-modified-since"),
+            );
 
-    const data: DataPoint = {
-        siteId: params.sid,
-        host: params.h,
-        path: params.p,
-        referrer: params.r,
-        newVisitor: newVisitor ? 1 : 0,
-        newSession: newSession ? 1 : 0,
-        // user agent stuff
-        userAgent: userAgent,
-        browserName: parsedUserAgent.getBrowser().name,
-        deviceModel: parsedUserAgent.getDevice().model,
-    };
+            const data: DataPoint = {
+                siteId: params.sid,
+                host: params.h,
+                path: params.p,
+                referrer: params.r,
+                newVisitor: newVisitor ? 1 : 0,
+                newSession: newSession ? 1 : 0,
+                // user agent stuff
+                userAgent: userAgent,
+                browserName: parsedUserAgent.getBrowser().name,
+                deviceModel: parsedUserAgent.getDevice().model,
+            };
 
-    // NOTE: location is derived from Cloudflare-specific request properties
-    // see: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
-    const country = (request as RequestInit).cf?.country;
-    if (typeof country === "string") {
-        data.country = country;
+            // NOTE: location is derived from Cloudflare-specific request properties
+            // see: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
+            const country = (request as RequestInit).cf?.country;
+            if (typeof country === "string") {
+                data.country = country;
+            }
+
+            writeDataPoint(env.WEB_COUNTER_AE, data);
+
+            // encode 1x1 transparent gif
+            const gif =
+                "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+            const gifData = atob(gif);
+            const gifLength = gifData.length;
+            const arrayBuffer = new ArrayBuffer(gifLength);
+            const uintArray = new Uint8Array(arrayBuffer);
+            for (let i = 0; i < gifLength; i++) {
+                uintArray[i] = gifData.charCodeAt(i);
+            }
+
+            return new Response(arrayBuffer, {
+                headers: {
+                    "Content-Type": "image/gif",
+                    Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
+                    "Cache-Control": "no-cache",
+                    Pragma: "no-cache",
+                    "Last-Modified": new Date().toUTCString(),
+                    Tk: "N", // not tracking
+                },
+                status: 200,
+            });
+        }
+        case "POST": {
+            const body: PostRequestBody =
+                request.json() as unknown as PostRequestBody;
+            if (!body) {
+                return new Response("Invalid request", { status: 400 });
+            }
+
+            const userAgent =
+                body.ua || request.headers.get("user-agent") || undefined;
+            const parsedUserAgent = new UAParser(userAgent);
+            parsedUserAgent.getBrowser().name;
+
+            const ifModifiedSince =
+                body.ims || request.headers.get("if-modified-since");
+            const { newVisitor, newSession } =
+                checkVisitorSession(ifModifiedSince);
+
+            const data: DataPoint = {
+                siteId: body.sid,
+                host: body.h,
+                userAgent: body.ua,
+                path: body.p,
+                country: body.c,
+                referrer: body.r,
+                browserName: body.bn || parsedUserAgent.getBrowser().name,
+                deviceModel: body.dm || parsedUserAgent.getDevice().model,
+                newVisitor: newVisitor ? 1 : 0,
+                newSession: newSession ? 1 : 0,
+            };
+
+            writeDataPoint(env.WEB_COUNTER_AE, data);
+
+            return new Response("OK", { status: 200 });
+        }
+        default: {
+            return new Response("Method not allowed", {
+                status: 405,
+                statusText: "Method not allowed",
+            });
+        }
     }
+}
 
-    writeDataPoint(env.WEB_COUNTER_AE, data);
-
-    // encode 1x1 transparent gif
-    const gif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    const gifData = atob(gif);
-    const gifLength = gifData.length;
-    const arrayBuffer = new ArrayBuffer(gifLength);
-    const uintArray = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < gifLength; i++) {
-        uintArray[i] = gifData.charCodeAt(i);
-    }
-
-    return new Response(arrayBuffer, {
-        headers: {
-            "Content-Type": "image/gif",
-            Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-            "Last-Modified": new Date().toUTCString(),
-            Tk: "N", // not tracking
-        },
-        status: 200,
-    });
+interface PostRequestBody {
+    sid?: string; // site id
+    h?: string; // host
+    ua?: string; // user agent
+    p?: string; // path
+    c?: string; // country
+    r?: string; // referrer
+    bn?: string; // browser name
+    dm?: string; // device model
+    ims?: string; // if modified since
 }
 
 interface DataPoint {
