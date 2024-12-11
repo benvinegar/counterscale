@@ -650,4 +650,56 @@ export class AnalyticsEngineAPI {
         );
         return returnPromise;
     }
+
+    async getEarliestEvents(siteId: string): Promise<{
+        earliestEvent: Date | null;
+        earliestBounce: Date | null;
+    }> {
+        const query = `
+            SELECT 
+                MIN(timestamp) as earliestEvent,
+                ${ColumnMappings.bounce} as isBounce
+            FROM metricsDataset
+            WHERE ${ColumnMappings.siteId} = '${siteId}'
+            GROUP by isBounce
+        `;
+
+        type SelectionSet = {
+            earliestEvent: string;
+            isBounce: number;
+        };
+        const queryResult = this.query(query);
+        const returnPromise = new Promise<{
+            earliestEvent: Date | null;
+            earliestBounce: Date | null;
+        }>((resolve, reject) => {
+            (async () => {
+                const response = await queryResult;
+
+                if (!response.ok) {
+                    reject(response.statusText);
+                    return;
+                }
+
+                const responseData =
+                    (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+                const data = responseData.data;
+
+                const earliestEvent = data.filter(
+                    (row) => row["isBounce"] === 0,
+                )[0]["earliestEvent"];
+                const earliestBounce = data.filter(
+                    (row) => row["isBounce"] === 1,
+                )[0]["earliestEvent"];
+
+                resolve({
+                    earliestEvent: new Date(earliestEvent),
+                    earliestBounce: new Date(earliestBounce),
+                });
+            })();
+        });
+
+        return returnPromise;
+    }
 }

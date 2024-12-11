@@ -1,6 +1,10 @@
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
+import {
+    getDateTimeRange,
+    getFiltersFromSearchParams,
+    paramsFromUrl,
+} from "~/lib/utils";
 import { useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
 import { Card } from "~/components/ui/card";
@@ -13,12 +17,49 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const tz = url.searchParams.get("timezone") || "UTC";
     const filters = getFiltersFromSearchParams(url.searchParams);
 
+    // intentionally parallelize queries by deferring await
+    const earliestEvents = analyticsEngine.getEarliestEvents(site);
     const counts = await analyticsEngine.getCounts(site, interval, tz, filters);
+
+    const { earliestEvent, earliestBounce } = await earliestEvents;
+    const { startDate } = getDateTimeRange(interval, tz);
+
+    // FOR BACKWARDS COMPATIBILITY, ONLY CALCULATE BOUNCE RATE IF WE HAVE
+    // DATE FOR THE ENTIRE QUERY PERIOD
+    // -----------------------------------------------------------------------------
+    // bounce rate is a later-introduced metric that may not have been recorded for
+    // the full duration of the queried Counterscale dataset (not possible to backfill
+    // data we dont have!)
+
+    // so, cannot reliably show "bounce rate" if bounce data was unavailable for a portion
+    // of the query period
+
+    // to figure if we can give an answer or not, we inspect the earliest bounce/earliest event data,
+    // and decide if our dataset is "complete" for the given interval
+    let bounceRate;
+
+    if (
+        counts.visitors > 0 &&
+        earliestBounce !== null &&
+        earliestEvent !== null &&
+        (earliestEvent.getTime() == earliestBounce.getTime() || // earliest event recorded a bounce -- any query is fine
+            earliestBounce < startDate) // earliest bounce occurred before start of query period -- this query is fine
+    ) {
+        bounceRate = (counts.bounces / counts.visitors).toLocaleString(
+            "en-US",
+            {
+                style: "percent",
+                minimumFractionDigits: 0,
+            },
+        );
+    } else {
+        bounceRate = "n/a";
+    }
 
     return json({
         views: counts.views,
         visitors: counts.visitors,
-        bounces: counts.bounces,
+        bounceRate: bounceRate,
     });
 }
 
@@ -35,7 +76,7 @@ export const StatsCard = ({
 }) => {
     const dataFetcher = useFetcher<typeof loader>();
 
-    const { views, visitors, bounces } = dataFetcher.data || {};
+    const { views, visitors, bounceRate } = dataFetcher.data || {};
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
     useEffect(() => {
@@ -71,10 +112,8 @@ export const StatsCard = ({
                         </div>
                     </div>
                     <div>
-                        <div className="text-md sm:text-lg">Bounces</div>
-                        <div className="text-4xl">
-                            {bounces ? countFormatter.format(bounces) : "-"}
-                        </div>
+                        <div className="text-md sm:text-lg">Bounce Rate</div>
+                        <div className="text-4xl">{bounceRate}</div>
                     </div>
                 </div>
             </div>

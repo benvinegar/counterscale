@@ -339,6 +339,30 @@ describe("AnalyticsEngineAPI", () => {
             });
         });
     });
+
+    describe("getEarliestEvents", () => {
+        test("returns both earliest event and bounce dates when found", async () => {
+            const mockEventTimestamp = "2024-01-01T10:00:00Z";
+            const mockBounceTimestamp = "2024-01-01T12:00:00Z";
+
+            // Mock responses for both queries
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    ok: true,
+                    data: [
+                        { earliestEvent: mockBounceTimestamp, isBounce: 1 },
+                        { earliestEvent: mockEventTimestamp, isBounce: 0 },
+                    ],
+                }),
+            );
+
+            const result = await api.getEarliestEvents("test-site");
+            expect(result).toEqual({
+                earliestEvent: new Date(mockEventTimestamp),
+                earliestBounce: new Date(mockBounceTimestamp),
+            });
+        });
+    });
 });
 
 describe("intervalToSql", () => {
