@@ -16,7 +16,7 @@
         "test": "TZ=EST vitest run",
         "test-ci": "TZ=EST vitest run --coverage",
         "typecheck": "tsc",
-        "prepare": "husky install",
+        "prepare": "husky",
         "types:gen": "wrangler types"
     },
     "dependencies": {
