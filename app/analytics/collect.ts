@@ -11,7 +11,7 @@ function getMidnightDate(): Date {
     return midnight;
 }
 
-function getNextModifiedDate(current: Date | null): Date {
+function getNextLastModifiedDate(current: Date | null): Date {
     // in case date is an 'Invalid Date'
     if (current && isNaN(current.getTime())) {
         current = null;
@@ -28,13 +28,16 @@ function getNextModifiedDate(current: Date | null): Date {
     return next;
 }
 
-function getBounce(current: Date | null): number {
-    if (!current) {
+function getBounceValue(nextLastModifiedDate: Date | null): number {
+    if (!nextLastModifiedDate) {
         return 0;
     }
 
     const midnight = getMidnightDate();
-    const visits = (current.getTime() - midnight.getTime()) / 1000 - 1;
+
+    // NOTE: minus one because this is the response last modified date
+    const visits =
+        (nextLastModifiedDate.getTime() - midnight.getTime()) / 1000 - 1;
 
     switch (visits) {
         case 0:
@@ -93,7 +96,7 @@ export function collectRequestHandler(request: Request, env: Env) {
 
     const ifModifiedSince = request.headers.get("if-modified-since");
     const { newVisitor } = checkVisitorSession(ifModifiedSince);
-    const modifiedDate = getNextModifiedDate(
+    const nextLastModifiedDate = getNextLastModifiedDate(
         ifModifiedSince ? new Date(ifModifiedSince) : null,
     );
 
@@ -104,7 +107,7 @@ export function collectRequestHandler(request: Request, env: Env) {
         referrer: params.r,
         newVisitor: newVisitor ? 1 : 0,
         newSession: 0, // dead column
-        bounce: newVisitor ? 1 : getBounce(modifiedDate),
+        bounce: newVisitor ? 1 : getBounceValue(nextLastModifiedDate),
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
@@ -136,7 +139,7 @@ export function collectRequestHandler(request: Request, env: Env) {
             Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
-            "Last-Modified": modifiedDate.toUTCString(),
+            "Last-Modified": nextLastModifiedDate.toUTCString(),
             Tk: "N", // not tracking
         },
         status: 200,
