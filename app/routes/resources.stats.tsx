@@ -91,28 +91,31 @@ export const StatsCard = ({
             <div className="p-4 pl-6">
                 <div className="grid grid-cols-3 gap-10 items-end">
                     <div>
-                        <div className="text-md">Views</div>
-                        <div className="text-4xl">
-                            {views ? countFormatter.format(views) : "-"}
-                        </div>
-                    </div>
-                    <div>
                         <div className="text-md sm:text-lg">Visitors</div>
                         <div className="text-4xl">
                             {visitors ? countFormatter.format(visitors) : "-"}
                         </div>
                     </div>
                     <div>
-                        <div className="text-md sm:text-lg">Bounce Rate</div>
-                        {hasSufficientBounceData ? (
-                            <div className="text-4xl">
-                                {bounceRate !== undefined
+                        <div className="text-md sm:text-lg">Views</div>
+                        <div className="text-4xl">
+                            {views ? countFormatter.format(views) : "-"}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-md sm:text-lg">
+                            <span>
+                                Bounce
+                                <span className="hidden sm:inline"> Rate</span>
+                            </span>
+                        </div>
+                        <div className="text-4xl">
+                            {hasSufficientBounceData
+                                ? bounceRate !== undefined
                                     ? `${Math.round(bounceRate * 100)}%`
-                                    : "-"}
-                            </div>
-                        ) : (
-                            <div className="text-4xl">n/a</div>
-                        )}
+                                    : "-"
+                                : "n/a"}
+                        </div>
                     </div>
                 </div>
             </div>
