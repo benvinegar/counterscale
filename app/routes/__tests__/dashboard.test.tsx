@@ -217,7 +217,6 @@ describe("Dashboard route", () => {
                         loader: () => {
                             return json({
                                 views: 0,
-                                visits: 0,
                                 visitors: 0,
                             });
                         },
@@ -270,7 +269,6 @@ describe("Dashboard route", () => {
         siteId: "example",
         sites: ["example"],
         views: 2133,
-        visits: 80,
         visitors: 33,
         viewsGroupedByInterval: [
             ["2024-01-11 05:00:00", 0],
@@ -304,7 +302,6 @@ describe("Dashboard route", () => {
                         loader: () => {
                             return json({
                                 views: 2133,
-                                visits: 80,
                                 visitors: 33,
                             });
                         },

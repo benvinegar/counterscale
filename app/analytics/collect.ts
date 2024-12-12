@@ -5,14 +5,55 @@ import type { RequestInit } from "@cloudflare/workers-types";
 // Cookieless visitor/session tracking
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
 
+function getMidnightDate(): Date {
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    return midnight;
+}
+
+function getNextLastModifiedDate(current: Date | null): Date {
+    // in case date is an 'Invalid Date'
+    if (current && isNaN(current.getTime())) {
+        current = null;
+    }
+
+    const midnight = getMidnightDate();
+
+    // check if new day, if it is then set to midnight
+    let next = current ? current : midnight;
+    next = midnight.getTime() - next.getTime() > 0 ? midnight : next;
+
+    // increment counter
+    next.setSeconds(next.getSeconds() + 1);
+    return next;
+}
+
+function getBounceValue(nextLastModifiedDate: Date | null): number {
+    if (!nextLastModifiedDate) {
+        return 0;
+    }
+
+    const midnight = getMidnightDate();
+
+    // NOTE: minus one because this is the response last modified date
+    const visits =
+        (nextLastModifiedDate.getTime() - midnight.getTime()) / 1000 - 1;
+
+    switch (visits) {
+        case 0:
+            return 1;
+        case 1:
+            return -1;
+        default:
+            return 0;
+    }
+}
+
 function checkVisitorSession(ifModifiedSince: string | null): {
     newVisitor: boolean;
-    newSession: boolean;
 } {
     let newVisitor = true;
-    let newSession = true;
 
-    const minutesUntilSessionResets = 30;
     if (ifModifiedSince) {
         // check today is a new day vs ifModifiedSince
         const today = new Date();
@@ -25,18 +66,9 @@ function checkVisitorSession(ifModifiedSince: string | null): {
             // if ifModifiedSince is today, this is not a new visitor
             newVisitor = false;
         }
-
-        // check ifModifiedSince is less than 30 mins ago
-        if (
-            Date.now() - new Date(ifModifiedSince).getTime() <
-            minutesUntilSessionResets * 60 * 1000
-        ) {
-            // this is a continuation of the same session
-            newSession = false;
-        }
     }
 
-    return { newVisitor, newSession };
+    return { newVisitor };
 }
 
 function extractParamsFromQueryString(requestUrl: string): {
@@ -62,8 +94,10 @@ export function collectRequestHandler(request: Request, env: Env) {
 
     parsedUserAgent.getBrowser().name;
 
-    const { newVisitor, newSession } = checkVisitorSession(
-        request.headers.get("if-modified-since"),
+    const ifModifiedSince = request.headers.get("if-modified-since");
+    const { newVisitor } = checkVisitorSession(ifModifiedSince);
+    const nextLastModifiedDate = getNextLastModifiedDate(
+        ifModifiedSince ? new Date(ifModifiedSince) : null,
     );
 
     const data: DataPoint = {
@@ -72,7 +106,8 @@ export function collectRequestHandler(request: Request, env: Env) {
         path: params.p,
         referrer: params.r,
         newVisitor: newVisitor ? 1 : 0,
-        newSession: newSession ? 1 : 0,
+        newSession: 0, // dead column
+        bounce: newVisitor ? 1 : getBounceValue(nextLastModifiedDate),
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
@@ -104,7 +139,7 @@ export function collectRequestHandler(request: Request, env: Env) {
             Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
-            "Last-Modified": new Date().toUTCString(),
+            "Last-Modified": nextLastModifiedDate.toUTCString(),
             Tk: "N", // not tracking
         },
         status: 200,
@@ -127,6 +162,7 @@ interface DataPoint {
     // doubles
     newVisitor: number;
     newSession: number;
+    bounce: number;
 }
 
 // NOTE: Cloudflare Analytics Engine has limits on total number of bytes, number of fields, etc.
@@ -148,7 +184,7 @@ export function writeDataPoint(
             data.deviceModel || "", // blob7
             data.siteId || "", // blob8
         ],
-        doubles: [data.newVisitor || 0, data.newSession || 0],
+        doubles: [data.newVisitor || 0, data.newSession || 0, data.bounce],
     };
 
     if (!analyticsEngine) {

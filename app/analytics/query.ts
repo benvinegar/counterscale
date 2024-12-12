@@ -19,12 +19,12 @@ interface AnalyticsQueryResult<
 
 interface AnalyticsCountResult {
     views: number;
-    visits: number;
     visitors: number;
+    bounces: number;
 }
 
 /** Given an AnalyticsCountResult object, and an object representing a row returned from
- *  CF Analytics Engine w/ counts grouped by isVisitor and isVisit, accumulate view,
+ *  CF Analytics Engine w/ counts grouped by isVisitor, accumulate view,
  *  visit, and visitor counts.
  */
 function accumulateCountsFromRowResult(
@@ -32,14 +32,15 @@ function accumulateCountsFromRowResult(
     row: {
         count: number;
         isVisitor: number;
-        isVisit: number;
+        isBounce: number;
     },
 ) {
-    if (row.isVisit == 1) {
-        counts.visits += Number(row.count);
-    }
     if (row.isVisitor == 1) {
         counts.visitors += Number(row.count);
+    }
+    if (row.isBounce && row.isBounce != 0) {
+        // bounce is either 1 or -1
+        counts.bounces += Number(row.count) * row.isBounce;
     }
     counts.views += Number(row.count);
 }
@@ -208,9 +209,8 @@ export class AnalyticsEngineAPI {
 
         const filterStr = filtersToSql(filters);
 
-        // NOTE: when using toStartOfInterval, cannot group by other columns
-        //       like double1 (isVisitor) or double2 (isSession/isVisit). This
-        //       is just a limitation of Cloudflare Analytics Engine.
+        // NOTE: when using toStartOfInterval, cannot group by other columns like double1 (isVisitor).
+        //       This is just a limitation of Cloudflare Analytics Engine.
         //       -- but you can filter on them (using WHERE)
 
         // NOTE 2: Since CF AE doesn't support COALESCE, this query will not return
@@ -230,7 +230,7 @@ export class AnalyticsEngineAPI {
             /* output as UTC */
             toDateTime(_bucket, 'Etc/UTC') as bucket
             FROM metricsDataset
-            WHERE timestamp >= toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}') 
+            WHERE timestamp >= toDateTime('${localStartTime.format("YYYY-MM-DD HH:mm:ss")}')
 								AND timestamp < toDateTime('${localEndTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
@@ -303,18 +303,18 @@ export class AnalyticsEngineAPI {
         const query = `
             SELECT SUM(_sample_interval) as count,
                 ${ColumnMappings.newVisitor} as isVisitor,
-                ${ColumnMappings.newSession} as isVisit
+                ${ColumnMappings.bounce} as isBounce
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 ${filterStr}
             AND ${siteIdColumn} = '${siteId}'
-            GROUP BY isVisitor, isVisit
-            ORDER BY isVisitor, isVisit ASC`;
+            GROUP BY isVisitor, isBounce
+            ORDER BY isVisitor, isBounce ASC`;
 
         type SelectionSet = {
             count: number;
             isVisitor: number;
-            isVisit: number;
+            isBounce: number;
         };
 
         const queryResult = this.query(query);
@@ -334,7 +334,7 @@ export class AnalyticsEngineAPI {
                     const counts: AnalyticsCountResult = {
                         views: 0,
                         visitors: 0,
-                        visits: 0,
+                        bounces: 0,
                     };
 
                     // NOTE: note it's possible to get no results, or half results (i.e. a row where isVisit=1 but
@@ -436,20 +436,20 @@ export class AnalyticsEngineAPI {
         const query = `
             SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,
-                ${ColumnMappings.newSession} as isVisit,
+                ${ColumnMappings.bounce} as isBounce,
                 SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
-            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.newSession}
+            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.bounce}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
         type SelectionSet = {
             readonly count: number;
             readonly isVisitor: number;
-            readonly isVisit: number;
+            readonly isBounce: number;
         } & Record<
             (typeof ColumnMappings)[T],
             ColumnMappingToType<(typeof ColumnMappings)[T]>
@@ -482,7 +482,7 @@ export class AnalyticsEngineAPI {
                                 acc[key] = {
                                     views: 0,
                                     visitors: 0,
-                                    visits: 0,
+                                    bounces: 0,
                                 } as AnalyticsCountResult;
                             }
 
@@ -648,6 +648,63 @@ export class AnalyticsEngineAPI {
                     resolve(result);
                 })(),
         );
+        return returnPromise;
+    }
+
+    async getEarliestEvents(siteId: string): Promise<{
+        earliestEvent: Date | null;
+        earliestBounce: Date | null;
+    }> {
+        const query = `
+            SELECT 
+                MIN(timestamp) as earliestEvent,
+                ${ColumnMappings.bounce} as isBounce
+            FROM metricsDataset
+            WHERE ${ColumnMappings.siteId} = '${siteId}'
+            GROUP by isBounce
+        `;
+
+        type SelectionSet = {
+            earliestEvent: string;
+            isBounce: number;
+        };
+        const queryResult = this.query(query);
+        const returnPromise = new Promise<{
+            earliestEvent: Date | null;
+            earliestBounce: Date | null;
+        }>((resolve, reject) => {
+            (async () => {
+                const response = await queryResult;
+
+                if (!response.ok) {
+                    reject(response.statusText);
+                    return;
+                }
+
+                const responseData =
+                    (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+                const data = responseData.data;
+
+                const earliestEvent = data.find(
+                    (row) => row["isBounce"] === 0,
+                )?.earliestEvent;
+
+                const earliestBounce = data.find(
+                    (row) => row["isBounce"] === 1,
+                )?.earliestEvent;
+
+                resolve({
+                    earliestEvent: earliestEvent
+                        ? new Date(earliestEvent)
+                        : null,
+                    earliestBounce: earliestBounce
+                        ? new Date(earliestBounce)
+                        : null,
+                });
+            })();
+        });
+
         return returnPromise;
     }
 }
