@@ -24,42 +24,32 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const { earliestEvent, earliestBounce } = await earliestEvents;
     const { startDate } = getDateTimeRange(interval, tz);
 
-    // FOR BACKWARDS COMPATIBILITY, ONLY CALCULATE BOUNCE RATE IF WE HAVE
-    // DATE FOR THE ENTIRE QUERY PERIOD
+    // FOR BACKWARDS COMPAT, ONLY SHOW BOUNCE RATE IF WE HAVE DATE FOR THE ENTIRE QUERY PERIOD
     // -----------------------------------------------------------------------------
-    // bounce rate is a later-introduced metric that may not have been recorded for
+    // Bounce rate is a later-introduced metric that may not have been recorded for
     // the full duration of the queried Counterscale dataset (not possible to backfill
     // data we dont have!)
 
-    // so, cannot reliably show "bounce rate" if bounce data was unavailable for a portion
-    // of the query period
+    // So, cannot reliably show "bounce rate" if bounce data was unavailable for a portion
+    // of the query period.
 
-    // to figure if we can give an answer or not, we inspect the earliest bounce/earliest event data,
-    // and decide if our dataset is "complete" for the given interval
-    let bounceRate;
+    // To figure out if we can give an answer or not, we inspect the earliest bounce/earliest event
+    // data recorded, and determine if our dataset is "complete" for the given query interval.
 
-    if (
-        counts.visitors > 0 &&
+    const hasSufficientBounceData =
         earliestBounce !== null &&
         earliestEvent !== null &&
         (earliestEvent.getTime() == earliestBounce.getTime() || // earliest event recorded a bounce -- any query is fine
-            earliestBounce < startDate) // earliest bounce occurred before start of query period -- this query is fine
-    ) {
-        bounceRate = (counts.bounces / counts.visitors).toLocaleString(
-            "en-US",
-            {
-                style: "percent",
-                minimumFractionDigits: 0,
-            },
-        );
-    } else {
-        bounceRate = "n/a";
-    }
+            earliestBounce < startDate); // earliest bounce occurred before start of query period -- this query is fine
+
+    const bounceRate =
+        counts.visitors > 0 ? counts.bounces / counts.visitors : undefined;
 
     return json({
         views: counts.views,
         visitors: counts.visitors,
         bounceRate: bounceRate,
+        hasSufficientBounceData,
     });
 }
 
@@ -76,7 +66,8 @@ export const StatsCard = ({
 }) => {
     const dataFetcher = useFetcher<typeof loader>();
 
-    const { views, visitors, bounceRate } = dataFetcher.data || {};
+    const { views, visitors, bounceRate, hasSufficientBounceData } =
+        dataFetcher.data || {};
     const countFormatter = Intl.NumberFormat("en", { notation: "compact" });
 
     useEffect(() => {
@@ -113,7 +104,15 @@ export const StatsCard = ({
                     </div>
                     <div>
                         <div className="text-md sm:text-lg">Bounce Rate</div>
-                        <div className="text-4xl">{bounceRate}</div>
+                        {hasSufficientBounceData ? (
+                            <div className="text-4xl">
+                                {bounceRate !== undefined
+                                    ? `${Math.round(bounceRate * 100)}%`
+                                    : "-"}
+                            </div>
+                        ) : (
+                            <div className="text-4xl">n/a</div>
+                        )}
                     </div>
                 </div>
             </div>

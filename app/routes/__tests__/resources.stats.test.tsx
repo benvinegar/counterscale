@@ -48,11 +48,12 @@ describe("resources.stats loader", () => {
         expect(data).toEqual({
             views: 1000,
             visitors: 250,
-            bounceRate: "50%",
+            bounceRate: 0.5,
+            hasSufficientBounceData: true,
         });
     });
 
-    test("if bounce data isn't complete for the given interval, show n/a", async () => {
+    test("if bounce data isn't complete for the given interval, hasSufficientBounceData is false", async () => {
         // set system time as jan 8th
         vi.setSystemTime(new Date("2023-01-08T00:00:00").getTime());
 
@@ -79,7 +80,8 @@ describe("resources.stats loader", () => {
         expect(data).toEqual({
             views: 1000,
             visitors: 250,
-            bounceRate: "n/a",
+            bounceRate: 0.5,
+            hasSufficientBounceData: false,
         });
     });
 
@@ -110,7 +112,8 @@ describe("resources.stats loader", () => {
         expect(data).toEqual({
             views: 1000,
             visitors: 250,
-            bounceRate: "50%",
+            bounceRate: 0.5,
+            hasSufficientBounceData: true,
         });
     });
 });
