@@ -88,16 +88,20 @@ function generateEmptyRowsOverInterval(
     startDateTime: Date,
     endDateTime: Date,
     tz?: string,
-): { [key: string]: number } {
+): { [key: string]: AnalyticsCountResult } {
     if (!tz) {
         tz = "Etc/UTC";
     }
 
-    const initialRows: { [key: string]: number } = {};
+    const initialRows: { [key: string]: AnalyticsCountResult } = {};
 
     while (startDateTime.getTime() < endDateTime.getTime()) {
         const key = dayjs(startDateTime).utc().format("YYYY-MM-DD HH:mm:ss");
-        initialRows[key] = 0;
+        initialRows[key] = {
+            views: 0,
+            visitors: 0,
+            bounces: 0,
+        };
 
         if (intervalType === "DAY") {
             // WARNING: Daylight savings hack. Cloudflare Workers uses a different Date
@@ -226,6 +230,8 @@ export class AnalyticsEngineAPI {
 
             /* interval start needs local timezone, e.g. 00:00 in America/New York means start of day in NYC */
             toStartOfInterval(timestamp, INTERVAL '${intervalCount}' ${intervalType}, '${tz}') as _bucket,
+            ${ColumnMappings.newVisitor} as isVisitor,
+            ${ColumnMappings.bounce} as isBounce,
 
             /* output as UTC */
             toDateTime(_bucket, 'Etc/UTC') as bucket
@@ -234,16 +240,18 @@ export class AnalyticsEngineAPI {
 								AND timestamp < toDateTime('${localEndTime.format("YYYY-MM-DD HH:mm:ss")}')
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
-            GROUP BY _bucket
+            GROUP BY _bucket, isVisitor, isBounce
             ORDER BY _bucket ASC`;
 
         type SelectionSet = {
             count: number;
             bucket: string;
+            isVisitor: number;
+            isBounce: number;
         };
 
         const queryResult = this.query(query);
-        const returnPromise = new Promise<[string, number][]>(
+        const returnPromise = new Promise<[string, AnalyticsCountResult][]>(
             (resolve, reject) =>
                 (async () => {
                     const response = await queryResult;
@@ -263,7 +271,15 @@ export class AnalyticsEngineAPI {
                             const key = dayjs(utcDateTime).format(
                                 "YYYY-MM-DD HH:mm:ss",
                             );
-                            accum[key] = Number(row["count"]);
+                            if (!accum.hasOwnProperty(key)) {
+                                accum[key] = {
+                                    views: 0,
+                                    visitors: 0,
+                                    bounces: 0,
+                                };
+                            }
+                            accumulateCountsFromRowResult(accum[key], row);
+
                             return accum;
                         },
                         initialRows,

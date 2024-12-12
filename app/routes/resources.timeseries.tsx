@@ -32,11 +32,16 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
             filters,
         );
 
-    const chartData: { date: string; views: number }[] = [];
+    const chartData: {
+        date: string;
+        views: number;
+        visitors: number;
+        bounces: number;
+    }[] = [];
     viewsGroupedByInterval.forEach((row) => {
         chartData.push({
             date: row[0],
-            views: row[1],
+            ...row[1],
         });
     });
 

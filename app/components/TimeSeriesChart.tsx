@@ -1,5 +1,3 @@
-import PropTypes, { InferProps } from "prop-types";
-
 import {
     AreaChart,
     Area,
@@ -10,11 +8,22 @@ import {
     ResponsiveContainer,
 } from "recharts";
 
+interface TimeSeriesChartProps {
+    data: Array<{
+        date: string;
+        views: number;
+        visitors: number;
+        bounces: number;
+    }>;
+    intervalType?: string;
+    timezone?: string;
+}
+
 export default function TimeSeriesChart({
     data,
     intervalType,
     timezone,
-}: InferProps<typeof TimeSeriesChart.propTypes>) {
+}: TimeSeriesChartProps) {
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {
         return null;
@@ -88,17 +97,13 @@ export default function TimeSeriesChart({
                     strokeWidth="2"
                     fill="#F99C35"
                 />
+                <Area
+                    dataKey="visitors"
+                    stroke="#F46A3D"
+                    strokeWidth="2"
+                    fill="#f96d3e"
+                />
             </AreaChart>
         </ResponsiveContainer>
     );
 }
-
-TimeSeriesChart.propTypes = {
-    data: PropTypes.arrayOf(
-        PropTypes.shape({
-            views: PropTypes.number.isRequired,
-        }).isRequired,
-    ).isRequired,
-    intervalType: PropTypes.string,
-    timezone: PropTypes.string,
-};
