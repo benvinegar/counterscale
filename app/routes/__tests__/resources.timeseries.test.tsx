@@ -25,8 +25,8 @@ describe("resources.timeseries loader", () => {
             context.analyticsEngine,
             "getViewsGroupedByInterval",
         ).mockResolvedValue([
-            ["2024-01-15T00:00:00Z", 100],
-            ["2024-01-16T00:00:00Z", 200],
+            ["2024-01-15T00:00:00Z", { views: 100, visitors: 0, bounces: 0 }],
+            ["2024-01-16T00:00:00Z", { views: 200, visitors: 0, bounces: 0 }],
         ]);
 
         // mock out responsive container to just return a standard div, otherwise
@@ -60,8 +60,18 @@ describe("resources.timeseries loader", () => {
 
         const data = await result.json();
         expect(data.chartData).toEqual([
-            { date: "2024-01-15T00:00:00Z", views: 100 },
-            { date: "2024-01-16T00:00:00Z", views: 200 },
+            {
+                date: "2024-01-15T00:00:00Z",
+                views: 100,
+                visitors: 0,
+                bounceRate: 0,
+            },
+            {
+                date: "2024-01-16T00:00:00Z",
+                views: 200,
+                visitors: 0,
+                bounceRate: 0,
+            },
         ]);
         expect(data.intervalType).toBe("DAY");
 
@@ -142,7 +152,10 @@ describe("TimeSeriesCard", () => {
         // Wait for the chart to be rendered
         await waitFor(() => screen.getAllByText("Mon, Jan 15").length > 0);
         // assert data appears in chart
-        expect(screen.getAllByText("100")).toHaveLength(2);
+
+        // 120 because 100 is max data point, then gets multiplied by 1.2 (MAX_Y_VALUE_MULTIPLIER)
+        // and this becomes a label in the chart
+        expect(screen.getAllByText("120")).toHaveLength(2);
     });
 
     test("refetches when props change", () => {

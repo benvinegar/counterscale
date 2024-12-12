@@ -1,24 +1,36 @@
-import PropTypes, { InferProps } from "prop-types";
-
 import {
-    AreaChart,
+    Line,
     Area,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    ComposedChart,
 } from "recharts";
+
+interface TimeSeriesChartProps {
+    data: Array<{
+        date: string;
+        views: number;
+        visitors: number;
+        bounceRate: number;
+    }>;
+    intervalType?: string;
+    timezone?: string;
+}
 
 export default function TimeSeriesChart({
     data,
     intervalType,
     timezone,
-}: InferProps<typeof TimeSeriesChart.propTypes>) {
+}: TimeSeriesChartProps) {
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {
         return null;
     }
+
+    const MAX_Y_VALUE_MULTIPLIER = 1.2;
 
     // get the max integer value of data views
     const maxViews = Math.max(...data.map((item) => item.views));
@@ -65,7 +77,7 @@ export default function TimeSeriesChart({
 
     return (
         <ResponsiveContainer width="100%" height="100%" minWidth={100}>
-            <AreaChart
+            <ComposedChart
                 width={500}
                 height={400}
                 data={data}
@@ -80,25 +92,41 @@ export default function TimeSeriesChart({
                 <XAxis dataKey="date" tickFormatter={xAxisDateFormatter} />
 
                 {/* manually setting maxViews vs using recharts "dataMax" key cause it doesnt seem to work */}
-                <YAxis dataKey="views" domain={[0, maxViews]} />
+                <YAxis
+                    yAxisId="count"
+                    dataKey="views"
+                    domain={[0, Math.floor(maxViews * MAX_Y_VALUE_MULTIPLIER)]} // set max Y value a little higher than what was recorded
+                />
+                <YAxis
+                    yAxisId="bounceRate"
+                    dataKey="bounceRate"
+                    domain={[0, Math.floor(100 * MAX_Y_VALUE_MULTIPLIER)]}
+                    hide={true}
+                />
+
                 <Tooltip labelFormatter={tooltipDateFormatter} />
                 <Area
+                    yAxisId="count"
                     dataKey="views"
                     stroke="#F46A3D"
                     strokeWidth="2"
                     fill="#F99C35"
                 />
-            </AreaChart>
+                <Area
+                    yAxisId="count"
+                    dataKey="visitors"
+                    stroke="#F46A3D"
+                    strokeWidth="2"
+                    fill="#f96d3e"
+                />
+                <Line
+                    yAxisId="bounceRate"
+                    dataKey="bounceRate"
+                    stroke="#56726C"
+                    strokeWidth="2"
+                    dot={false}
+                />
+            </ComposedChart>
         </ResponsiveContainer>
     );
 }
-
-TimeSeriesChart.propTypes = {
-    data: PropTypes.arrayOf(
-        PropTypes.shape({
-            views: PropTypes.number.isRequired,
-        }).isRequired,
-    ).isRequired,
-    intervalType: PropTypes.string,
-    timezone: PropTypes.string,
-};

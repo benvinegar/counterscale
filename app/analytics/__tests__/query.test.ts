@@ -93,14 +93,14 @@ describe("AnalyticsEngineAPI", () => {
             // results should all be at 05:00:00 because local timezone is UTC-5 --
             // this set of results represents "start of day" in local tz, which is 5 AM UTC
             expect(result1).toEqual([
-                ["2024-01-11 05:00:00", 0],
-                ["2024-01-12 05:00:00", 0],
-                ["2024-01-13 05:00:00", 3],
-                ["2024-01-14 05:00:00", 0],
-                ["2024-01-15 05:00:00", 0],
-                ["2024-01-16 05:00:00", 2],
-                ["2024-01-17 05:00:00", 1],
-                ["2024-01-18 05:00:00", 0],
+                ["2024-01-11 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-12 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-13 05:00:00", { views: 3, visitors: 0, bounces: 0 }],
+                ["2024-01-14 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-15 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-16 05:00:00", { views: 2, visitors: 0, bounces: 0 }],
+                ["2024-01-17 05:00:00", { views: 1, visitors: 0, bounces: 0 }],
+                ["2024-01-18 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
             ]);
 
             const result2 = await api.getViewsGroupedByInterval(
@@ -111,12 +111,12 @@ describe("AnalyticsEngineAPI", () => {
                 "America/New_York",
             );
             expect(result2).toEqual([
-                ["2024-01-13 05:00:00", 3],
-                ["2024-01-14 05:00:00", 0],
-                ["2024-01-15 05:00:00", 0],
-                ["2024-01-16 05:00:00", 2],
-                ["2024-01-17 05:00:00", 1],
-                ["2024-01-18 05:00:00", 0],
+                ["2024-01-13 05:00:00", { views: 3, visitors: 0, bounces: 0 }],
+                ["2024-01-14 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-15 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-16 05:00:00", { views: 2, visitors: 0, bounces: 0 }],
+                ["2024-01-17 05:00:00", { views: 1, visitors: 0, bounces: 0 }],
+                ["2024-01-18 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
             ]);
         });
     });
@@ -129,15 +129,21 @@ describe("AnalyticsEngineAPI", () => {
                 data: [
                     {
                         count: 3,
+                        isVisitor: 0,
+                        isBounce: 0,
                         // note: intentionally sparse data (data for some timestamps missing)
                         bucket: "2024-01-17 11:00:00",
                     },
                     {
                         count: 2,
+                        isVisitor: 0,
+                        isBounce: 0,
                         bucket: "2024-01-17 14:00:00",
                     },
                     {
                         count: 1,
+                        isVisitor: 0,
+                        isBounce: 0,
                         bucket: "2024-01-17 16:00:00",
                     },
                 ],
@@ -158,31 +164,31 @@ describe("AnalyticsEngineAPI", () => {
         // so if we want the last 24 hours from 05:00:00 in local time (EST), the actual
         // time range in UTC starts and ends at 10:00:00 (+5 hours)
         expect(result1).toEqual([
-            ["2024-01-17 10:00:00", 0],
-            ["2024-01-17 11:00:00", 3],
-            ["2024-01-17 12:00:00", 0],
-            ["2024-01-17 13:00:00", 0],
-            ["2024-01-17 14:00:00", 2],
-            ["2024-01-17 15:00:00", 0],
-            ["2024-01-17 16:00:00", 1],
-            ["2024-01-17 17:00:00", 0],
-            ["2024-01-17 18:00:00", 0],
-            ["2024-01-17 19:00:00", 0],
-            ["2024-01-17 20:00:00", 0],
-            ["2024-01-17 21:00:00", 0],
-            ["2024-01-17 22:00:00", 0],
-            ["2024-01-17 23:00:00", 0],
-            ["2024-01-18 00:00:00", 0],
-            ["2024-01-18 01:00:00", 0],
-            ["2024-01-18 02:00:00", 0],
-            ["2024-01-18 03:00:00", 0],
-            ["2024-01-18 04:00:00", 0],
-            ["2024-01-18 05:00:00", 0],
-            ["2024-01-18 06:00:00", 0],
-            ["2024-01-18 07:00:00", 0],
-            ["2024-01-18 08:00:00", 0],
-            ["2024-01-18 09:00:00", 0],
-            ["2024-01-18 10:00:00", 0],
+            ["2024-01-17 10:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 11:00:00", { views: 3, visitors: 0, bounces: 0 }],
+            ["2024-01-17 12:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 13:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 14:00:00", { views: 2, visitors: 0, bounces: 0 }],
+            ["2024-01-17 15:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 16:00:00", { views: 1, visitors: 0, bounces: 0 }],
+            ["2024-01-17 17:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 18:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 19:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 20:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 21:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 22:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-17 23:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 00:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 01:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 02:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 03:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 04:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 06:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 07:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 08:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 09:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ["2024-01-18 10:00:00", { views: 0, visitors: 0, bounces: 0 }],
         ]);
     });
 

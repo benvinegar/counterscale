@@ -32,11 +32,22 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
             filters,
         );
 
-    const chartData: { date: string; views: number }[] = [];
+    const chartData: {
+        date: string;
+        views: number;
+        visitors: number;
+        bounceRate: number;
+    }[] = [];
     viewsGroupedByInterval.forEach((row) => {
+        const { views, visitors, bounces } = row[1];
+
         chartData.push({
             date: row[0],
-            views: row[1],
+            views,
+            visitors,
+            bounceRate: Math.floor(
+                (visitors > 0 ? bounces / visitors : 0) * 100,
+            ),
         });
     });
 
