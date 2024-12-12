@@ -450,7 +450,7 @@ export class AnalyticsEngineAPI {
         const filterStr = filtersToSql(filters);
         const _column = ColumnMappings[column];
         const query = `
-            SELECT ${_column} as column,
+            SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,
                 SUM(_sample_interval) as count
             FROM metricsDataset
@@ -464,7 +464,6 @@ export class AnalyticsEngineAPI {
             LIMIT ${limit * page}`;
 
         type SelectionSet = {
-            column: string;
             count: number;
             isVisitor: number;
             isBounce: number;
@@ -497,7 +496,7 @@ export class AnalyticsEngineAPI {
                     // the query results (pageData)
                     visitorCountByColumn.forEach(([key, value]) => {
                         pageData.push({
-                            column: key,
+                            [_column]: key,
                             count: value,
                             isVisitor: 1,
                         } as SelectionSet);
@@ -505,7 +504,7 @@ export class AnalyticsEngineAPI {
 
                     const result = pageData.reduce(
                         (acc, row) => {
-                            const key = row["column"] as string;
+                            const key = row[_column] as string;
                             if (!Object.hasOwn(acc, key)) {
                                 acc[key] = {
                                     views: 0,

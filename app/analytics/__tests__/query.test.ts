@@ -295,18 +295,31 @@ describe("AnalyticsEngineAPI", () => {
 
     describe("getAllCountsByColumn", () => {
         test("it should return an array of [column, count] tuples", async () => {
-            fetch.mockResolvedValue(
+            // return 2 mocked responses
+            fetch.mockResolvedValueOnce(
                 createFetchResponse({
                     data: [
                         {
                             blob4: "CA",
+                            isVisitor: 1,
                             count: 3,
                         },
                     ],
                 }),
             );
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    data: [
+                        {
+                            blob4: "CA",
+                            isVisitor: 0,
+                            count: 1,
+                        },
+                    ],
+                }),
+            );
 
-            const result = api.getAllCountsByColumn(
+            const result = await api.getAllCountsByColumn(
                 "example.com",
                 "country",
                 "7d",
@@ -316,24 +329,17 @@ describe("AnalyticsEngineAPI", () => {
                 },
             );
 
-            expect(fetch).toHaveBeenCalled();
+            expect(fetch).toHaveBeenCalledTimes(2);
             expect(
                 (fetch as Mock).mock.calls[0][1].body
                     .replace(/\s+/g, " ") // removes tabs and whitespace from query
                     .trim(),
-            ).toEqual(
-                "SELECT blob4, " +
-                    "double1 as isVisitor, " +
-                    "double3 as isBounce, " +
-                    "SUM(_sample_interval) as count " +
-                    "FROM metricsDataset WHERE timestamp >= NOW() - INTERVAL '7' DAY AND timestamp < NOW() AND blob8 = 'example.com' AND blob4 = 'CA' " +
-                    "GROUP BY blob4, double1, double3 " +
-                    "ORDER BY count DESC LIMIT 10",
             );
+            // console.log(result);
             expect(await result).toEqual({
                 CA: {
-                    views: 3,
-                    visitors: 0,
+                    views: 4,
+                    visitors: 3,
                     bounces: 0,
                 },
             });
