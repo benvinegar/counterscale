@@ -25,8 +25,8 @@ describe("resources.timeseries loader", () => {
             context.analyticsEngine,
             "getViewsGroupedByInterval",
         ).mockResolvedValue([
-            ["2024-01-15T00:00:00Z", 100],
-            ["2024-01-16T00:00:00Z", 200],
+            ["2024-01-15T00:00:00Z", { views: 100, visitors: 0, bounces: 0 }],
+            ["2024-01-16T00:00:00Z", { views: 200, visitors: 0, bounces: 0 }],
         ]);
 
         // mock out responsive container to just return a standard div, otherwise
@@ -60,8 +60,18 @@ describe("resources.timeseries loader", () => {
 
         const data = await result.json();
         expect(data.chartData).toEqual([
-            { date: "2024-01-15T00:00:00Z", views: 100 },
-            { date: "2024-01-16T00:00:00Z", views: 200 },
+            {
+                date: "2024-01-15T00:00:00Z",
+                views: 100,
+                visitors: 0,
+                bounces: 0,
+            },
+            {
+                date: "2024-01-16T00:00:00Z",
+                views: 200,
+                visitors: 0,
+                bounces: 0,
+            },
         ]);
         expect(data.intervalType).toBe("DAY");
 

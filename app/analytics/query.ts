@@ -271,7 +271,7 @@ export class AnalyticsEngineAPI {
                             const key = dayjs(utcDateTime).format(
                                 "YYYY-MM-DD HH:mm:ss",
                             );
-                            if (!accum.hasOwnProperty(key)) {
+                            if (!Object.hasOwn(accum, key)) {
                                 accum[key] = {
                                     views: 0,
                                     visitors: 0,
