@@ -362,6 +362,24 @@ describe("AnalyticsEngineAPI", () => {
                 earliestBounce: new Date(mockBounceTimestamp),
             });
         });
+
+        test("returns only earliest event when no bounces found", async () => {
+            const mockEventTimestamp = "2024-01-01T10:00:00Z";
+
+            // Mock responses for both queries
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    ok: true,
+                    data: [{ earliestEvent: mockEventTimestamp, isBounce: 0 }],
+                }),
+            );
+
+            const result = await api.getEarliestEvents("test-site");
+            expect(result).toEqual({
+                earliestEvent: new Date(mockEventTimestamp),
+                earliestBounce: null,
+            });
+        });
     });
 });
 

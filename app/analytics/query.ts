@@ -686,16 +686,21 @@ export class AnalyticsEngineAPI {
 
                 const data = responseData.data;
 
-                const earliestEvent = data.filter(
+                const earliestEvent = data.find(
                     (row) => row["isBounce"] === 0,
-                )[0]["earliestEvent"];
-                const earliestBounce = data.filter(
+                )?.earliestEvent;
+
+                const earliestBounce = data.find(
                     (row) => row["isBounce"] === 1,
-                )[0]["earliestEvent"];
+                )?.earliestEvent;
 
                 resolve({
-                    earliestEvent: new Date(earliestEvent),
-                    earliestBounce: new Date(earliestBounce),
+                    earliestEvent: earliestEvent
+                        ? new Date(earliestEvent)
+                        : null,
+                    earliestBounce: earliestBounce
+                        ? new Date(earliestBounce)
+                        : null,
                 });
             })();
         });
