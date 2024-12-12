@@ -96,6 +96,7 @@ export const StatsCard = ({
                             {visitors ? countFormatter.format(visitors) : "-"}
                         </div>
                     </div>
+
                     <div>
                         <div className="text-md sm:text-lg">Views</div>
                         <div className="text-4xl">
