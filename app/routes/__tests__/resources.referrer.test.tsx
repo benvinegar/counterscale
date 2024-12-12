@@ -26,22 +26,28 @@ describe("Resources/Referrer route", () => {
 
     describe("loader", () => {
         test("returns valid json", async () => {
+            // first request for visitors
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
                     data: [
-                        { blob5: "/", isVisitor: 0, isVisit: 0, count: "5" },
-                        { blob5: "/", isVisitor: 1, isVisit: 1, count: "1" },
-                        {
-                            blob5: "/example",
-                            isVisitor: 0,
-                            isVisit: 1,
-                            count: "2",
-                        },
+                        { blob5: "/", isVisitor: 1, count: "1" },
                         {
                             blob5: "/example",
                             isVisitor: 1,
-                            isVisit: 1,
                             count: "1",
+                        },
+                    ],
+                }),
+            );
+            // second request for views
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    data: [
+                        { blob5: "/", isVisitor: 0, count: "5" },
+                        {
+                            blob5: "/example",
+                            isVisitor: 0,
+                            count: "2",
                         },
                     ],
                 }),
@@ -57,6 +63,7 @@ describe("Resources/Referrer route", () => {
 
             // expect redirect
             expect(response.status).toBe(200);
+            expect(fetch).toHaveBeenCalledTimes(2);
 
             const json = await response.json();
             expect(json).toEqual({
