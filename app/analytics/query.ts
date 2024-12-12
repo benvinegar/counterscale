@@ -430,26 +430,43 @@ export class AnalyticsEngineAPI {
             tz,
         );
 
-        const filterStr = filtersToSql(filters);
+        // first query by visitor count – this is to figure out the top N results
+        // by visitor count first
+        // NOTE: there's an await here; need to fix this or harms parallelism
+        const visitorCountByColumn = await this.getVisitorCountByColumn(
+            siteId,
+            column,
+            interval,
+            tz,
+            filters,
+            page,
+            limit,
+        );
 
+        // next, make a second query - this time for non-visitor hits - by filtering
+        // on the keys returned by the first query.
+        const keys = visitorCountByColumn.map(([key]) => key);
+
+        const filterStr = filtersToSql(filters);
         const _column = ColumnMappings[column];
         const query = `
             SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,
-                ${ColumnMappings.bounce} as isBounce,
                 SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
+                AND ${_column} IN (${keys.map((key) => `'${key}'`).join(", ")})
+                AND ${ColumnMappings.newVisitor} = 0
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
-            GROUP BY ${_column}, ${ColumnMappings.newVisitor}, ${ColumnMappings.bounce}
+            GROUP BY ${_column}, ${ColumnMappings.newVisitor}
             ORDER BY count DESC
             LIMIT ${limit * page}`;
 
         type SelectionSet = {
-            readonly count: number;
-            readonly isVisitor: number;
-            readonly isBounce: number;
+            count: number;
+            isVisitor: number;
+            isBounce: number;
         } & Record<
             (typeof ColumnMappings)[T],
             ColumnMappingToType<(typeof ColumnMappings)[T]>
@@ -475,6 +492,16 @@ export class AnalyticsEngineAPI {
                         limit * page,
                     );
 
+                    // remap visitor counts into SelectionSet objects, then insert into
+                    // the query results (pageData)
+                    visitorCountByColumn.forEach(([key, value]) => {
+                        pageData.push({
+                            [_column]: key,
+                            count: value,
+                            isVisitor: 1,
+                        } as SelectionSet);
+                    });
+
                     const result = pageData.reduce(
                         (acc, row) => {
                             const key = row[_column] as string;
@@ -491,6 +518,7 @@ export class AnalyticsEngineAPI {
                         },
                         {} as Record<string, AnalyticsCountResult>,
                     );
+
                     resolve(result);
                 })(),
         );
