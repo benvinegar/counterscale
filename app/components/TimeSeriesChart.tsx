@@ -68,11 +68,6 @@ export default function TimeSeriesChart({
     data,
     intervalType,
 }: TimeSeriesChartProps) {
-    // chart doesn't really work no data points, so just bail out
-    if (data.length === 0) {
-        return null;
-    }
-
     function xAxisDateFormatter(date: string): string {
         const dateObj = dateStringToLocalDateObj(date);
 
@@ -119,6 +114,11 @@ export default function TimeSeriesChart({
 
         return ticks;
     }, [data]);
+
+    // chart doesn't really work no data points, so just bail out
+    if (data.length === 0) {
+        return null;
+    }
 
     return (
         <ResponsiveContainer width="100%" height="100%" minWidth={100}>

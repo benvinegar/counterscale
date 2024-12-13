@@ -119,77 +119,143 @@ describe("AnalyticsEngineAPI", () => {
                 ["2024-01-18 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
             ]);
         });
-    });
 
-    test("should return an array of [timestamp, count] tuples grouped by hour", async () => {
-        expect(process.env.TZ).toBe("EST");
+        test("should return an array of [timestamp, count] tuples grouped by hour", async () => {
+            expect(process.env.TZ).toBe("EST");
 
-        fetch.mockResolvedValue(
-            createFetchResponse({
+            fetch.mockResolvedValue(
+                createFetchResponse({
+                    data: [
+                        {
+                            count: 3,
+                            isVisitor: 0,
+                            isBounce: 0,
+                            // note: intentionally sparse data (data for some timestamps missing)
+                            bucket: "2024-01-17 11:00:00",
+                        },
+                        {
+                            count: 2,
+                            isVisitor: 0,
+                            isBounce: 0,
+                            bucket: "2024-01-17 14:00:00",
+                        },
+                        {
+                            count: 1,
+                            isVisitor: 0,
+                            isBounce: 0,
+                            bucket: "2024-01-17 16:00:00",
+                        },
+                    ],
+                }),
+            );
+
+            vi.setSystemTime(new Date("2024-01-18T05:33:02").getTime());
+
+            const result1 = await api.getViewsGroupedByInterval(
+                "example.com",
+                "HOUR",
+                new Date("2024-01-17 05:00:00"), // local time (because tz also passed)
+                new Date(),
+                "America/New_York",
+            );
+
+            // reminder results are expressed as UTC
+            // so if we want the last 24 hours from 05:00:00 in local time (EST), the actual
+            // time range in UTC starts and ends at 10:00:00 (+5 hours)
+            expect(result1).toEqual([
+                ["2024-01-17 10:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 11:00:00", { views: 3, visitors: 0, bounces: 0 }],
+                ["2024-01-17 12:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 13:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 14:00:00", { views: 2, visitors: 0, bounces: 0 }],
+                ["2024-01-17 15:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 16:00:00", { views: 1, visitors: 0, bounces: 0 }],
+                ["2024-01-17 17:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 18:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 19:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 20:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 21:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 22:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-17 23:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 00:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 01:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 02:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 03:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 04:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 06:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 07:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 08:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 09:00:00", { views: 0, visitors: 0, bounces: 0 }],
+                ["2024-01-18 10:00:00", { views: 0, visitors: 0, bounces: 0 }],
+            ]);
+        });
+
+        test("corrects negative bounce values by moving them to previous bucket", async () => {
+            const mockResponse = {
                 data: [
+                    // First bucket has 10 bounces
                     {
-                        count: 3,
-                        isVisitor: 0,
-                        isBounce: 0,
-                        // note: intentionally sparse data (data for some timestamps missing)
-                        bucket: "2024-01-17 11:00:00",
+                        bucket: "2024-01-01 00:00:00",
+                        count: 10,
+                        isVisitor: 1,
+                        isBounce: 1,
                     },
                     {
+                        bucket: "2024-01-01 00:00:00",
                         count: 2,
-                        isVisitor: 0,
-                        isBounce: 0,
-                        bucket: "2024-01-17 14:00:00",
+                        isVisitor: 1,
+                        isBounce: -1,
+                    },
+                    // Second bucket has -2 bounces (which should get moved to first bucket)
+                    {
+                        bucket: "2024-01-01 01:00:00",
+                        count: 8,
+                        isVisitor: 1,
+                        isBounce: 1,
                     },
                     {
-                        count: 1,
-                        isVisitor: 0,
-                        isBounce: 0,
-                        bucket: "2024-01-17 16:00:00",
+                        bucket: "2024-01-01 01:00:00",
+                        count: 10, // 8 - 10 = -2
+                        isVisitor: 1,
+                        isBounce: -1,
+                    },
+                    {
+                        bucket: "2024-01-01 02:00:00",
+                        count: 20,
+                        isVisitor: 1,
+                        isBounce: 1,
+                    },
+                    {
+                        bucket: "2024-01-01 02:00:00",
+                        count: 8,
+                        isVisitor: 1,
+                        isBounce: -1,
                     },
                 ],
-            }),
-        );
+                meta: { total: 3 },
+            };
 
-        vi.setSystemTime(new Date("2024-01-18T05:33:02").getTime());
+            fetch.mockResolvedValue(createFetchResponse(mockResponse));
+            vi.setSystemTime(new Date("2024-01-18T05:33:02").getTime());
 
-        const result1 = await api.getViewsGroupedByInterval(
-            "example.com",
-            "HOUR",
-            new Date("2024-01-17 05:00:00"), // local time (because tz also passed)
-            new Date(),
-            "America/New_York",
-        );
+            const result = await api.getViewsGroupedByInterval(
+                "test-site",
+                "HOUR",
+                new Date("2024-01-01"),
+                new Date("2024-01-02"),
+                "America/New_York",
+            );
 
-        // reminder results are expressed as UTC
-        // so if we want the last 24 hours from 05:00:00 in local time (EST), the actual
-        // time range in UTC starts and ends at 10:00:00 (+5 hours)
-        expect(result1).toEqual([
-            ["2024-01-17 10:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 11:00:00", { views: 3, visitors: 0, bounces: 0 }],
-            ["2024-01-17 12:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 13:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 14:00:00", { views: 2, visitors: 0, bounces: 0 }],
-            ["2024-01-17 15:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 16:00:00", { views: 1, visitors: 0, bounces: 0 }],
-            ["2024-01-17 17:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 18:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 19:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 20:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 21:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 22:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-17 23:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 00:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 01:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 02:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 03:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 04:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 05:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 06:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 07:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 08:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 09:00:00", { views: 0, visitors: 0, bounces: 0 }],
-            ["2024-01-18 10:00:00", { views: 0, visitors: 0, bounces: 0 }],
-        ]);
+            expect(result).toHaveLength(24); // still returns 24 buckets
+
+            // First bucket should have had its bounces reduced by 2
+            expect(result[0][1].bounces).toBe(6);
+            // Second bucket should have been zeroed out
+            expect(result[1][1].bounces).toBe(0);
+            // Third bucket should be unchanged
+            expect(result[2][1].bounces).toBe(12);
+        });
     });
 
     describe("getCounts", () => {

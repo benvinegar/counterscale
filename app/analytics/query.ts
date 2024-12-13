@@ -294,6 +294,27 @@ export class AnalyticsEngineAPI {
                         },
                     );
 
+                    // Fix negative bounce values coming from sparse values.
+                    //
+                    // If data is sparse, it's possible to have a bucket where a negative bounce value. This is because
+                    // the initial "bounce" occurred in an earlier bucket. We need to go "back in time" and amend
+                    // that bucket. Otherwise chart will show -100% bounce rate which makes no sense.
+                    // (NOTE: The buckets must be sorted)
+                    for (let i = 1; i < sortedRows.length; i++) {
+                        const current = sortedRows[i][1];
+                        // if the current value of bounces is negative, find the last non-zero bucket and decrement
+                        if (current.bounces < 0) {
+                            for (let j = i - 1; j >= 0; j--) {
+                                const prev = sortedRows[j][1];
+                                if (prev.bounces > 0) {
+                                    prev.bounces += current.bounces;
+                                    current.bounces = 0; // zero-out current bucket
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     resolve(sortedRows);
                 })(),
         );
