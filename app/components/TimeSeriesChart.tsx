@@ -66,6 +66,7 @@ function CustomTooltip(props: any) {
 export default function TimeSeriesChart({
     data,
     intervalType,
+    timezone,
 }: TimeSeriesChartProps) {
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {

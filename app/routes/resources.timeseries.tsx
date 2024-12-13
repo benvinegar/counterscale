@@ -75,6 +75,7 @@ export const TimeSeriesCard = ({
         const params = {
             site: siteId,
             interval,
+            timezone,
             ...filters,
         };
 
@@ -94,6 +95,7 @@ export const TimeSeriesCard = ({
                         <TimeSeriesChart
                             data={chartData}
                             intervalType={intervalType}
+                            timezone={timezone}
                         />
                     )}
                 </div>

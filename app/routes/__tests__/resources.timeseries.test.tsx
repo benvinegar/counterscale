@@ -130,6 +130,7 @@ describe("TimeSeriesCard", () => {
             {
                 site: "test-site",
                 interval: "7d",
+                timezone: "UTC",
             },
             {
                 method: "get",
@@ -177,6 +178,7 @@ describe("TimeSeriesCard", () => {
             {
                 site: "test-site",
                 interval: "1d",
+                timezone: "UTC",
             },
             {
                 method: "get",
