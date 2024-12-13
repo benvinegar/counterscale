@@ -9,6 +9,8 @@ import {
     ComposedChart,
 } from "recharts";
 
+import { Card } from "./ui/card";
+
 interface TimeSeriesChartProps {
     data: Array<{
         date: string;
@@ -17,13 +19,52 @@ interface TimeSeriesChartProps {
         bounceRate: number;
     }>;
     intervalType?: string;
-    timezone?: string;
+}
+
+function dateStringToLocalDateObj(dateString: string): Date {
+    const date = new Date(dateString);
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date;
+}
+
+function CustomTooltip(props: any) {
+    const { active, payload, label } = props;
+
+    const date = dateStringToLocalDateObj(label);
+
+    const formattedDate = date.toLocaleString("en-us", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        timeZoneName: "short",
+    });
+    if (active && payload && payload.length) {
+        return (
+            <Card className="p-2 shadow-lg leading-normal">
+                <div className="font-semibold">{formattedDate}</div>
+                <div className="before:content-['•'] before:text-barchart before:font-bold">
+                    {" "}
+                    {`${payload[0].value} views`}
+                </div>
+                <div className="before:content-['•'] before:text-border before:font-bold">
+                    {" "}
+                    {`${payload[1].value} visitors`}
+                </div>
+                <div className="before:content-['•'] before:text-paldarkgrey before:font-bold">
+                    {" "}
+                    {`${payload[2].value}% bounce rate`}
+                </div>
+            </Card>
+        );
+    } else {
+        return null;
+    }
 }
 
 export default function TimeSeriesChart({
     data,
     intervalType,
-    timezone,
 }: TimeSeriesChartProps) {
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {
@@ -36,10 +77,7 @@ export default function TimeSeriesChart({
     const maxViews = Math.max(...data.map((item) => item.views));
 
     function xAxisDateFormatter(date: string): string {
-        const dateObj = new Date(date);
-
-        // convert from utc to local time
-        dateObj.setMinutes(dateObj.getMinutes() - dateObj.getTimezoneOffset());
+        const dateObj = dateStringToLocalDateObj(date);
 
         switch (intervalType) {
             case "DAY":
@@ -56,23 +94,6 @@ export default function TimeSeriesChart({
             default:
                 throw new Error("Invalid interval type");
         }
-    }
-
-    function tooltipDateFormatter(date: string): string {
-        const dateObj = new Date(date);
-
-        // convert from utc to local time
-        dateObj.setMinutes(dateObj.getMinutes() - dateObj.getTimezoneOffset());
-
-        return (
-            dateObj.toLocaleString("en-us", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "numeric",
-            }) + ` ${timezone}`
-        );
     }
 
     return (
@@ -104,7 +125,9 @@ export default function TimeSeriesChart({
                     hide={true}
                 />
 
-                <Tooltip labelFormatter={tooltipDateFormatter} />
+                <Tooltip content={<CustomTooltip />} />
+
+                {/* NOTE: colors defined in globals.css/tailwind.config.js */}
                 <Area
                     yAxisId="count"
                     dataKey="views"

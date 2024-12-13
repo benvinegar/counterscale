@@ -95,7 +95,6 @@ export const TimeSeriesCard = ({
                         <TimeSeriesChart
                             data={chartData}
                             intervalType={intervalType}
-                            timezone={timezone}
                         />
                     )}
                 </div>
