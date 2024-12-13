@@ -45,13 +45,13 @@ function CustomTooltip(props: any) {
         return (
             <Card className="p-2 shadow-lg leading-normal">
                 <div className="font-semibold">{formattedDate}</div>
-                <div className="before:content-['•'] before:text-barchart before:font-bold">
-                    {" "}
-                    {`${payload[0].value} views`}
-                </div>
                 <div className="before:content-['•'] before:text-border before:font-bold">
                     {" "}
                     {`${payload[1].value} visitors`}
+                </div>
+                <div className="before:content-['•'] before:text-barchart before:font-bold">
+                    {" "}
+                    {`${payload[0].value} views`}
                 </div>
                 <div className="before:content-['•'] before:text-paldarkgrey before:font-bold">
                     {" "}
