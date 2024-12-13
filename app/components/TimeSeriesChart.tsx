@@ -9,6 +9,8 @@ import {
     ComposedChart,
 } from "recharts";
 
+import { useMemo } from "react";
+
 import { Card } from "./ui/card";
 
 interface TimeSeriesChartProps {
@@ -71,11 +73,6 @@ export default function TimeSeriesChart({
         return null;
     }
 
-    const MAX_Y_VALUE_MULTIPLIER = 1.2;
-
-    // get the max integer value of data views
-    const maxViews = Math.max(...data.map((item) => item.views));
-
     function xAxisDateFormatter(date: string): string {
         const dateObj = dateStringToLocalDateObj(date);
 
@@ -96,6 +93,33 @@ export default function TimeSeriesChart({
         }
     }
 
+    const yAxisCountTicks = useMemo(() => {
+        const MAX_TICKS_TO_SHOW = 4;
+
+        // get the max integer value of data views
+        const maxViews = Math.max(...data.map((item) => item.views));
+
+        // determine the magnitude of maxViews to set rounding
+        const magnitude = Math.floor(Math.log10(maxViews));
+        const roundTo = Math.pow(10, Math.max(0, magnitude - 1));
+
+        const numTicks = Math.min(MAX_TICKS_TO_SHOW, maxViews);
+        const ticks = [];
+
+        // calculate increment and round it up to the nearest roundTo
+        let increment = Math.floor(maxViews / numTicks);
+        increment = Math.ceil(increment / roundTo) * roundTo;
+
+        // skip 0 and go 1 further
+        for (let i = 1; i <= numTicks + 1; i++) {
+            const tick = i * increment;
+
+            ticks.push(tick);
+        }
+
+        return ticks;
+    }, [data]);
+
     return (
         <ResponsiveContainer width="100%" height="100%" minWidth={100}>
             <ComposedChart
@@ -110,18 +134,27 @@ export default function TimeSeriesChart({
                 }}
             >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={xAxisDateFormatter} />
+                <XAxis
+                    dataKey="date"
+                    tickFormatter={xAxisDateFormatter}
+                    tickLine={false}
+                    tickMargin={5}
+                    minTickGap={20}
+                />
 
                 {/* manually setting maxViews vs using recharts "dataMax" key cause it doesnt seem to work */}
                 <YAxis
                     yAxisId="count"
                     dataKey="views"
-                    domain={[0, Math.floor(maxViews * MAX_Y_VALUE_MULTIPLIER)]} // set max Y value a little higher than what was recorded
+                    domain={[0, Math.max(...yAxisCountTicks)]} // set max Y value a little higher than what was recorded
+                    tickLine={false}
+                    tickMargin={5}
+                    ticks={yAxisCountTicks}
                 />
                 <YAxis
                     yAxisId="bounceRate"
                     dataKey="bounceRate"
-                    domain={[0, Math.floor(100 * MAX_Y_VALUE_MULTIPLIER)]}
+                    domain={[0, 120]}
                     hide={true}
                 />
 

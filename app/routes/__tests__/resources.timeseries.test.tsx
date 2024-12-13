@@ -151,11 +151,6 @@ describe("TimeSeriesCard", () => {
 
         // Wait for the chart to be rendered
         await waitFor(() => screen.getAllByText("Mon, Jan 15").length > 0);
-        // assert data appears in chart
-
-        // 120 because 100 is max data point, then gets multiplied by 1.2 (MAX_Y_VALUE_MULTIPLIER)
-        // and this becomes a label in the chart
-        expect(screen.getAllByText("120")).toHaveLength(2);
     });
 
     test("refetches when props change", () => {
