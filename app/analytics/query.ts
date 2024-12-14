@@ -484,15 +484,17 @@ export class AnalyticsEngineAPI {
         // on the keys returned by the first query.
         const keys = visitorCountByColumn.map(([key]) => key);
 
-        const filterStr = filtersToSql(filters);
+        let filterStr = filtersToSql(filters);
         const _column = ColumnMappings[column];
+        if (keys.length > 0) {
+            filterStr += `AND ${_column} IN (${keys.map((key) => `'${key}'`).join(", ")})`;
+        }
         const query = `
             SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,
                 SUM(_sample_interval) as count
             FROM metricsDataset
             WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
-                AND ${_column} IN (${keys.map((key) => `'${key}'`).join(", ")})
                 AND ${ColumnMappings.newVisitor} = 0
                 AND ${ColumnMappings.siteId} = '${siteId}'
                 ${filterStr}
