@@ -486,9 +486,11 @@ export class AnalyticsEngineAPI {
 
         let filterStr = filtersToSql(filters);
         const _column = ColumnMappings[column];
+
         if (keys.length > 0) {
-            filterStr += `AND ${_column} IN (${keys.map((key) => `'${key}'`).join(", ")})`;
+            filterStr += ` AND ${_column} IN (${keys.map((key) => `'${key}'`).join(", ")})`;
         }
+
         const query = `
             SELECT ${_column},
                 ${ColumnMappings.newVisitor} as isVisitor,

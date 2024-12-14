@@ -416,6 +416,30 @@ describe("AnalyticsEngineAPI", () => {
                 },
             });
         });
+
+        test("should handle case where there are no results", async () => {
+            fetch
+                .mockResolvedValueOnce(
+                    createFetchResponse({
+                        data: [], // no visitor count results
+                    }),
+                )
+                .mockResolvedValueOnce(
+                    createFetchResponse({
+                        data: [], // no non-visitor results
+                    }),
+                );
+
+            const result = await api.getAllCountsByColumn(
+                "example.com",
+                "path",
+                "DAY",
+                "America/New_York",
+            );
+
+            expect(result).toEqual({});
+            expect(fetch).toHaveBeenCalledTimes(2);
+        });
     });
 
     describe("getEarliestEvents", () => {
