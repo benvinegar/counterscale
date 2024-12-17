@@ -90,7 +90,7 @@ export const TimeSeriesCard = ({
     return (
         <Card>
             <CardContent>
-                <div className="h-72 pt-6 -m-4 -ml-8 sm:m-0">
+                <div className="h-72 pt-6 -m-4 -mr-10 -ml-10 sm:-m-2 sm:-ml-6 sm:-mr-6">
                     {chartData && (
                         <TimeSeriesChart
                             data={chartData}

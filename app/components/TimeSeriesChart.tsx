@@ -115,6 +115,12 @@ export default function TimeSeriesChart({
         return ticks;
     }, [data]);
 
+    // omit first and last
+    const xAxisTicks = useMemo(
+        () => data.slice(1, -1).map((entry) => entry.date),
+        [data],
+    );
+
     // chart doesn't really work no data points, so just bail out
     if (data.length === 0) {
         return null;
@@ -136,10 +142,11 @@ export default function TimeSeriesChart({
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                     dataKey="date"
+                    // tickLine={false}
+                    tickMargin={8}
+                    ticks={xAxisTicks}
                     tickFormatter={xAxisDateFormatter}
-                    tickLine={false}
-                    tickMargin={5}
-                    minTickGap={20}
+                    tick={{ fill: "grey", fontSize: 14 }}
                 />
 
                 {/* manually setting maxViews vs using recharts "dataMax" key cause it doesnt seem to work */}
@@ -150,6 +157,7 @@ export default function TimeSeriesChart({
                     tickLine={false}
                     tickMargin={5}
                     ticks={yAxisCountTicks}
+                    tick={{ fill: "grey", fontSize: 14 }}
                 />
                 <YAxis
                     yAxisId="bounceRate"
