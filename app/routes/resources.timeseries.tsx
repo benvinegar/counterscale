@@ -1,5 +1,4 @@
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
 import {
     getFiltersFromSearchParams,
     paramsFromUrl,
@@ -51,10 +50,10 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
         });
     });
 
-    return json({
+    return {
         chartData: chartData,
         intervalType: intervalType,
-    });
+    };
 }
 
 export const TimeSeriesCard = ({

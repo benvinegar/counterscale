@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { json } from "@remix-run/node";
 import { beforeAll, afterEach, describe, expect, test, vitest } from "vitest";
 import "vitest-dom/extend-expect";
 import { render, waitFor, screen, cleanup } from "@testing-library/react";
@@ -17,11 +16,11 @@ describe("Root", () => {
 
     test("renders without crashing", async () => {
         function loader() {
-            return json({
+            return {
                 version: "ABC123",
                 origin: "http://example.com",
                 url: "http://example.com/path",
-            });
+            };
         }
 
         const RemixStub = createRemixStub([
@@ -75,11 +74,11 @@ describe("Layout", () => {
 
     test("renders with provided route data", async () => {
         function loader() {
-            return json({
+            return {
                 version: "v1.2.3",
                 origin: "test.counterscale.dev",
                 url: "https://test.counterscale.dev/",
-            });
+            };
         }
 
         const RemixStub = createRemixStub([

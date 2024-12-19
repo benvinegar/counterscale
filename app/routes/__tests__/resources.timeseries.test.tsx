@@ -58,7 +58,7 @@ describe("resources.timeseries loader", () => {
             request,
         });
 
-        const data = await result.json();
+        const data = await result;
         expect(data.chartData).toEqual([
             {
                 date: "2024-01-15T00:00:00Z",

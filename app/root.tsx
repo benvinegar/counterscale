@@ -1,10 +1,6 @@
 /// <reference types="vite/client" />
 import styles from "./globals.css?url";
-import {
-    json,
-    LoaderFunctionArgs,
-    type LinksFunction,
-} from "@remix-run/cloudflare";
+import { LoaderFunctionArgs, type LinksFunction } from "@remix-run/cloudflare";
 
 import {
     Links,
@@ -19,11 +15,11 @@ export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
 export const loader = ({ context, request }: LoaderFunctionArgs) => {
     const url = new URL(request.url);
-    return json({
+    return {
         version: context.cloudflare?.env?.CF_PAGES_COMMIT_SHA,
         origin: url.origin,
         url: request.url,
-    });
+    };
 };
 
 export const Layout = ({ children = [] }: { children: React.ReactNode }) => {

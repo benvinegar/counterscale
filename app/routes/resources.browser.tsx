@@ -1,7 +1,6 @@
 import { useFetcher } from "@remix-run/react";
 
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
 
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
@@ -15,7 +14,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const tz = url.searchParams.get("timezone") || "UTC";
     const filters = getFiltersFromSearchParams(url.searchParams);
 
-    return json({
+    return {
         countsByProperty: await analyticsEngine.getCountByBrowser(
             site,
             interval,
@@ -24,7 +23,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
             Number(page),
         ),
         page: Number(page),
-    });
+    };
 }
 
 export const BrowserCard = ({

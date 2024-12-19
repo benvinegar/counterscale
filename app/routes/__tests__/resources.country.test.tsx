@@ -43,10 +43,7 @@ describe("Resources/Country route", () => {
                 },
             });
 
-            // expect redirect
-            expect(response.status).toBe(200);
-
-            const json = await response.json();
+            const json = await response;
             expect(json).toEqual({
                 countsByProperty: [
                     [["CA", "Canada"], 5],

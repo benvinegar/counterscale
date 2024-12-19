@@ -1,5 +1,4 @@
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
 import {
     getDateTimeRange,
     getFiltersFromSearchParams,
@@ -45,12 +44,12 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const bounceRate =
         counts.visitors > 0 ? counts.bounces / counts.visitors : undefined;
 
-    return json({
+    return {
         views: counts.views,
         visitors: counts.visitors,
         bounceRate: bounceRate,
         hasSufficientBounceData,
-    });
+    };
 }
 
 export const StatsCard = ({

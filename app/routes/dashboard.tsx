@@ -7,7 +7,7 @@ import {
 } from "~/components/ui/select";
 
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/cloudflare";
 import {
     isRouteErrorResponse,
     useLoaderData,
@@ -74,7 +74,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         const redirectSite = sitesByHits[0]?.[0] || "";
         const redirectUrl = new URL(request.url);
         redirectUrl.searchParams.set("site", redirectSite);
-        return redirect(redirectUrl.toString());
+        throw redirect(redirectUrl.toString());
     }
 
     const siteId = url.searchParams.get("site") || "";
@@ -111,7 +111,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         throw new Error("Failed to fetch data from Analytics Engine");
     }
 
-    return json(out);
+    return out;
 };
 
 export default function Dashboard() {
