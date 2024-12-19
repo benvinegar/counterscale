@@ -1,9 +1,9 @@
 node_modules
 
-/.cache
-/.wrangler
-/build
-/public/build
+.cache
+.wrangler
+build
+public/build
 .env
 
 .dev.vars
