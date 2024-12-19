@@ -1,6 +1,5 @@
 import { useFetcher } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 import { SearchFilters } from "~/lib/types";
@@ -45,10 +44,10 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     //       in different browsers (see https://github.com/benvinegar/counterscale/issues/72)
     const countsByProperty = convertCountryCodesToNames(countsByCountry);
 
-    return json({
+    return {
         countsByProperty,
         page: Number(page),
-    });
+    };
 }
 
 export const CountryCard = ({

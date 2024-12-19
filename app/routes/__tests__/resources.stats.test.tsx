@@ -36,7 +36,7 @@ describe("resources.stats loader", () => {
         );
 
         const response = await loader({ context, request } as any);
-        const data = await response.json();
+        const data = await response;
 
         expect(mockGetCounts).toHaveBeenCalledWith(
             "test-site",
@@ -75,7 +75,7 @@ describe("resources.stats loader", () => {
         );
 
         const response = await loader({ context, request } as any);
-        const data = await response.json();
+        const data = await response;
 
         expect(data).toEqual({
             views: 1000,
@@ -107,7 +107,7 @@ describe("resources.stats loader", () => {
         );
 
         const response = await loader({ context, request } as any);
-        const data = await response.json();
+        const data = await response;
 
         expect(data).toEqual({
             views: 1000,

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { json, LoaderFunctionArgs } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 import {
     vi,
     test,
@@ -97,19 +97,24 @@ describe("Dashboard route", () => {
                 }),
             );
 
-            const response = await loader({
-                ...getDefaultContext(),
-                // @ts-expect-error we don't need to provide all the properties of the request object
-                request: {
-                    url: "http://localhost:3000/dashboard", // no site query param
-                },
-            });
+            try {
+                await loader({
+                    ...getDefaultContext(),
+                    // @ts-expect-error we don't need to provide all the properties of the request object
+                    request: {
+                        url: "http://localhost:3000/dashboard", // no site query param
+                    },
+                });
+            } catch (error) {
+                expect(error).toBeInstanceOf(Response);
+                const response = error as Response;
 
-            // expect redirect
-            expect(response.status).toBe(302);
-            expect(response.headers.get("Location")).toBe(
-                "http://localhost:3000/dashboard?site=test-siteid",
-            );
+                // expect redirect
+                expect(response.status).toBe(302);
+                expect(response.headers.get("Location")).toBe(
+                    "http://localhost:3000/dashboard?site=test-siteid",
+                );
+            }
         });
 
         test("redirects to ?site= if no siteId is provided via query string / no site data", async () => {
@@ -120,19 +125,24 @@ describe("Dashboard route", () => {
                 }),
             );
 
-            const response = await loader({
-                ...getDefaultContext(),
-                // @ts-expect-error we don't need to provide all the properties of the request object
-                request: {
-                    url: "http://localhost:3000/dashboard", // no site query param
-                },
-            });
+            try {
+                await loader({
+                    ...getDefaultContext(),
+                    // @ts-expect-error we don't need to provide all the properties of the request object
+                    request: {
+                        url: "http://localhost:3000/dashboard", // no site query param
+                    },
+                });
+            } catch (error) {
+                expect(error).toBeInstanceOf(Response);
+                const response = error as Response;
 
-            // expect redirect
-            expect(response.status).toBe(302);
-            expect(response.headers.get("Location")).toBe(
-                "http://localhost:3000/dashboard?site=",
-            );
+                // expect redirect
+                expect(response.status).toBe(302);
+                expect(response.headers.get("Location")).toBe(
+                    "http://localhost:3000/dashboard?site=",
+                );
+            }
         });
 
         test("assembles data returned from CF API", async () => {
@@ -153,7 +163,7 @@ describe("Dashboard route", () => {
                 },
             });
 
-            const json = await response.json();
+            const json = await response;
 
             expect(json).toEqual({
                 filters: {},
@@ -179,7 +189,7 @@ describe("Dashboard route", () => {
                 },
             });
 
-            const json = await response.json();
+            const json = await response;
 
             expect(json).toEqual({
                 filters: {},
@@ -193,11 +203,11 @@ describe("Dashboard route", () => {
 
     test("renders when no data", async () => {
         function loader() {
-            return json({
+            return {
                 siteId: "@unknown",
                 sites: [],
                 intervalType: "day",
-            });
+            };
         }
 
         const RemixStub = createRemixStub([
@@ -209,46 +219,46 @@ describe("Dashboard route", () => {
                     {
                         path: "/resources/timeseries",
                         loader: () => {
-                            return json({ chartData: [] });
+                            return { chartData: [] };
                         },
                     },
                     {
                         path: "/resources/stats",
                         loader: () => {
-                            return json({
+                            return {
                                 views: 0,
                                 visitors: 0,
-                            });
+                            };
                         },
                     },
                     {
                         path: "/resources/paths",
                         loader: () => {
-                            return json({ countsByProperty: [] });
+                            return { countsByProperty: [] };
                         },
                     },
                     {
                         path: "/resources/referrer",
                         loader: () => {
-                            return json({ countsByProperty: [] });
+                            return { countsByProperty: [] };
                         },
                     },
                     {
                         path: "/resources/browser",
                         loader: () => {
-                            return json({ countsByProperty: [] });
+                            return { countsByProperty: [] };
                         },
                     },
                     {
                         path: "/resources/country",
                         loader: () => {
-                            return json({ countsByProperty: [] });
+                            return { countsByProperty: [] };
                         },
                     },
                     {
                         path: "/resources/device",
                         loader: () => {
-                            return json({ countsByProperty: [] });
+                            return { countsByProperty: [] };
                         },
                     },
                 ],
@@ -288,7 +298,7 @@ describe("Dashboard route", () => {
 
     test("renders with valid data", async () => {
         function loader() {
-            return json({ ...defaultMockedLoaderJson });
+            return { ...defaultMockedLoaderJson };
         }
 
         const RemixStub = createRemixStub([
@@ -300,76 +310,76 @@ describe("Dashboard route", () => {
                     {
                         path: "/resources/stats",
                         loader: () => {
-                            return json({
+                            return {
                                 views: 2133,
                                 visitors: 33,
-                            });
+                            };
                         },
                     },
                     {
                         path: "/resources/timeseries",
                         loader: () => {
-                            return json({});
+                            return {};
                         },
                     },
                     {
                         path: "/resources/paths",
                         loader: () => {
-                            return json({
+                            return {
                                 countsByProperty: [
                                     ["/", 100],
                                     ["/about", 80],
                                     ["/contact", 60],
                                 ],
-                            });
+                            };
                         },
                     },
                     {
                         path: "/resources/referrer",
                         loader: () => {
-                            return json({
+                            return {
                                 countsByProperty: [
                                     ["google.com", 100],
                                     ["facebook.com", 80],
                                     ["twitter.com", 60],
                                 ],
-                            });
+                            };
                         },
                     },
                     {
                         path: "/resources/browser",
                         loader: () => {
-                            return json({
+                            return {
                                 countsByProperty: [
                                     ["Chrome", 100],
                                     ["Safari", 80],
                                     ["Firefox", 60],
                                 ],
-                            });
+                            };
                         },
                     },
                     {
                         path: "/resources/country",
                         loader: () => {
-                            return json({
+                            return {
                                 countsByProperty: [
                                     ["United States", 100],
                                     ["Canada", 80],
                                     ["United Kingdom", 60],
                                 ],
-                            });
+                            };
                         },
                     },
                     {
                         path: "/resources/device",
                         loader: () => {
-                            return json({
+                            return {
                                 countsByProperty: [
                                     ["Desktop", 100],
                                     ["Mobile", 80],
                                     ["Tablet", 60],
                                 ],
-                            });
+                            };
                         },
                     },
                 ],

@@ -62,10 +62,9 @@ describe("Resources/Referrer route", () => {
             });
 
             // expect redirect
-            expect(response.status).toBe(200);
             expect(fetch).toHaveBeenCalledTimes(2);
 
-            const json = await response.json();
+            const json = await response;
             expect(json).toEqual({
                 countsByProperty: [
                     ["/", 1, 6],
