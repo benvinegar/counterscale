@@ -1,0 +1,16 @@
+{
+  "name": "@counterscale/tracker",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "version": "2.2.2",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^6.0.4"
+  }
+}
