@@ -9,3 +9,7 @@ node_modules
 .dev.vars
 
 coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -42,11 +42,13 @@
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20240620.0",
+        "@playwright/test": "^1.49.1",
         "@remix-run/dev": "^2.9.2",
         "@remix-run/fs-routes": "^2.15.1",
         "@remix-run/route-config": "^2.15.1",
         "@remix-run/testing": "^2.15.1",
         "@testing-library/react": "^14.3.1",
+        "@types/node": "^22.10.2",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
         "@types/recharts": "^1.8.29",
