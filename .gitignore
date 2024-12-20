@@ -3,6 +3,7 @@ node_modules
 .cache
 .wrangler
 build
+dist
 public/build
 .env
 

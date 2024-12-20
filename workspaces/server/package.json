@@ -1,9 +1,9 @@
 {
-    "name": "counterscale",
+    "name": "@counterscale/server",
     "private": true,
     "sideEffects": false,
     "type": "module",
-    "version": "2.2.2",
+    "version": "2.3.0",
     "scripts": {
         "dev": "remix vite:dev",
         "build": "remix vite:build",
@@ -20,6 +20,7 @@
         "types:gen": "wrangler types"
     },
     "dependencies": {
+        "@counterscale/tracker": "*",
         "@cloudflare/kv-asset-handler": "^0.3.3",
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
