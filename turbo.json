@@ -10,6 +10,7 @@
             "cache": false,
             "persistent": true
         },
+        "test": {},
         "lint": {},
         "typecheck": {}
     }
