@@ -12,7 +12,8 @@
         "typescript": "^5.4.5"
     },
     "workspaces": [
-        "workspaces/*"
+        "workspaces/*",
+        "@counterscale/tracker"
     ],
     "packageManager": "npm@10.0.0",
     "prettier": {
