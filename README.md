@@ -20,6 +20,8 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. Enable [Cloudflare Analytics Engine beta](https://developers.cloudflare.com/analytics/analytics-engine/get-started/) for your account ([screenshot](https://github.com/benvinegar/counterscale/assets/4562878/ad1b5712-2344-4489-a684-685b876635d1))
     1. If this is your first time using Workers, you have to create a Worker before you can enable the Analytics Engine. Navigate to Workers & Pages > Overview, click the "Create Worker" button ([screenshot](./docs/create-worker.png)) to create a "Hello World" worker (it doesn't matter what you name this Worker as you can delete it later).
 1. Create a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions at a minimum ([screenshot](./docs/api-token.png)).
+1. Download the assets from the [Releases section](https://github.com/benvinegar/counterscale/releases) and extract them to your computer.
+1. Open the terminal and navigate to the folder where you extracted the files.
 1. Run `npm install`
 1. Run `npx wrangler pages project create counterscale` and create a new Pages project.
     1. If this is your first time invoking `wrangler` on the terminal, you will be prompted to sign into your Cloudflare account.
