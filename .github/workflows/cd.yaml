@@ -14,7 +14,7 @@ jobs:
               with:
                   node-version-file: "package.json"
             - run: npm install
-            - run: npm run build
+            - run: turbo build
             - uses: cloudflare/wrangler-action@v3
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

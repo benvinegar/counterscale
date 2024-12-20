@@ -12,6 +12,7 @@
         },
         "deploy": {},
         "test": {},
+        "test-ci": {},
         "lint": {},
         "typecheck": {}
     }
