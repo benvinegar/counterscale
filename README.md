@@ -30,14 +30,12 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. With your terminal, navigate to the folder containing the source files.
 1. Run `npm install`
 1. Run `npx wrangler pages project create counterscale` and create a new Pages project.
-    1. You will be prompted to enter the "production branch name". Just use the default provided.
+    1. You will be prompted to enter the "production branch name". Just use the default provided (e.g. "main" or "production").
     * _NOTE: If this is your first time invoking `wrangler` on the terminal, you will be prompted to sign into your Cloudflare account._
 1. Run `npx wrangler pages secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
 1. Run `npx wrangler pages secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
     * Find your account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
 1. Run `npm run deploy` – this will do several things:
-    1. Prompt you to create a new Cloudflare Pages project (`counterscale`)
-    1. Prompt you for the production branch name (default is your current branch, i.e. `main`)
     1. Create a new Analytics Engine dataset, called `metricsDataset`
     1. Deploy the site and give you the deployment URL.
 1. The site should now be deployed. Visit `https://{subdomain-emitted-from-npm-run-deploy}.pages.dev`.
