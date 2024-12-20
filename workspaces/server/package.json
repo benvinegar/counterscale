@@ -12,15 +12,15 @@
         "predeploy": "remix vite:build",
         "deploy": "wrangler pages deploy ./build/client",
         "prelint": "remix vite:build",
-        "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         "test": "TZ=EST vitest run",
         "test-ci": "TZ=EST vitest run --coverage",
         "typecheck": "tsc",
         "prepare": "husky",
-        "types:gen": "wrangler types"
+        "types:gen": "wrangler types",
+        "copy-tracker": "cp ./node_modules/@counterscale/tracker/dist/tracker.js ./build/tracker.js"
     },
     "dependencies": {
-        "@counterscale/tracker": "*",
         "@cloudflare/kv-asset-handler": "^0.3.3",
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
@@ -42,6 +42,7 @@
         "ua-parser-js": "^1.0.38"
     },
     "devDependencies": {
+        "@counterscale/tracker": "*",
         "@cloudflare/workers-types": "^4.20240620.0",
         "@remix-run/dev": "^2.9.2",
         "@remix-run/fs-routes": "^2.15.1",

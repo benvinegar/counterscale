@@ -12,5 +12,10 @@
   },
   "devDependencies": {
     "vite": "^6.0.4"
+  },
+  "exports": {
+    "./tracker": {
+      "default": "./dist/tracker.js"
+    }
   }
 }
