@@ -24,7 +24,7 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. Create a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions at a minimum ([screenshot](./docs/api-token.png)).
    * _WARNING: Keep this window open or copy your API token somewhere safe (e.g. a password manager), because if you close this window you will not be able to access this API token again and have to start over._
 
-### Deploy
+### Deploy Counterscale
 
 1. Download the [latest Counterscale release](https://github.com/benvinegar/counterscale/releases/latest) (or clone the repository) and extract the source files to a folder.
 1. With your terminal, navigate to the folder containing the source files.
@@ -42,15 +42,7 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. The site should now be deployed. Visit `https://{subdomain-emitted-from-npm-run-deploy}.pages.dev`.
     * NOTE: _It may take take a few minutes before the subdomain becomes live._
 
-### Troubleshooting
-
-If the website is not immediately available (e.g. "Secure Connection Failed"), it could be because Cloudflare has not yet activated your subdomain (yoursubdomain.workers.dev). This process can take a minute; you can check in on the progress by visiting the newly created worker in your Cloudflare dashboard (Workers & Pages → counterscale).
-
-### Custom Domains
-
-The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
-
-## Installing the Tracker
+### Install the Tracker Script on Your Website(s)
 
 When Counterscale is deployed, it makes `tracker.js` available at the URL you deployed to:
 
@@ -76,6 +68,14 @@ To start tracking website traffic on your web property, copy/paste the following
 ```
 
 Be sure to replace `your-unique-site-id` with a unique string/slug representing your web property. Use a unique site ID for each property you place the tracking script on.
+
+## Troubleshooting
+
+If the website is not immediately available (e.g. "Secure Connection Failed"), it could be because Cloudflare has not yet activated your subdomain (yoursubdomain.workers.dev). This process can take a minute; you can check in on the progress by visiting the newly created worker in your Cloudflare dashboard (Workers & Pages → counterscale).
+
+## Custom Domains
+
+The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
 ## Development
 
