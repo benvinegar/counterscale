@@ -1,21 +1,28 @@
 {
-  "name": "@counterscale/tracker",
-  "private": true,
-  "sideEffects": false,
-  "type": "module",
-  "version": "2.3.0",
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "scripts": {
-    "build": "vite build"
-  },
-  "devDependencies": {
-    "vite": "^6.0.4"
-  },
-  "exports": {
-    "./tracker": {
-      "default": "./dist/tracker.js"
+    "name": "@counterscale/tracker",
+    "private": true,
+    "sideEffects": false,
+    "type": "module",
+    "version": "2.3.0",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "build": "vite build",
+        "test": "playwright test",
+        "start": "node ./integration/server.cjs"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.49.1",
+        "@types/node": "^22.10.2",
+        "vite": "^6.0.4"
+    },
+    "exports": {
+        "./tracker": {
+            "default": "./dist/tracker.js"
+        }
+    },
+    "dependencies": {
+        "playwright": "^1.49.1"
     }
-  }
 }
