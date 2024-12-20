@@ -12,7 +12,9 @@ It's designed to be easy to deploy and maintain, and should cost you near-zero t
 
 **_NOTE: Counterscale is currently in very early development and shouldn't be used in any actual production setting. We welcome people trying it and giving feedback/contributing, but heads up this project is still super early._**
 
-## Deployment
+## Installation
+
+### Cloudflare Preparation
 
 If you don't have one already, [create a Cloudflare account here](https://dash.cloudflare.com/sign-up).
 
@@ -20,21 +22,25 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. Enable [Cloudflare Analytics Engine beta](https://developers.cloudflare.com/analytics/analytics-engine/get-started/) for your account ([screenshot](https://github.com/benvinegar/counterscale/assets/4562878/ad1b5712-2344-4489-a684-685b876635d1))
     1. If this is your first time using Workers, you have to create a Worker before you can enable the Analytics Engine. Navigate to Workers & Pages > Overview, click the "Create Worker" button ([screenshot](./docs/create-worker.png)) to create a "Hello World" worker (it doesn't matter what you name this Worker as you can delete it later).
 1. Create a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/). This token needs `Account.Account Analytics` permissions at a minimum ([screenshot](./docs/api-token.png)).
-1. Download the assets from the [Releases section](https://github.com/benvinegar/counterscale/releases) and extract them to your computer.
-1. Open the terminal and navigate to the folder where you extracted the files.
+   * _WARNING: Keep this window open or copy your API token somewhere safe (e.g. a password manager), because if you close this window you will not be able to access this API token again and have to start over._
+
+### Deploy
+
+1. Download the [latest Counterscale release](https://github.com/benvinegar/counterscale/releases/latest) (or clone the repository) and extract the source files to a folder.
+1. With your terminal, navigate to the folder containing the source files.
 1. Run `npm install`
 1. Run `npx wrangler pages project create counterscale` and create a new Pages project.
-    1. If this is your first time invoking `wrangler` on the terminal, you will be prompted to sign into your Cloudflare account.
+    * _If this is your first time invoking `wrangler` on the terminal, you will be prompted to sign into your Cloudflare account._
 1. Run `npx wrangler pages secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
 1. Run `npx wrangler pages secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
-    1. Find your account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
+    * Find your account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
 1. Run `npm run deploy` – this will do several things:
     1. Prompt you to create a new Cloudflare Pages project (`counterscale`)
     1. Prompt you for the production branch name (default is your current branch, i.e. `main`)
     1. Create a new Analytics Engine dataset, called `metricsDataset`
     1. Deploy the site and give you the deployment URL.
 1. The site should now be deployed. Visit `https://{subdomain-emitted-from-npm-run-deploy}.pages.dev`.
-    1. NOTE: _It may take take a few minutes before the subdomain becomes live._
+    * NOTE: _It may take take a few minutes before the subdomain becomes live._
 
 ### Troubleshooting
 
