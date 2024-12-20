@@ -10,6 +10,9 @@ http.createServer(function (req, res) {
     if (req.url === "/tracker.js") {
         res.writeHead(200, { "Content-Type": "application/javascript" });
         res.end(tracker);
+    } else if (req.url === "/collect") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end("{}");
     } else {
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(index);

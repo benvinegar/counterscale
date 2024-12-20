@@ -1,20 +1,14 @@
 import { test, expect } from "@playwright/test";
 
-test("has title", async ({ page }) => {
+test("tracks outbound requests", async ({ page }) => {
+    // Create a promise that will resolve when we see a request to /collect
+    const collectRequestPromise = page.waitForRequest((request) =>
+        request.url().includes("/collect"),
+    );
+
     await page.goto("http://localhost:3004");
 
-    // Expect a title "to contain" a substring.
-    await expect(page).toHaveTitle(/Tracker Test/);
+    // Wait for the request to /collect
+    const request = await collectRequestPromise;
+    expect(request).toBeTruthy();
 });
-
-// test("get started link", async ({ page }) => {
-//     await page.goto("https://playwright.dev/");
-
-//     // Click the get started link.
-//     await page.getByRole("link", { name: "Get started" }).click();
-
-//     // Expects page to have a heading with the name of Installation.
-//     await expect(
-//         page.getByRole("heading", { name: "Installation" }),
-//     ).toBeVisible();
-// });

@@ -5,6 +5,21 @@
     </head>
     <body>
         <h1>Tracker Test</h1>
-        <script src="/tracker.js"></script>
+
+        <script>
+            (function () {
+                window.counterscale = {
+                    q: [
+                        ["set", "siteId", "your-unique-site-id"],
+                        ["trackPageview"],
+                    ],
+                };
+            })();
+        </script>
+        <script
+            id="counterscale-script"
+            src="http://localhost:3004/tracker.js"
+            defer
+        ></script>
     </body>
 </html>
