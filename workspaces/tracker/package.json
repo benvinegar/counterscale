@@ -10,19 +10,20 @@
     "scripts": {
         "build": "vite build",
         "test": "playwright test",
-        "start": "node ./integration/server.cjs"
+        "start": "node ./integration/server.cjs",
+        "typecheck": "tsc"
     },
     "devDependencies": {
         "@playwright/test": "^1.49.1",
         "@types/node": "^22.10.2",
-        "vite": "^6.0.4"
+        "playwright": "^1.49.1",
+        "typescript": "^5.4.5",
+        "vite": "^6.0.4",
+        "vite-tsconfig-paths": "^5.1.4"
     },
     "exports": {
         "./tracker": {
             "default": "./dist/tracker.js"
         }
-    },
-    "dependencies": {
-        "playwright": "^1.49.1"
     }
 }
