@@ -13,8 +13,7 @@ jobs:
               with:
                   node-version-file: "package.json"
             - run: npm install
-            - run: turbo lint build typecheck
-            - run: turbo test-ci
+            - run: npx turbo lint build typecheck test-ci --concurrency=1
             - name: Upload coverage reports to Codecov
               uses: codecov/codecov-action@v3
               env:
