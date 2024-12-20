@@ -6,7 +6,8 @@
     "lint": "turbo run lint"
   },
   "devDependencies": {
-    "turbo": "latest"
+    "turbo": "latest",
+    "typescript": "^5.4.5"
   },
   "workspaces": [
     "workspaces/*"
