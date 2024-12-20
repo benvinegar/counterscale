@@ -1,16 +1,21 @@
 {
-  "private": true,
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint"
-  },
-  "devDependencies": {
-    "turbo": "latest",
-    "typescript": "^5.4.5"
-  },
-  "workspaces": [
-    "workspaces/*"
-  ],
-  "packageManager": "npm@10.0.0"
+    "private": true,
+    "scripts": {
+        "build": "turbo run build",
+        "dev": "turbo run dev",
+        "lint": "turbo run lint"
+    },
+    "devDependencies": {
+        "eslint-config-prettier": "^9.1.0",
+        "prettier": "^3.3.2",
+        "turbo": "latest",
+        "typescript": "^5.4.5"
+    },
+    "workspaces": [
+        "workspaces/*"
+    ],
+    "packageManager": "npm@10.0.0",
+    "prettier": {
+        "tabWidth": 4
+    }
 }
