@@ -5,7 +5,9 @@
     "type": "module",
     "version": "2.3.0",
     "scripts": {
+        "predev": "cp ../tracker/dist/tracker.js ./public/tracker.js",
         "dev": "remix vite:dev",
+        "prebuild": "cp ../tracker/dist/tracker.js ./public/tracker.js",
         "build": "remix vite:build",
         "prepreview": "remix vite:build",
         "preview": "wrangler pages dev ./build/client",
