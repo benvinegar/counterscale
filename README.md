@@ -30,7 +30,8 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. With your terminal, navigate to the folder containing the source files.
 1. Run `npm install`
 1. Run `npx wrangler pages project create counterscale` and create a new Pages project.
-    * _If this is your first time invoking `wrangler` on the terminal, you will be prompted to sign into your Cloudflare account._
+    1. You will be prompted to enter the "production branch name". Just use the default provided.
+    * _NOTE: If this is your first time invoking `wrangler` on the terminal, you will be prompted to sign into your Cloudflare account._
 1. Run `npx wrangler pages secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
 1. Run `npx wrangler pages secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
     * Find your account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
