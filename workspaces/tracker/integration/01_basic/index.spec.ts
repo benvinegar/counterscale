@@ -6,7 +6,7 @@ test("tracks outbound requests", async ({ page }) => {
         request.url().includes("/collect"),
     );
 
-    await page.goto("http://localhost:3004");
+    await page.goto("http://localhost:3004/01_basic/");
 
     // Wait for the request to /collect
     const request = await collectRequestPromise;
@@ -18,6 +18,6 @@ test("tracks outbound requests", async ({ page }) => {
     const params = new URLSearchParams(url.split("?")[1]);
     expect(params.get("sid")).toBe("your-unique-site-id");
     expect(params.get("h")).toBe("http://localhost"); // drops port
-    expect(params.get("p")).toBe("/");
+    expect(params.get("p")).toBe("/01_basic/");
     expect(params.get("r")).toBe("");
 });

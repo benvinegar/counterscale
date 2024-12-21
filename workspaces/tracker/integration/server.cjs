@@ -3,18 +3,39 @@ var fs = require("fs");
 var path = require("path");
 
 var tracker = fs.readFileSync(path.join(__dirname, "../dist/tracker.js"));
-var index = fs.readFileSync(path.join(__dirname, "./index.html"));
+
+const PORT = 3004;
 
 http.createServer(function (req, res) {
-    // get the url
-    if (req.url === "/tracker.js") {
+    console.log("Request for " + req.url + " received");
+    const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+
+    if (requestUrl.pathname === "/tracker.js") {
         res.writeHead(200, { "Content-Type": "application/javascript" });
         res.end(tracker);
-    } else if (req.url === "/collect") {
+    } else if (requestUrl.pathname === "/collect") {
+        // no-op writes to /collect
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end("{}");
+    } else if (requestUrl.pathname.indexOf("..") !== -1) {
+        res.writeHead(404, { "Content-Type": "text/html" });
+        res.end("Not found");
     } else {
+        const resolvedUrl = req.url.endsWith("/")
+            ? req.url + "index.html"
+            : req.url;
+        const filePath = path.join(__dirname, resolvedUrl);
+        let file;
+        try {
+            file = fs.readFileSync(filePath);
+        } catch (e) {
+            res.writeHead(404, { "Content-Type": "text/html" });
+            res.end("Not found");
+            return;
+        }
         res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(index);
+        res.end(file);
     }
-}).listen(3004);
+}).listen(PORT);
+
+console.log(`Server running at http://localhost:${PORT}/`);
