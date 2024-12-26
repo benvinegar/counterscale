@@ -111,6 +111,7 @@ export function collectRequestHandler(request: Request, env: Env) {
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
+        browserVersion: parsedUserAgent.getBrowser().version,
         deviceModel: parsedUserAgent.getDevice().model,
     };
 
@@ -157,6 +158,7 @@ interface DataPoint {
     country?: string;
     referrer?: string;
     browserName?: string;
+    browserVersion?: string;
     deviceModel?: string;
 
     // doubles
@@ -183,6 +185,7 @@ export function writeDataPoint(
             data.browserName || "", // blob6
             data.deviceModel || "", // blob7
             data.siteId || "", // blob8
+            data.browserVersion || "", // blob9
         ],
         doubles: [data.newVisitor || 0, data.newSession || 0, data.bounce],
     };

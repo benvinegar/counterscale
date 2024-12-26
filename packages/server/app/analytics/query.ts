@@ -131,6 +131,7 @@ function filtersToSql(filters: SearchFilters) {
         "path",
         "referrer",
         "browserName",
+        "browserVersion",
         "country",
         "deviceModel",
     ];
@@ -654,6 +655,23 @@ export class AnalyticsEngineAPI {
         );
     }
 
+    async getCountByBrowserVersion(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ): Promise<[browser: string, visitors: number][]> {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "browserVersion",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
     async getCountByDevice(
         siteId: string,
         interval: string,
@@ -725,7 +743,7 @@ export class AnalyticsEngineAPI {
         earliestBounce: Date | null;
     }> {
         const query = `
-            SELECT 
+            SELECT
                 MIN(timestamp) as earliestEvent,
                 ${ColumnMappings.bounce} as isBounce
             FROM metricsDataset

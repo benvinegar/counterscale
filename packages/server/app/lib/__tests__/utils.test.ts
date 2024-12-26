@@ -11,7 +11,7 @@ dayjs.extend(timezone);
 describe("getFiltersFromSearchParams", () => {
     test("it should return an object with the correct keys", () => {
         const searchParams = new URLSearchParams(
-            "?path=/about&referrer=google.com&deviceModel=iphone&country=us&browserName=chrome",
+            "?path=/about&referrer=google.com&deviceModel=iphone&country=us&browserName=chrome&browserVersion=118",
         );
         expect(getFiltersFromSearchParams(searchParams)).toEqual({
             path: "/about",
@@ -19,6 +19,7 @@ describe("getFiltersFromSearchParams", () => {
             deviceModel: "iphone",
             country: "us",
             browserName: "chrome",
+            browserVersion: "118",
         });
     });
 

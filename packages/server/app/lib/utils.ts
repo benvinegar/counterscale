@@ -26,6 +26,7 @@ interface SearchFilters {
     deviceModel?: string;
     country?: string;
     browserName?: string;
+    browserVersion?: string;
 }
 
 export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
@@ -45,6 +46,9 @@ export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
     }
     if (searchParams.has("browserName")) {
         filters.browserName = searchParams.get("browserName") || "";
+    }
+    if (searchParams.has("browserVersion")) {
+        filters.browserVersion = searchParams.get("browserVersion") || "";
     }
 
     return filters;

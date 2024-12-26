@@ -22,6 +22,7 @@ export const ColumnMappings = {
     browserName: "blob6",
     deviceModel: "blob7",
     siteId: "blob8",
+    browserVersion: "blob9",
 
     /**
      * doubles
