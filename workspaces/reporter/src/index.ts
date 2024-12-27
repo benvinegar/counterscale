@@ -72,11 +72,11 @@ function stringifyObject(obj: { [key: string]: string }) {
     );
 }
 
-function findReporterUrl() {
+function findReporterScript() {
     const el = document.getElementById(
         "counterscale-script",
     ) as HTMLScriptElement;
-    return el ? el.src.replace("reporter.js", "collect") : "";
+    return el;
 }
 
 function reportPageview(vars: { [key: string]: string }) {
@@ -138,6 +138,8 @@ function reportPageview(vars: { [key: string]: string }) {
     // strip query string from referrer
     referrer = referrer.split("?")[0];
 
+    let script = findReporterScript();
+
     const d = {
         p: path,
         h: hostname,
@@ -145,7 +147,10 @@ function reportPageview(vars: { [key: string]: string }) {
         sid: config.siteId !== undefined ? config.siteId : "", // Ensure sid is always a string
     };
 
-    let url = config.reporterUrl || findReporterUrl();
+    let url =
+        config.reporterUrl ||
+        (script ? script.src.replace("reporter.js", "collect") : "");
+
     let img = document.createElement("img");
     img.setAttribute("alt", "");
     img.setAttribute("aria-hidden", "true");
@@ -187,3 +192,14 @@ queue.forEach(function (i: QueueEntry) {
     // @ts-expect-error
     counterscale.apply(this, i);
 });
+
+(() => {
+    const script = findReporterScript();
+
+    // new api; auto report pageview
+    const siteId = script.getAttribute("data-site-id");
+    if (siteId) {
+        set("siteId", siteId);
+        reportPageview({});
+    }
+})();
