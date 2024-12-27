@@ -74,7 +74,7 @@ The deployment URL can always be changed to go behind a custom domain you own. [
 
 ### Config
 
-To get started, in the `workspaces/server` folder, copy `.dev.vars.example` to `.dev.vars`.
+To get started, in the `packages/server` folder, copy `.dev.vars.example` to `.dev.vars`.
 
 Open `.dev.vars` and enter the same values for `CF_BEARER_TOKEN` and `CF_ACCOUNT_ID` you used earlier.
 

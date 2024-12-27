@@ -12,7 +12,7 @@
         "wrangler": "^3.61.0"
     },
     "workspaces": [
-        "workspaces/*",
+        "packages/*",
         "@counterscale/reporter"
     ],
     "packageManager": "npm@10.0.0",
