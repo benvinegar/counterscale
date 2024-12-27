@@ -5,9 +5,9 @@
     "type": "module",
     "version": "2.3.0",
     "scripts": {
-        "predev": "cp ../tracker/dist/tracker.js ./public/tracker.js",
+        "predev": "npm run copy-reporter",
         "dev": "remix vite:dev",
-        "prebuild": "cp ../tracker/dist/tracker.js ./public/tracker.js",
+        "prebuild": "npm run copy-reporter",
         "build": "remix vite:build",
         "prepreview": "remix vite:build",
         "preview": "wrangler pages dev ./build/client",
@@ -20,10 +20,11 @@
         "typecheck": "tsc",
         "prepare": "husky",
         "types:gen": "wrangler types",
-        "copy-tracker": "cp ./node_modules/@counterscale/tracker/dist/tracker.js ./build/tracker.js"
+        "copy-reporter": "cp ../reporter/dist/reporter.js ./public/reporter.js && cp ../reporter/dist/reporter.js ./public/tracker.js"
     },
     "dependencies": {
         "@cloudflare/kv-asset-handler": "^0.3.3",
+        "@counterscale/reporter": "*",
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
         "@remix-run/cloudflare": "^2.15.1",
@@ -43,7 +44,6 @@
         "ua-parser-js": "^1.0.38"
     },
     "devDependencies": {
-        "@counterscale/tracker": "*",
         "@cloudflare/workers-types": "^4.20240620.0",
         "@remix-run/dev": "^2.9.2",
         "@remix-run/fs-routes": "^2.15.1",

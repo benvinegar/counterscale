@@ -13,7 +13,7 @@
     },
     "workspaces": [
         "workspaces/*",
-        "@counterscale/tracker"
+        "@counterscale/reporter"
     ],
     "packageManager": "npm@10.0.0",
     "prettier": {

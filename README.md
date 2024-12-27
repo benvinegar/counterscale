@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/benvinegar/counterscale)](https://github.com/benvinegar/counterscale/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/benvinegar/counterscale/graph/badge.svg?token=NUHURNB682)](https://codecov.io/gh/benvinegar/counterscale)
 
-Counterscale is a simple web analytics tracker and dashboard that you self-host on Cloudflare.
+Counterscale is a simple web analytics reporter and dashboard that you self-host on Cloudflare.
 
 It's designed to be easy to deploy and maintain, and should cost you near-zero to operate – even at high levels of traffic (Cloudflare's [free tier](https://developers.cloudflare.com/workers/platform/pricing/#workers) could hypothetically support up to 100k hits/day).
 
@@ -41,27 +41,27 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. The site should now be deployed. Visit `https://{subdomain-emitted-from-npm-run-deploy}.pages.dev`.
     - NOTE: _It may take take a few minutes before the subdomain becomes live._
 
-### Install the Tracker Script on Your Website(s)
+### Install the Reporting Script on Your Website(s)
 
-When Counterscale is deployed, it makes `tracker.js` available at the URL you deployed to:
+When Counterscale is deployed, it makes `reporter.js` available at the URL you deployed to:
 
 ```
-https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/tracker.js
+https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/reporter.js
 ```
 
-To start tracking website traffic on your web property, copy/paste the following snippet into your website HTML:
+To start reporting website traffic from your web property, copy/paste the following snippet into your website HTML:
 
 ```html
 <script>
     (function () {
         window.counterscale = {
-            q: [["set", "siteId", "your-unique-site-id"], ["trackPageview"]],
+            q: [["set", "siteId", "your-unique-site-id"], ["reportPageview"]],
         };
     })();
 </script>
 <script
     id="counterscale-script"
-    src="https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/tracker.js"
+    src="https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/reporter.js"
     defer
 ></script>
 ```
