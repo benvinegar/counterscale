@@ -1,0 +1,30 @@
+{
+    "name": "@counterscale/reporter",
+    "private": true,
+    "sideEffects": false,
+    "type": "module",
+    "version": "2.3.0",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "build": "vite build",
+        "pretest": "npm run build",
+        "test": "playwright test",
+        "start": "node ./integration/server.cjs",
+        "typecheck": "tsc"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.49.1",
+        "@types/node": "^22.10.2",
+        "playwright": "^1.49.1",
+        "typescript": "^5.4.5",
+        "vite": "^6.0.4",
+        "vite-tsconfig-paths": "^5.1.4"
+    },
+    "exports": {
+        "./reporter": {
+            "default": "./dist/reporter.js"
+        }
+    }
+}

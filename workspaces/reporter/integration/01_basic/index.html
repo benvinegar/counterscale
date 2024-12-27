@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Reporter Test</title>
+    </head>
+    <body>
+        <script>
+            (function () {
+                window.counterscale = {
+                    q: [
+                        ["set", "siteId", "your-unique-site-id"],
+                        ["reportPageview"],
+                    ],
+                };
+            })();
+        </script>
+        <script
+            id="counterscale-script"
+            src="http://localhost:3004/reporter.js"
+            defer
+        ></script>
+    </body>
+</html>
