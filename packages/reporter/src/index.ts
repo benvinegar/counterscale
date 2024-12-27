@@ -33,7 +33,7 @@ SOFTWARE.
 
 "use strict";
 
-let queue = (window.counterscale && window.counterscale.q) || [];
+const queue = (window.counterscale && window.counterscale.q) || [];
 
 type ConfigType = {
     siteId?: string;
@@ -60,7 +60,7 @@ function setReporterUrl(value: string) {
 
 // convert object to query string
 function stringifyObject(obj: { [key: string]: string }) {
-    var keys = Object.keys(obj);
+    const keys = Object.keys(obj);
 
     return (
         "?" +
@@ -107,11 +107,11 @@ function reportPageview(vars: { [key: string]: string }) {
     }
 
     // find canonical URL
-    let canonical = document.querySelector(
+    const canonical = document.querySelector(
         'link[rel="canonical"][href]',
     ) as HTMLLinkElement;
     if (canonical) {
-        let a = document.createElement("a");
+        const a = document.createElement("a");
         a.href = canonical.href;
 
         // use parsed canonical as location object
@@ -128,7 +128,7 @@ function reportPageview(vars: { [key: string]: string }) {
     path = path.split("?")[0];
 
     // determine hostname
-    let hostname = vars.hostname || req.protocol + "//" + req.hostname;
+    const hostname = vars.hostname || req.protocol + "//" + req.hostname;
 
     // only set referrer if not internal
     let referrer = vars.referrer || "";
@@ -138,7 +138,7 @@ function reportPageview(vars: { [key: string]: string }) {
     // strip query string from referrer
     referrer = referrer.split("?")[0];
 
-    let script = findReporterScript();
+    const script = findReporterScript();
 
     const d = {
         p: path,
@@ -147,11 +147,11 @@ function reportPageview(vars: { [key: string]: string }) {
         sid: config.siteId !== undefined ? config.siteId : "", // Ensure sid is always a string
     };
 
-    let url =
+    const url =
         config.reporterUrl ||
         (script ? script.src.replace("reporter.js", "collect") : "");
 
-    let img = document.createElement("img");
+    const img = document.createElement("img");
     img.setAttribute("alt", "");
     img.setAttribute("aria-hidden", "true");
     img.setAttribute("style", "position:absolute");
@@ -176,21 +176,24 @@ function reportPageview(vars: { [key: string]: string }) {
 }
 
 // override global counterscale object
-const counterscale = (window.counterscale = function () {
-    var args = [].slice.call(arguments) as QueueEntry;
-    var c = args.shift();
+const counterscale = (window.counterscale = function (...args: Command) {
+    const cmd = args[0];
+    const commandFn = commands[cmd];
 
-    // @ts-expect-error
-    commands[c].apply(this, args);
+    if (typeof commandFn === "function") {
+        /* @ts-expect-error really just can't figure out how to type this call */
+        commandFn.apply(this, args.slice(1));
+    }
 });
 
 // process existing queue
 
-type QueueEntry = Array<[string, ...unknown[]]>;
+type CommandName = keyof typeof commands;
+type CommandArgs = string[];
+type Command = [CommandName, ...CommandArgs];
 
-queue.forEach(function (i: QueueEntry) {
-    // @ts-expect-error
-    counterscale.apply(this, i);
+queue.forEach(function (cmd: Command) {
+    counterscale.apply(window, cmd);
 });
 
 (() => {

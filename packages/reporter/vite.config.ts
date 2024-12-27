@@ -11,6 +11,7 @@ export default defineConfig({
         },
     },
     plugins: [
+        tsconfigPaths(),
         {
             name: "wrap-in-iife",
             generateBundle(outputOptions, bundle) {

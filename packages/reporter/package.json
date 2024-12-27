@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "vite build",
+        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         "pretest": "npm run build",
         "test": "playwright test",
         "start": "node ./integration/server.cjs",
@@ -17,7 +18,11 @@
     "devDependencies": {
         "@playwright/test": "^1.49.1",
         "@types/node": "^22.10.2",
-        "playwright": "^1.49.1",
+        "@typescript-eslint/eslint-plugin": "^7.13.1",
+        "@typescript-eslint/parser": "^7.13.1",
+        "eslint": "^8.56.0",
+        "eslint-import-resolver-typescript": "^3.6.1",
+        "eslint-plugin-import": "^2.29.1",
         "typescript": "^5.4.5",
         "vite": "^6.0.4",
         "vite-tsconfig-paths": "^5.1.4"
