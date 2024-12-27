@@ -5,7 +5,7 @@ test("tracks outbound requests", async ({ page }) => {
     const collectRequestPromise = page.waitForRequest((request) =>
         request.url().includes("/collect"),
     );
-    await page.goto("http://localhost:3004/02_dataAttrs/");
+    await page.goto("http://localhost:3004/02_dataAttrsInit/");
     // Wait for the request to /collect
     const request = await collectRequestPromise;
     expect(request).toBeTruthy();
@@ -14,6 +14,6 @@ test("tracks outbound requests", async ({ page }) => {
     const params = new URLSearchParams(url.split("?")[1]);
     expect(params.get("sid")).toBe("your-unique-site-id");
     expect(params.get("h")).toBe("http://localhost"); // drops port
-    expect(params.get("p")).toBe("/02_dataAttrs/");
+    expect(params.get("p")).toBe("/02_dataAttrsInit/");
     expect(params.get("r")).toBe("");
 });
