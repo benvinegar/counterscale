@@ -1,4 +1,8 @@
-import { getFiltersFromSearchParams, getDateTimeRange } from "../utils";
+import {
+    getFiltersFromSearchParams,
+    getDateTimeRange,
+    maskBrowserVersion,
+} from "../utils";
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -89,5 +93,21 @@ describe("getDateTimeRange", () => {
         expect(tokyo.startDate).toEqual(new Date("2024-01-15T15:00:00Z"));
         // London's start date should be Jan 15 00:00 UTC
         expect(london.startDate).toEqual(new Date("2024-01-15T00:00:00Z"));
+    });
+});
+
+describe("maskBrowserVersion", () => {
+    const browserVersions = [
+        ["Microsoft Edge", "119.0.0.0", "119.x.x.x"],
+        ["Google Chrome", "119.0.0.0", "119.x.x.x"],
+        ["Mozilla Firefox", "119.0", "119.x"],
+        ["Safari", "605.1.15", "605.x.x"],
+        ["DuckDuckGo", "5", "5"],
+        ["Brave", "129.0.6668.54", "129.x.x.x"],
+        ["Opera", "117.0.0.0", "117.x.x.x"],
+    ];
+
+    test.each(browserVersions)("%s", (_, version, expected) => {
+        expect(maskBrowserVersion(version)).toEqual(expected);
     });
 });

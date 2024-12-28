@@ -112,3 +112,17 @@ export function getDateTimeRange(interval: string, tz: string) {
         endDate: localEndDateTime.toDate(),
     };
 }
+
+export function maskBrowserVersion(version?: string) {
+    if (!version) return version;
+
+    const majorEnd = version.indexOf(".");
+
+    if (majorEnd != -1) {
+        version =
+            version.substring(0, majorEnd) +
+            version.slice(majorEnd).replaceAll(/\.[^.]+/g, ".x");
+    }
+
+    return version;
+}

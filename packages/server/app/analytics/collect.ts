@@ -1,6 +1,7 @@
 import { UAParser } from "ua-parser-js";
 
 import type { RequestInit } from "@cloudflare/workers-types";
+import { maskBrowserVersion } from "~/lib/utils";
 
 // Cookieless visitor/session tracking
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
@@ -100,6 +101,10 @@ export function collectRequestHandler(request: Request, env: Env) {
         ifModifiedSince ? new Date(ifModifiedSince) : null,
     );
 
+    const browserVersion = maskBrowserVersion(
+        parsedUserAgent.getBrowser().version,
+    );
+
     const data: DataPoint = {
         siteId: params.sid,
         host: params.h,
@@ -111,7 +116,7 @@ export function collectRequestHandler(request: Request, env: Env) {
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
-        browserVersion: parsedUserAgent.getBrowser().version,
+        browserVersion: browserVersion,
         deviceModel: parsedUserAgent.getDevice().model,
     };
 
