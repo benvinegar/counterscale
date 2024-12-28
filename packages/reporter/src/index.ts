@@ -44,17 +44,15 @@ const config: ConfigType = {};
 
 const commands = {
     set: set,
-    reportPageview: reportPageview,
-    trackPageview: reportPageview, // backwards compat
-    setReporterUrl: setReporterUrl,
-    setTrackerUrl: setReporterUrl, // backwards compat
+    trackPageview: trackPageview, // backwards compat
+    setTrackerUrl: setTrackerUrl, // backwards compat
 };
 
 function set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
     config[key] = value;
 }
 
-function setReporterUrl(value: string) {
+function setTrackerUrl(value: string) {
     return set("reporterUrl", value);
 }
 
@@ -79,7 +77,7 @@ function findReporterScript() {
     return el;
 }
 
-function reportPageview(vars: { [key: string]: string }) {
+function trackPageview(vars: { [key: string]: string }) {
     vars = vars || {};
 
     // ignore prerendered pages
@@ -93,7 +91,7 @@ function reportPageview(vars: { [key: string]: string }) {
     // if <body> did not load yet, try again at dom ready event
     if (document.body === null) {
         document.addEventListener("DOMContentLoaded", () => {
-            reportPageview(vars);
+            trackPageview(vars);
         });
         return;
     }
@@ -203,6 +201,6 @@ queue.forEach(function (cmd: Command) {
     const siteId = script.getAttribute("data-site-id");
     if (siteId) {
         set("siteId", siteId);
-        reportPageview({});
+        trackPageview({});
     }
 })();
