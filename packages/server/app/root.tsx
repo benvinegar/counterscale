@@ -73,11 +73,10 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
                 <ScrollRestoration />
                 <Scripts />
                 <script
-                    dangerouslySetInnerHTML={{
-                        __html: "window.counterscale = {'q': [['set', 'siteId', 'counterscale-dev'], ['trackPageview']] };",
-                    }}
+                    id="counterscale-script"
+                    data-site-id="counterscale-dev"
+                    src="/tracker.js"
                 ></script>
-                <script id="counterscale-script" src="/tracker.js"></script>
             </body>
         </html>
     );
