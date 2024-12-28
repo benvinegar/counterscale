@@ -15,10 +15,17 @@
             "cache": false,
             "persistent": true
         },
-        "deploy": {},
+        "deploy": {
+            "dependsOn": ["build"],
+            "cache": false
+        },
         "test": {},
         "test-ci": {},
-        "lint": {},
-        "typecheck": {}
+        "lint": {
+            "dependsOn": ["build"]
+        },
+        "typecheck": {
+            "dependsOn": ["build"]
+        }
     }
 }
