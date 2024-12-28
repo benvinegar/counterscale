@@ -52,7 +52,9 @@ https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/tracker.js
 To start reporting website traffic from your web property, copy/paste the following snippet into your website HTML:
 
 ```html
-<script 
+<script
+    id="counterscale-script"
+    data-site-id="your-unique-site-id"
     src="https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/tracker.js"
     defer
 ></script>
