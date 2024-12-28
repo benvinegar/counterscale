@@ -5,9 +5,9 @@
     "type": "module",
     "version": "2.3.0",
     "scripts": {
-        "predev": "npm run copy-reporter",
+        "predev": "npm run copy-tracker",
         "dev": "remix vite:dev",
-        "prebuild": "npm run copy-reporter",
+        "prebuild": "npm run copy-tracker",
         "build": "remix vite:build",
         "prepreview": "remix vite:build",
         "preview": "wrangler pages dev ./build/client",
@@ -21,11 +21,11 @@
         "typecheck": "tsc",
         "prepare": "husky",
         "types:gen": "wrangler types",
-        "copy-reporter": "cp ../reporter/dist/reporter.js ./public/reporter.js && cp ../reporter/dist/reporter.js ./public/tracker.js"
+        "copy-tracker": "cp ../tracker/dist/tracker.js ./public/tracker.js"
     },
     "dependencies": {
         "@cloudflare/kv-asset-handler": "^0.3.3",
-        "@counterscale/reporter": "*",
+        "@counterscale/tracker": "*",
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
         "@remix-run/cloudflare": "^2.15.1",

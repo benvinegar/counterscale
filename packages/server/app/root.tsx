@@ -77,7 +77,7 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
                         __html: "window.counterscale = {'q': [['set', 'siteId', 'counterscale-dev'], ['trackPageview']] };",
                     }}
                 ></script>
-                <script id="counterscale-script" src="/reporter.js"></script>
+                <script id="counterscale-script" src="/tracker.js"></script>
             </body>
         </html>
     );

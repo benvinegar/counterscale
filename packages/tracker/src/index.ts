@@ -147,7 +147,7 @@ function trackPageview(vars: { [key: string]: string }) {
 
     const url =
         config.reporterUrl ||
-        (script ? script.src.replace("reporter.js", "collect") : "");
+        (script ? script.src.replace("tracker.js", "collect") : "");
 
     const img = document.createElement("img");
     img.setAttribute("alt", "");
