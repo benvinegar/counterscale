@@ -1,6 +1,6 @@
 # Counterscale
 
-![](/public/counterscale-logo-300x300.webp)
+![](/packages/server/public/counterscale-logo-300x300.webp)
 
 ![ci status](https://github.com/benvinegar/counterscale/actions/workflows/ci.yaml/badge.svg)
 [![License](https://img.shields.io/github/license/benvinegar/counterscale)](https://github.com/benvinegar/counterscale/blob/master/LICENSE)
