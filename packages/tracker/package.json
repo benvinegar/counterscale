@@ -1,0 +1,35 @@
+{
+    "name": "@counterscale/tracker",
+    "private": true,
+    "sideEffects": false,
+    "type": "module",
+    "version": "2.3.0",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "build": "vite build",
+        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+        "pretest": "npm run build",
+        "test": "playwright test",
+        "start": "node ./integration/server.cjs",
+        "typecheck": "tsc"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.49.1",
+        "@types/node": "^22.10.2",
+        "@typescript-eslint/eslint-plugin": "^8.18.2",
+        "@typescript-eslint/parser": "^8.18.2",
+        "eslint": "^8.56.0",
+        "eslint-import-resolver-typescript": "^3.6.1",
+        "eslint-plugin-import": "^2.29.1",
+        "typescript": "^5.7.2",
+        "vite": "^6.0.4",
+        "vite-tsconfig-paths": "^5.1.4"
+    },
+    "exports": {
+        "./tracker": {
+            "default": "./dist/tracker.js"
+        }
+    }
+}

@@ -11,8 +11,6 @@ echo "$FILES" | xargs ./node_modules/.bin/prettier --ignore-unknown --write
 # Add back the modified/prettified files to staging
 echo "$FILES" | xargs git add
 
-npm test
-npm run lint
-npm run typecheck
+npx turbo test lint typecheck --concurrency=1
 
 exit 0

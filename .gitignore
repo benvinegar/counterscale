@@ -1,11 +1,13 @@
 node_modules
 
-/.cache
-/.wrangler
-/build
-/public/build
+.cache
+.wrangler
+build
+dist
+public/build
 .env
 
 .dev.vars
 
 coverage
+.turbo
