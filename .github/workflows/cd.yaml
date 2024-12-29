@@ -19,3 +19,4 @@ jobs:
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   command: pages deploy ./build/client
+                  workingDirectory: "packages/server"
