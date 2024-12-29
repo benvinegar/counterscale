@@ -4,24 +4,21 @@
     "sideEffects": false,
     "type": "module",
     "version": "2.3.0",
+    "engines": {
+        "node": ">=20.0.0"
+    },
     "scripts": {
-        "predev": "npm run copy-tracker",
         "dev": "remix vite:dev",
-        "prebuild": "npm run copy-tracker",
         "build": "remix vite:build",
-        "prepreview": "remix vite:build",
         "preview": "wrangler pages dev ./build/client",
-        "predeploy": "npm run build",
         "deploy": "wrangler pages deploy ./build/client",
-        "prelint": "npm run build",
         "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         "test": "TZ=EST vitest run",
         "test-ci": "TZ=EST vitest run --coverage",
-        "pretypecheck": "npm run build",
         "typecheck": "tsc",
         "prepare": "husky",
         "types:gen": "wrangler types",
-        "copy-tracker": "cp ../tracker/dist/tracker.js ./public/tracker.js"
+        "copytracker": "cp ../tracker/dist/tracker.js ./public/tracker.js"
     },
     "dependencies": {
         "@cloudflare/kv-asset-handler": "^0.3.3",
@@ -78,9 +75,6 @@
         "vitest": "2.1",
         "vitest-dom": "^0.1.1",
         "wrangler": "^3.61.0"
-    },
-    "engines": {
-        "node": ">=20.0.0"
     },
     "postcss": {
         "plugins": {

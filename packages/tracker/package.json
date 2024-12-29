@@ -10,7 +10,6 @@
     "scripts": {
         "build": "vite build",
         "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-        "pretest": "npm run build",
         "test": "playwright test",
         "start": "node ./integration/server.cjs",
         "typecheck": "tsc"

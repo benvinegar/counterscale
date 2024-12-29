@@ -1,12 +1,21 @@
 {
     "$schema": "https://turbo.build/schema.json",
     "tasks": {
-        "build": {
-            "dependsOn": ["^build"],
-            "inputs": ["$TURBO_DEFAULT$", ".env*"]
+        "@counterscale/tracker#build": {
+            "outputs": ["dist/**"]
+        },
+        "@counterscale/server#build": {
+            "dependsOn": ["^build", "@counterscale/server#copytracker"],
+            "inputs": ["$TURBO_DEFAULT$", ".dev.vars"],
+            "outputs": ["build/**"]
+        },
+        "@counterscale/server#copytracker": {
+            "dependsOn": ["^@counterscale/tracker#build"],
+            "outputs": ["public/tracker.js"]
         },
         "dev": {
-            "dependsOn": ["build"],
+            "dependsOn": ["^@counterscale/server#copytracker"],
+            "inputs": ["$TURBO_DEFAULT$", ".dev.vars"],
             "cache": false,
             "persistent": true
         },
