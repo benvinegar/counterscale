@@ -26,6 +26,7 @@ interface SearchFilters {
     deviceModel?: string;
     country?: string;
     browserName?: string;
+    browserVersion?: string;
 }
 
 export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
@@ -45,6 +46,9 @@ export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
     }
     if (searchParams.has("browserName")) {
         filters.browserName = searchParams.get("browserName") || "";
+    }
+    if (searchParams.has("browserVersion")) {
+        filters.browserVersion = searchParams.get("browserVersion") || "";
     }
 
     return filters;
@@ -107,4 +111,18 @@ export function getDateTimeRange(interval: string, tz: string) {
         startDate: localDateTime.toDate(),
         endDate: localEndDateTime.toDate(),
     };
+}
+
+export function maskBrowserVersion(version?: string) {
+    if (!version) return version;
+
+    const majorEnd = version.indexOf(".");
+
+    if (majorEnd != -1) {
+        version =
+            version.substring(0, majorEnd) +
+            version.slice(majorEnd).replaceAll(/\.[^.]+/g, ".x");
+    }
+
+    return version;
 }

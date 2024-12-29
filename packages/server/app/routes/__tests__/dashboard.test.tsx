@@ -261,6 +261,12 @@ describe("Dashboard route", () => {
                             return { countsByProperty: [] };
                         },
                     },
+                    {
+                        path: "/resources/browserversion",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
                 ],
             },
         ]);
@@ -380,6 +386,12 @@ describe("Dashboard route", () => {
                                     ["Tablet", 60],
                                 ],
                             };
+                        },
+                    },
+                    {
+                        path: "/resources/browserversion",
+                        loader: () => {
+                            return { countsByProperty: [] };
                         },
                     },
                 ],

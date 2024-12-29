@@ -19,6 +19,7 @@ import {
 import { ReferrerCard } from "./resources.referrer";
 import { PathsCard } from "./resources.paths";
 import { BrowserCard } from "./resources.browser";
+import { BrowserVersionCard } from "./resources.browserversion";
 import { CountryCard } from "./resources.country";
 import { DeviceCard } from "./resources.device";
 
@@ -250,13 +251,23 @@ export default function Dashboard() {
                     />
                 </div>
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <BrowserCard
-                        siteId={data.siteId}
-                        interval={data.interval}
-                        filters={data.filters}
-                        onFilterChange={handleFilterChange}
-                        timezone={userTimezone}
-                    />
+                    {data.filters && data.filters.browserName ? (
+                        <BrowserVersionCard
+                            siteId={data.siteId}
+                            interval={data.interval}
+                            filters={data.filters}
+                            onFilterChange={handleFilterChange}
+                            timezone={userTimezone}
+                        />
+                    ) : (
+                        <BrowserCard
+                            siteId={data.siteId}
+                            interval={data.interval}
+                            filters={data.filters}
+                            onFilterChange={handleFilterChange}
+                            timezone={userTimezone}
+                        />
+                    )}
 
                     <CountryCard
                         siteId={data.siteId}
