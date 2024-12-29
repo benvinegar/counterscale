@@ -29,7 +29,15 @@
             "cache": false
         },
         "test": {},
-        "test-ci": {},
+        "@counterscale/tracker#test": {
+            "dependsOn": ["@counterscale/tracker#build"]
+        },
+        "test-ci": {
+            "outputs": ["coverage/**"]
+        },
+        "@counterscale/tracker#test-ci": {
+            "dependsOn": ["@counterscale/tracker#build"]
+        },
         "lint": {
             "dependsOn": ["build"]
         },

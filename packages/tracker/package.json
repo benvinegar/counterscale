@@ -11,6 +11,7 @@
         "build": "vite build",
         "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         "test": "playwright test",
+        "test-ci": "playwright test",
         "start": "node ./integration/server.cjs",
         "typecheck": "tsc"
     },
