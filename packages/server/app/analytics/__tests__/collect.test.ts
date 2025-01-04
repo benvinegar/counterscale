@@ -66,6 +66,7 @@ describe("collectRequestHandler", () => {
                 "Chrome", // browser name
                 "",
                 "example", // site id
+                "51.x.x.x", // browser version
             ],
             doubles: [
                 1, // new visitor
