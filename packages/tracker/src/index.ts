@@ -77,6 +77,15 @@ function findReporterScript() {
     return el;
 }
 
+function instrument() {
+    const origPushState = history.pushState;
+
+    history.pushState = function (data, title, url) {
+        origPushState.apply(this, [data, title, url]);
+        trackPageview({});
+    };
+}
+
 function trackPageview(vars: { [key: string]: string }) {
     vars = vars || {};
 
@@ -201,6 +210,8 @@ queue.forEach(function (cmd: Command) {
     const siteId = script.getAttribute("data-site-id");
     if (siteId) {
         set("siteId", siteId);
+
+        instrument();
         trackPageview({});
     }
 })();
