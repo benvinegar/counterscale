@@ -38,7 +38,7 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. Run `npx turbo deploy` – this will do several things:
     1. Create a new Analytics Engine dataset, called `metricsDataset`
     1. Deploy the site and give you the deployment URL.
-1. The site should now be deployed. Visit `https://{subdomain-emitted-from-npm-run-deploy}.pages.dev`.
+1. The site should now be deployed. Visit `https://{subdomain-emitted-during-deploy}.pages.dev`.
     - NOTE: _It may take take a few minutes before the subdomain becomes live._
 
 ### Install the Tracking Script on Your Website(s)
@@ -46,7 +46,7 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 When Counterscale is deployed, it makes `tracker.js` available at the URL you deployed to:
 
 ```
-https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/tracker.js
+https://{subdomain-emitted-during-deploy}.pages.dev/tracker.js
 ```
 
 To start reporting website traffic from your web property, copy/paste the following snippet into your website HTML:
@@ -55,7 +55,7 @@ To start reporting website traffic from your web property, copy/paste the follow
 <script
     id="counterscale-script"
     data-site-id="your-unique-site-id"
-    src="https://{subdomain-emitted-from-npm-run-deploy}.pages.dev/tracker.js"
+    src="https://{subdomain-emitted-during-deploy}.pages.dev/tracker.js"
     defer
 ></script>
 ```
