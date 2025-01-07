@@ -35,6 +35,10 @@ SOFTWARE.
 
 const queue = (window.counterscale && window.counterscale.q) || [];
 
+const context = {
+    isInstrumented: false,
+};
+
 type ConfigType = {
     siteId?: string;
     reporterUrl?: string;
@@ -77,7 +81,12 @@ function findReporterScript() {
     return el;
 }
 
-function instrument() {
+function instrumentHistoryBuiltIns() {
+    if (context.isInstrumented) {
+        return false;
+    }
+
+    context.isInstrumented = true;
     const origPushState = history.pushState;
 
     // NOTE: Intentionally only declaring 2 parameters for this pushState wrapper,
@@ -101,6 +110,8 @@ function instrument() {
 
 function trackPageview(vars?: { [key: string]: string }) {
     vars = vars || {};
+
+    instrumentHistoryBuiltIns();
 
     // ignore prerendered pages
     if (
@@ -224,7 +235,6 @@ queue.forEach(function (cmd: Command) {
     if (siteId) {
         set("siteId", siteId);
 
-        instrument();
         trackPageview({});
     }
 })();
