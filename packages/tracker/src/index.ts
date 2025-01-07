@@ -35,6 +35,10 @@ SOFTWARE.
 
 const queue = (window.counterscale && window.counterscale.q) || [];
 
+const context = {
+    isInstrumented: false,
+};
+
 type ConfigType = {
     siteId?: string;
     reporterUrl?: string;
@@ -77,8 +81,37 @@ function findReporterScript() {
     return el;
 }
 
-function trackPageview(vars: { [key: string]: string }) {
+function instrumentHistoryBuiltIns() {
+    if (context.isInstrumented) {
+        return false;
+    }
+
+    context.isInstrumented = true;
+    const origPushState = history.pushState;
+
+    // NOTE: Intentionally only declaring 2 parameters for this pushState wrapper,
+    //       because that is the arity of the built-in function we're overwriting.
+
+    // See: https://blog.sentry.io/wrap-javascript-functions/#preserve-arity
+
+    // eslint-disable-next-line
+    history.pushState = function (data, title /*, url */) {
+        // eslint-disable-next-line
+        origPushState.apply(this, arguments as any);
+        trackPageview();
+    };
+
+    addEventListener("popstate", () => {
+        trackPageview();
+    });
+
+    // TODO: Should offer some way to clean this up
+}
+
+function trackPageview(vars?: { [key: string]: string }) {
     vars = vars || {};
+
+    instrumentHistoryBuiltIns();
 
     // ignore prerendered pages
     if (
@@ -201,6 +234,7 @@ queue.forEach(function (cmd: Command) {
     const siteId = script.getAttribute("data-site-id");
     if (siteId) {
         set("siteId", siteId);
+
         trackPageview({});
     }
 })();

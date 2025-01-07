@@ -12,7 +12,7 @@
         "build": "remix vite:build",
         "preview": "wrangler pages dev ./build/client",
         "deploy": "wrangler pages deploy ./build/client",
-        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+        "lint": "eslint --ignore-path ../../.gitignore --ignore-pattern public/tracker.js --cache --cache-location ./node_modules/.cache/eslint .",
         "test": "TZ=EST vitest run",
         "test-ci": "TZ=EST vitest run --coverage",
         "typecheck": "tsc",
