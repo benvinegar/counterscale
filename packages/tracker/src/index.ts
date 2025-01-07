@@ -89,11 +89,17 @@ function instrument() {
     history.pushState = function (data, title /*, url */) {
         // eslint-disable-next-line
         origPushState.apply(this, arguments as any);
-        trackPageview({});
+        trackPageview();
     };
+
+    addEventListener("popstate", () => {
+        trackPageview();
+    });
+
+    // TODO: Should offer some way to clean this up
 }
 
-function trackPageview(vars: { [key: string]: string }) {
+function trackPageview(vars?: { [key: string]: string }) {
     vars = vars || {};
 
     // ignore prerendered pages
