@@ -1,4 +1,5 @@
 import type { Client } from "./client";
+import { instrumentHistoryBuiltIns } from "./instrument";
 import { makeRequest } from "./request";
 
 type TrackPageviewOpts = {
@@ -6,8 +7,28 @@ type TrackPageviewOpts = {
     referrer?: string;
 };
 
+export function autoTrackPageviews(client: Client) {
+    instrumentHistoryBuiltIns(() => {
+        trackPageview(client);
+    });
+
+    trackPageview(client);
+}
+
+function getCanonicalUrl() {
+    const canonical = document.querySelector(
+        'link[rel="canonical"][href]',
+    ) as HTMLLinkElement;
+    if (!canonical) {
+        return null;
+    }
+
+    const a = document.createElement("a");
+    a.href = canonical.href;
+    return a;
+}
+
 export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
-    // ignore prerendered pages
     if (
         "visibilityState" in document &&
         (document.visibilityState as string) === "prerender"
@@ -15,44 +36,21 @@ export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
         return;
     }
 
-    //  parse request, use canonical if there is one
-    let req = window.location;
+    const canonical = getCanonicalUrl();
+    const location = canonical ?? window.location;
 
-    // do not track if not served over HTTP or HTTPS (eg from local filesystem) and we're not in an Electron app
-    if (req.host === "" && navigator.userAgent.indexOf("Electron") < 0) {
+    if (location.host === "" && navigator.userAgent.indexOf("Electron") < 0) {
         return;
     }
 
-    // find canonical URL
-    const canonical = document.querySelector(
-        'link[rel="canonical"][href]',
-    ) as HTMLLinkElement;
-    if (canonical) {
-        const a = document.createElement("a");
-        a.href = canonical.href;
+    const url = opts.url || location.pathname + location.search || "/";
+    const path = url.split("?")[0];
+    const hostname = location.protocol + "//" + location.hostname;
 
-        // use parsed canonical as location object
-
-        // @ts-expect-error TBH typescript may have a point here and not sure if this works - BV
-        req = a;
-    }
-
-    let path = opts.url || req.pathname + req.search;
-    if (!path) {
-        path = "/";
-    }
-    // strip query string from path
-    path = path.split("?")[0];
-
-    // determine hostname
-    const hostname = req.protocol + "//" + req.hostname;
-
-    // only set referrer if not internal
     let referrer = opts.referrer || "";
     if (document.referrer.indexOf(hostname) < 0) {
         referrer = document.referrer;
     }
-    // strip query string from referrer
     referrer = referrer.split("?")[0];
 
     const d = {
