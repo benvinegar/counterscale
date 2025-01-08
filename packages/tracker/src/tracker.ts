@@ -3,7 +3,13 @@
 import { Client } from "./lib/client";
 import { instrumentHistoryBuiltIns } from "./lib/instrument";
 import { trackPageview } from "./lib/track";
-import { findReporterScript } from "./lib/utils";
+
+export function findReporterScript() {
+    const el = document.getElementById(
+        "counterscale-script",
+    ) as HTMLScriptElement;
+    return el;
+}
 
 function getLegacySiteId(): string | undefined {
     // backwards compatibility layer with legacy API for setting
