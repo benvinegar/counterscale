@@ -34,6 +34,7 @@ SOFTWARE.
 "use strict";
 
 import { makeRequest } from "./lib/request";
+import { instrumentHistoryBuiltIns } from "./lib/instrument";
 
 const queue = (window.counterscale && window.counterscale.q) || [];
 
@@ -69,37 +70,15 @@ function findReporterScript() {
     return el;
 }
 
-function instrumentHistoryBuiltIns() {
-    if (context.isInstrumented) {
-        return false;
-    }
-
-    context.isInstrumented = true;
-    const origPushState = history.pushState;
-
-    // NOTE: Intentionally only declaring 2 parameters for this pushState wrapper,
-    //       because that is the arity of the built-in function we're overwriting.
-
-    // See: https://blog.sentry.io/wrap-javascript-functions/#preserve-arity
-
-    // eslint-disable-next-line
-    history.pushState = function (data, title /*, url */) {
-        // eslint-disable-next-line
-        origPushState.apply(this, arguments as any);
-        trackPageview();
-    };
-
-    addEventListener("popstate", () => {
-        trackPageview();
-    });
-
-    // TODO: Should offer some way to clean this up
-}
-
 function trackPageview(vars?: { [key: string]: string }) {
     vars = vars || {};
 
-    instrumentHistoryBuiltIns();
+    if (!context.isInstrumented) {
+        instrumentHistoryBuiltIns(() => {
+            trackPageview();
+        });
+        context.isInstrumented = true;
+    }
 
     // ignore prerendered pages
     if (
