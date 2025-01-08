@@ -15,14 +15,6 @@ export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
         return;
     }
 
-    // if <body> did not load yet, try again at dom ready event
-    if (document.body === null) {
-        document.addEventListener("DOMContentLoaded", () => {
-            trackPageview(client);
-        });
-        return;
-    }
-
     //  parse request, use canonical if there is one
     let req = window.location;
 

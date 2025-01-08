@@ -25,19 +25,33 @@ function getLegacySiteId(): string | undefined {
 }
 
 (function () {
-    const script = findReporterScript();
-    const siteId = script?.getAttribute("data-site-id") || getLegacySiteId();
-    const reporterUrl = script?.src.replace("tracker.js", "collect");
+    function init() {
+        const script = findReporterScript();
+        const siteId =
+            script?.getAttribute("data-site-id") || getLegacySiteId();
+        const reporterUrl = script?.src.replace("tracker.js", "collect");
 
-    if (!siteId || !reporterUrl) {
+        if (!siteId || !reporterUrl) {
+            return;
+        }
+
+        const client = new Client({ siteId, reporterUrl });
+
+        instrumentHistoryBuiltIns(() => {
+            trackPageview(client);
+        });
+
+        trackPageview(client);
+    }
+
+    // body (and thus, script elem) might not be accessible until
+    // DOMContentLoaded, so wait for that first
+    if (document.body === null) {
+        document.addEventListener("DOMContentLoaded", () => {
+            init();
+        });
         return;
     }
 
-    const client = new Client({ siteId, reporterUrl });
-
-    instrumentHistoryBuiltIns(() => {
-        trackPageview(client);
-    });
-
-    trackPageview(client);
+    init();
 })();
