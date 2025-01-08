@@ -33,6 +33,8 @@ SOFTWARE.
 
 "use strict";
 
+import { makeRequest } from "./lib/request";
+
 const queue = (window.counterscale && window.counterscale.q) || [];
 
 const context = {
@@ -58,20 +60,6 @@ function set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
 
 function setTrackerUrl(value: string) {
     return set("reporterUrl", value);
-}
-
-// convert object to query string
-function stringifyObject(obj: { [key: string]: string }) {
-    const keys = Object.keys(obj);
-
-    return (
-        "?" +
-        keys
-            .map(function (k) {
-                return encodeURIComponent(k) + "=" + encodeURIComponent(obj[k]);
-            })
-            .join("&")
-    );
 }
 
 function findReporterScript() {
@@ -182,28 +170,7 @@ function trackPageview(vars?: { [key: string]: string }) {
         config.reporterUrl ||
         (script ? script.src.replace("tracker.js", "collect") : "");
 
-    const img = document.createElement("img");
-    img.setAttribute("alt", "");
-    img.setAttribute("aria-hidden", "true");
-    img.setAttribute("style", "position:absolute");
-    img.src = url + stringifyObject(d);
-    img.addEventListener("load", function () {
-        // remove tracking img from DOM
-        document.body.removeChild(img);
-    });
-
-    // in case img.onload never fires, remove img after 1s & reset src attribute to cancel request
-    window.setTimeout(() => {
-        if (!img.parentNode) {
-            return;
-        }
-
-        img.src = "";
-        document.body.removeChild(img);
-    }, 1000);
-
-    // add to DOM to fire request
-    document.body.appendChild(img);
+    makeRequest(url, d);
 }
 
 // override global counterscale object
