@@ -28,6 +28,24 @@ function getCanonicalUrl() {
     return a;
 }
 
+function getHostnameAndPath(url: string) {
+    const a = document.createElement("a");
+    a.href = url;
+
+    const hostname = a.protocol + "//" + a.hostname;
+    const path = a.pathname;
+
+    return { hostname, path };
+}
+
+function getReferrer(hostname: string, referrer: string) {
+    if (!referrer && document.referrer.indexOf(hostname) < 0) {
+        referrer = document.referrer;
+    }
+
+    return referrer.split("?")[0];
+}
+
 export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
@@ -37,14 +55,9 @@ export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
     }
 
     const url = opts.url || location.pathname + location.search || "/";
-    const path = url.split("?")[0];
-    const hostname = location.protocol + "//" + location.hostname;
 
-    let referrer = opts.referrer || "";
-    if (document.referrer.indexOf(hostname) < 0) {
-        referrer = document.referrer;
-    }
-    referrer = referrer.split("?")[0];
+    const { hostname, path } = getHostnameAndPath(url);
+    const referrer = getReferrer(hostname, opts.referrer || "");
 
     const d = {
         p: path,

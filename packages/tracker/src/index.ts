@@ -11,7 +11,7 @@ export default function (opts: ClientOpts) {
         autoTrackPageviews: () => {
             autoTrackPageviews(client);
         },
-        trackPageview: (opts: TrackPageviewOpts) => {
+        trackPageview: (opts?: TrackPageviewOpts) => {
             trackPageview(client, opts);
         },
     };
