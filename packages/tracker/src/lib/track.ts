@@ -29,13 +29,6 @@ function getCanonicalUrl() {
 }
 
 export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
-    if (
-        "visibilityState" in document &&
-        (document.visibilityState as string) === "prerender"
-    ) {
-        return;
-    }
-
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
 
