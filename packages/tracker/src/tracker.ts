@@ -4,7 +4,7 @@ import { Client } from "./lib/client";
 import { instrumentHistoryBuiltIns } from "./lib/instrument";
 import { trackPageview } from "./lib/track";
 
-export function findReporterScript() {
+function findReporterScript() {
     const el = document.getElementById(
         "counterscale-script",
     ) as HTMLScriptElement;
@@ -30,26 +30,26 @@ function getLegacySiteId(): string | undefined {
     return siteId;
 }
 
-(function () {
-    function init() {
-        const script = findReporterScript();
-        const siteId =
-            script?.getAttribute("data-site-id") || getLegacySiteId();
-        const reporterUrl = script?.src.replace("tracker.js", "collect");
+function init() {
+    const script = findReporterScript();
+    const siteId = script?.getAttribute("data-site-id") || getLegacySiteId();
 
-        if (!siteId || !reporterUrl) {
-            return;
-        }
+    const reporterUrl = script?.src.replace("tracker.js", "collect");
 
-        const client = new Client({ siteId, reporterUrl });
-
-        instrumentHistoryBuiltIns(() => {
-            trackPageview(client);
-        });
-
-        trackPageview(client);
+    if (!siteId || !reporterUrl) {
+        return;
     }
 
+    const client = new Client({ siteId, reporterUrl });
+
+    instrumentHistoryBuiltIns(() => {
+        trackPageview(client);
+    });
+
+    trackPageview(client);
+}
+
+(function () {
     // body (and thus, script elem) might not be accessible until
     // DOMContentLoaded, so wait for that first
     if (document.body === null) {

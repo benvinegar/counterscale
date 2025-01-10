@@ -18,7 +18,7 @@
         "typecheck": "tsc",
         "prepare": "husky",
         "types:gen": "wrangler types",
-        "copytracker": "cp ../tracker/dist/tracker.js ./public/tracker.js"
+        "copytracker": "cp ../tracker/dist/loader/tracker.js ./public/tracker.js"
     },
     "dependencies": {
         "@cloudflare/kv-asset-handler": "^0.3.3",
