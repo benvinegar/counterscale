@@ -2,7 +2,7 @@ import type { Client } from "./client";
 import { instrumentHistoryBuiltIns } from "./instrument";
 import { makeRequest } from "./request";
 
-type TrackPageviewOpts = {
+export type TrackPageviewOpts = {
     url?: string;
     referrer?: string;
 };
