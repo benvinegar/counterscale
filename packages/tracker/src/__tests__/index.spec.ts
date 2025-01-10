@@ -90,7 +90,7 @@ describe("api", () => {
     });
 
     describe("autoTrackPageviews", () => {
-        test("records an initial pageview", () => {
+        test("records initial and subsequent pageviews", () => {
             const { cleanup } = Counterscale({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
@@ -99,14 +99,26 @@ describe("api", () => {
 
             expect(mockXhrObjects).toHaveLength(1);
 
-            const openArgs = mockXhrObjects[0].open.mock.calls[0];
+            let openArgs = mockXhrObjects[0].open.mock.calls[0];
             expect(openArgs[0]).toBe("GET");
 
-            const queryString = openArgs[1];
-            const searchParams = new URL(queryString).searchParams;
+            let queryString = openArgs[1];
+            let searchParams = new URL(queryString).searchParams;
             expect(searchParams.get("sid")).toBe("test-id");
             expect(searchParams.get("h")).toBe("http://localhost");
             expect(searchParams.get("p")).toBe("/"); // default path when running test w/ jsdom
+            expect(searchParams.get("r")).toBe("");
+
+            window.history.pushState({ page: 2 }, "", "/foo");
+
+            expect(mockXhrObjects).toHaveLength(2);
+
+            openArgs = mockXhrObjects[1].open.mock.calls[0];
+            queryString = openArgs[1];
+            searchParams = new URL(queryString).searchParams;
+            expect(searchParams.get("sid")).toBe("test-id");
+            expect(searchParams.get("h")).toBe("http://localhost");
+            expect(searchParams.get("p")).toBe("/foo");
             expect(searchParams.get("r")).toBe("");
 
             cleanup();
