@@ -1,5 +1,5 @@
 // vitest.config.ts
-import { defineConfig } from "vitest/config";
+import { defineConfig, coverageConfigDefaults } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
@@ -7,14 +7,15 @@ export default defineConfig({
         exclude: ["integration"],
         coverage: {
             provider: "v8", // or 'v8'
+            exclude: [
+                "**/node_modules/**",
+                "**/{playwright,vite.loader,vite.module}.config.*",
+                "src/tracker.ts", // covered by /integration tests
+                "integration/**",
+                ...coverageConfigDefaults.exclude,
+            ],
         },
-        browser: {
-            enabled: true,
-            provider: "playwright",
-            name: "chromium",
-            headless: true,
-            screenshotFailures: false,
-        },
+        environment: "jsdom",
     },
     plugins: [tsconfigPaths()],
 });

@@ -57,7 +57,7 @@ describe("api", () => {
             const searchParams = new URL(queryString).searchParams;
             expect(searchParams.get("sid")).toBe("test-id");
             expect(searchParams.get("h")).toBe("http://localhost");
-            expect(searchParams.get("p")).toMatch(/\/__vitest_test__\//); // NOTE: because running in Chromium headless will have a different unique URL each run
+            expect(searchParams.get("p")).toBe("/"); // default path when running test w/ jsdom
             expect(searchParams.get("r")).toBe("");
         });
 
@@ -106,7 +106,7 @@ describe("api", () => {
             const searchParams = new URL(queryString).searchParams;
             expect(searchParams.get("sid")).toBe("test-id");
             expect(searchParams.get("h")).toBe("http://localhost");
-            expect(searchParams.get("p")).toMatch(/\/__vitest_test__\//); // NOTE: because running in Chromium headless will have a different unique URL each run
+            expect(searchParams.get("p")).toBe("/"); // default path when running test w/ jsdom
             expect(searchParams.get("r")).toBe("");
 
             cleanup();
