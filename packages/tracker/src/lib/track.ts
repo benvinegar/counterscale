@@ -8,11 +8,13 @@ export type TrackPageviewOpts = {
 };
 
 export function autoTrackPageviews(client: Client) {
-    instrumentHistoryBuiltIns(() => {
+    const cleanupFn = instrumentHistoryBuiltIns(() => {
         trackPageview(client);
     });
 
     trackPageview(client);
+
+    return cleanupFn;
 }
 
 function getCanonicalUrl() {

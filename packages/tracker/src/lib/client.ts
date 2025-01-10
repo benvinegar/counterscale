@@ -10,12 +10,20 @@ export class Client {
     siteId: string;
     reporterUrl: string;
 
+    _cleanupAutoTrackPageviews?: () => void;
+
     constructor(opts: ClientOpts) {
         this.siteId = opts.siteId;
         this.reporterUrl = opts.reporterUrl;
 
         if (opts.autoTrackPageviews) {
-            autoTrackPageviews(this);
+            this._cleanupAutoTrackPageviews = autoTrackPageviews(this);
+        }
+    }
+
+    cleanup() {
+        if (this._cleanupAutoTrackPageviews) {
+            this._cleanupAutoTrackPageviews();
         }
     }
 }

@@ -13,9 +13,13 @@ export function instrumentHistoryBuiltIns(callback: () => void) {
         callback();
     };
 
-    addEventListener("popstate", () => {
+    const listener = () => {
         callback();
-    });
+    };
+    addEventListener("popstate", listener);
 
-    // TODO: Should offer some way to clean this up
+    return () => {
+        history.pushState = origPushState;
+        removeEventListener("popstate", listener);
+    };
 }

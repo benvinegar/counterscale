@@ -33,7 +33,7 @@ describe("api", () => {
         });
 
         expect(counterscale).toHaveProperty("trackPageview");
-        expect(counterscale).toHaveProperty("autoTrackPageviews");
+        expect(counterscale).toHaveProperty("cleanup");
     });
 
     describe("trackPageview", () => {
@@ -91,7 +91,7 @@ describe("api", () => {
 
     describe("autoTrackPageviews", () => {
         test("records an initial pageview", () => {
-            Counterscale({
+            const { cleanup } = Counterscale({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: true,
@@ -108,6 +108,8 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("http://localhost");
             expect(searchParams.get("p")).toMatch(/\/__vitest_test__\//); // NOTE: because running in Chromium headless will have a different unique URL each run
             expect(searchParams.get("r")).toBe("");
+
+            cleanup();
         });
     });
 });
