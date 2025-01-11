@@ -8,7 +8,7 @@ const GLOBALS = {
     client: undefined as Client | undefined,
 };
 
-export function initialize(opts: ClientOpts) {
+export function init(opts: ClientOpts) {
     if (GLOBALS.client) {
         throw new Error("Counterscale has already been initialized.");
     }

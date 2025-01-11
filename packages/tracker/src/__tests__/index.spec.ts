@@ -39,7 +39,7 @@ describe("api", () => {
     });
 
     test("initializes", () => {
-        Counterscale.initialize({
+        Counterscale.init({
             siteId: "test-id",
             reporterUrl: "https://example.com/collect",
         });
@@ -47,7 +47,7 @@ describe("api", () => {
 
     describe("trackPageview", () => {
         test("records a pageview for the current url", () => {
-            Counterscale.initialize({
+            Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
             });
@@ -71,7 +71,7 @@ describe("api", () => {
         });
 
         test("records a pageview for the given url and referrer", () => {
-            Counterscale.initialize({
+            Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
             });
@@ -100,7 +100,7 @@ describe("api", () => {
 
     describe("autoTrackPageviews", () => {
         test("records initial and subsequent pageviews", () => {
-            Counterscale.initialize({
+            Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: true,
