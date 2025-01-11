@@ -1,6 +1,14 @@
-import { describe, test, expect, beforeAll, beforeEach, vi } from "vitest";
+import {
+    describe,
+    test,
+    expect,
+    beforeAll,
+    beforeEach,
+    afterEach,
+    vi,
+} from "vitest";
 
-import Counterscale from "../index";
+import * as Counterscale from "../index";
 
 describe("api", () => {
     let mockXhrObjects = [] as any;
@@ -26,19 +34,20 @@ describe("api", () => {
         mockXhrObjects = [];
     });
 
+    afterEach(() => {
+        Counterscale.cleanup();
+    });
+
     test("initializes", () => {
-        const counterscale = Counterscale({
+        Counterscale.initialize({
             siteId: "test-id",
             reporterUrl: "https://example.com/collect",
         });
-
-        expect(counterscale).toHaveProperty("trackPageview");
-        expect(counterscale).toHaveProperty("cleanup");
     });
 
     describe("trackPageview", () => {
         test("records a pageview for the current url", () => {
-            const { trackPageview } = Counterscale({
+            Counterscale.initialize({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
             });
@@ -46,7 +55,7 @@ describe("api", () => {
             // since auto: false, no requests should be made yet
             expect(mockXhrObjects).toHaveLength(0);
 
-            trackPageview();
+            Counterscale.trackPageview();
 
             expect(mockXhrObjects).toHaveLength(1);
 
@@ -62,7 +71,7 @@ describe("api", () => {
         });
 
         test("records a pageview for the given url and referrer", () => {
-            const { trackPageview } = Counterscale({
+            Counterscale.initialize({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
             });
@@ -70,7 +79,7 @@ describe("api", () => {
             // since auto: false, no requests should be made yet
             expect(mockXhrObjects).toHaveLength(0);
 
-            trackPageview({
+            Counterscale.trackPageview({
                 url: "https://example.com/foo",
                 referrer: "https://referrer.com/",
             });
@@ -91,7 +100,7 @@ describe("api", () => {
 
     describe("autoTrackPageviews", () => {
         test("records initial and subsequent pageviews", () => {
-            const { cleanup } = Counterscale({
+            Counterscale.initialize({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: true,
@@ -121,7 +130,7 @@ describe("api", () => {
             expect(searchParams.get("p")).toBe("/foo");
             expect(searchParams.get("r")).toBe("");
 
-            cleanup();
+            Counterscale.cleanup();
         });
     });
 });
