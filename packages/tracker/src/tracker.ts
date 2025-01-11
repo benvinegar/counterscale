@@ -1,8 +1,6 @@
 "use strict";
 
-import { Client } from "./lib/client";
-import { instrumentHistoryBuiltIns } from "./lib/instrument";
-import { trackPageview } from "./lib/track";
+import * as Counterscale from "./index";
 
 function findReporterScript() {
     const el = document.getElementById(
@@ -40,13 +38,11 @@ function init() {
         return;
     }
 
-    const client = new Client({ siteId, reporterUrl });
-
-    instrumentHistoryBuiltIns(() => {
-        trackPageview(client);
+    Counterscale.init({
+        siteId,
+        reporterUrl,
+        autoTrackPageviews: true,
     });
-
-    trackPageview(client);
 }
 
 (function () {

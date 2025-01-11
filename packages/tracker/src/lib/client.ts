@@ -16,7 +16,8 @@ export class Client {
         this.siteId = opts.siteId;
         this.reporterUrl = opts.reporterUrl;
 
-        if (opts.autoTrackPageviews) {
+        // default to true
+        if (opts.autoTrackPageviews === undefined || opts.autoTrackPageviews) {
             this._cleanupAutoTrackPageviews = autoTrackPageviews(this);
         }
     }

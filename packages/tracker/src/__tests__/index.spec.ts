@@ -1,12 +1,4 @@
-import {
-    describe,
-    test,
-    expect,
-    beforeAll,
-    beforeEach,
-    afterEach,
-    vi,
-} from "vitest";
+import { describe, test, expect, beforeAll, afterEach, vi } from "vitest";
 
 import * as Counterscale from "../index";
 
@@ -30,11 +22,8 @@ describe("api", () => {
         vi.stubGlobal("XMLHttpRequest", XMLHttpRequestMock);
     });
 
-    beforeEach(() => {
-        mockXhrObjects = [];
-    });
-
     afterEach(() => {
+        mockXhrObjects = [];
         Counterscale.cleanup();
     });
 
@@ -42,6 +31,7 @@ describe("api", () => {
         Counterscale.init({
             siteId: "test-id",
             reporterUrl: "https://example.com/collect",
+            autoTrackPageviews: false,
         });
     });
 
@@ -50,6 +40,7 @@ describe("api", () => {
             Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
             });
 
             // since auto: false, no requests should be made yet
@@ -74,6 +65,7 @@ describe("api", () => {
             Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
             });
 
             // since auto: false, no requests should be made yet
@@ -129,8 +121,6 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("http://localhost");
             expect(searchParams.get("p")).toBe("/foo");
             expect(searchParams.get("r")).toBe("");
-
-            Counterscale.cleanup();
         });
     });
 });
