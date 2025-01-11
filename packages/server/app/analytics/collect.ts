@@ -141,6 +141,7 @@ export function collectRequestHandler(request: Request, env: Env) {
 
     return new Response(arrayBuffer, {
         headers: {
+            "Access-Control-Allow-Origin": "*",
             "Content-Type": "image/gif",
             Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
             "Cache-Control": "no-cache",
