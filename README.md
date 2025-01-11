@@ -41,7 +41,11 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 1. The site should now be deployed. Visit `https://{subdomain-emitted-during-deploy}.pages.dev`.
     - NOTE: _It may take take a few minutes before the subdomain becomes live._
 
-### Install the Tracking Script on Your Website(s)
+### Start Recording Web Traffic from Your Website(s)
+
+You can load the tracking code using one of two methods:
+
+#### 1. Script Loader (CDN)
 
 When Counterscale is deployed, it makes `tracker.js` available at the URL you deployed to:
 
@@ -60,11 +64,49 @@ To start reporting website traffic from your web property, copy/paste the follow
 ></script>
 ```
 
+#### 2. Package/Module
+
+The Counterscale tracker is published as an npm module:
+
+```bash
+npm install @counterscale/tracker
+```
+
+Initialize Counterscale with your site ID and deployment URL:
+
+```typescript
+import * as Counterscale from "@counterscale/tracker";
+
+Counterscale.init({
+    siteId: "your-unique-site-id",
+    deploymentUrl: "https://{subdomain-emitted-during-deploy}.pages.dev/",
+});
+```
+
 ## Troubleshooting
 
 If the website is not immediately available (e.g. "Secure Connection Failed"), it could be because Cloudflare has not yet activated your subdomain (yoursubdomain.workers.dev). This process can take a minute; you can check in on the progress by visiting the newly created worker in your Cloudflare dashboard (Workers & Pages → counterscale).
 
-## Custom Domains
+## Advanced
+
+### Manually Track Pageviews
+
+When you initialize the Counterscale tracker, set `autoTrackPageviews` to `false`. Then, you can manually call `Counterscale.trackPageview()` when you want to record a pageview.
+
+```typescript
+import * as Counterscale from "@counterscale/tracker";
+
+Counterscale.init({
+    siteId: "your-unique-site-id",
+    deploymentUrl: "https://{subdomain-emitted-during-deploy}.pages.dev/",
+    autoTrackPageviews: false, // <- don't forget this
+});
+
+// ... when a pageview happens
+Counterscale.trackPageview();
+```
+
+### Custom Domains
 
 The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
