@@ -3,7 +3,9 @@ var fs = require("fs");
 var path = require("path");
 
 // Load tracker script
-var tracker = fs.readFileSync(path.join(__dirname, "../dist/tracker.js"));
+var tracker = fs.readFileSync(
+    path.join(__dirname, "../dist/loader/tracker.js"), // NOTE: needs to be built first
+);
 
 const PORT = 3004;
 

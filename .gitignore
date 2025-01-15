@@ -1,13 +1,15 @@
 node_modules
 
-.cache
-.wrangler
 build
-dist
 public/build
-.env
+dist
 
+.cache
+.env
+.wrangler
 .dev.vars
+.turbo
 
 coverage
-.turbo
+playwright-report
+__screenshots__
