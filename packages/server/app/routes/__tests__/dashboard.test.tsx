@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { LoaderFunctionArgs } from "@remix-run/node";
+import { LoaderFunctionArgs } from "react-router";
 import {
     vi,
     test,
@@ -12,7 +12,7 @@ import {
 } from "vitest";
 import "vitest-dom/extend-expect";
 
-import { createRemixStub } from "@remix-run/testing";
+import { createRoutesStub } from "react-router";
 import { render, screen, waitFor } from "@testing-library/react";
 
 import Dashboard, { loader } from "../dashboard";
@@ -44,14 +44,13 @@ describe("Dashboard route", () => {
                         "testApiToken",
                     ),
                     cloudflare: {
-                        // @ts-expect-error we don't need to provide all the properties of the cloudflare object
                         env: {
                             CF_ACCOUNT_ID: "",
                             CF_BEARER_TOKEN: "",
                         },
                     },
                 },
-                // @ts-expect-error we don't need to provide all the properties of the request object
+                // @ts-expect-error we don't need to provide all the properties of the cloudflare object
                 request: {
                     url: "http://localhost:3000/dashboard",
                 },
@@ -70,7 +69,6 @@ describe("Dashboard route", () => {
 
             // run it again, this time with account ID present, but bearer token absent
             mockLoaderParams.context.cloudflare = {
-                // @ts-expect-error we don't need to provide all the properties of the cloudflare object
                 env: {
                     CF_ACCOUNT_ID: "testAccountId",
                     CF_BEARER_TOKEN: "",
@@ -210,7 +208,7 @@ describe("Dashboard route", () => {
             };
         }
 
-        const RemixStub = createRemixStub([
+        const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Dashboard,
@@ -307,7 +305,7 @@ describe("Dashboard route", () => {
             return { ...defaultMockedLoaderJson };
         }
 
-        const RemixStub = createRemixStub([
+        const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Dashboard,

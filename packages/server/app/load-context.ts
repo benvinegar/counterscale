@@ -1,4 +1,4 @@
-import { type AppLoadContext } from "@remix-run/cloudflare";
+import { type AppLoadContext } from "react-router";
 import { type PlatformProxy } from "wrangler";
 import { AnalyticsEngineAPI } from "./analytics/query";
 
@@ -8,7 +8,7 @@ interface ExtendedEnv extends Env {
 
 type Cloudflare = Omit<PlatformProxy<ExtendedEnv>, "dispose">;
 
-declare module "@remix-run/cloudflare" {
+declare module "react-router" {
     interface AppLoadContext {
         cloudflare: Cloudflare;
         analyticsEngine: AnalyticsEngineAPI;

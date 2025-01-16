@@ -6,15 +6,15 @@ import {
     SelectValue,
 } from "~/components/ui/select";
 
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { redirect } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { redirect } from "react-router";
 import {
     isRouteErrorResponse,
     useLoaderData,
     useNavigation,
     useRouteError,
     useSearchParams,
-} from "@remix-run/react";
+} from "react-router";
 
 import { ReferrerCard } from "./resources.referrer";
 import { PathsCard } from "./resources.paths";

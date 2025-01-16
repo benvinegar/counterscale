@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import styles from "./globals.css?url";
-import { LoaderFunctionArgs, type LinksFunction } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs, type LinksFunction } from "react-router";
 
 import {
     Links,
@@ -9,7 +9,7 @@ import {
     Scripts,
     ScrollRestoration,
     useLoaderData,
-} from "@remix-run/react";
+} from "react-router";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 

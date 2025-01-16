@@ -4,13 +4,13 @@ import { ReactNode } from "react";
 import { describe, test, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, waitFor, screen } from "@testing-library/react";
 import { loader, TimeSeriesCard } from "../resources.timeseries";
-import * as RemixReact from "@remix-run/react";
+import * as RemixReact from "react-router";
 import "vitest-dom/extend-expect";
 import { getDefaultContext } from "./testutils";
 
 // Mock the useFetcher hook
-vi.mock("@remix-run/react", async () => {
-    const actual = await vi.importActual("@remix-run/react");
+vi.mock("react-router", async () => {
+    const actual = await vi.importActual("react-router");
     return {
         ...actual,
         useFetcher: vi.fn(),
@@ -52,8 +52,8 @@ describe("resources.timeseries loader", () => {
         const request = new Request(
             "http://test.com?interval=7d&site=test-site&timezone=UTC",
         );
+        // @ts-expect-error we don't need to provide all the properties of the context object
         const result = await loader({
-            // @ts-expect-error we don't need to provide all the properties of the contextobject
             context,
             request,
         });

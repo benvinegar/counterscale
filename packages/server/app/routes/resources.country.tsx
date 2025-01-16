@@ -1,5 +1,5 @@
-import { useFetcher } from "@remix-run/react";
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { useFetcher } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 import { SearchFilters } from "~/lib/types";

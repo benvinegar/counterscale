@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, redirect } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs, redirect } from "react-router";
 
 export const loader = async ({ context }: LoaderFunctionArgs) => {
     return redirect(

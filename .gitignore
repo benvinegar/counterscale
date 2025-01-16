@@ -9,6 +9,7 @@ dist
 .wrangler
 .dev.vars
 .turbo
+.react-router
 
 coverage
 playwright-report

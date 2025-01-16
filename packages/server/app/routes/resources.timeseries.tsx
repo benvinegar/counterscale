@@ -1,4 +1,5 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "react-router";
+import type { AnalyticsEngineAPI } from "~/analytics/query";
 import {
     getFiltersFromSearchParams,
     paramsFromUrl,
@@ -6,12 +7,19 @@ import {
     getDateTimeRange,
 } from "~/lib/utils";
 import { useEffect } from "react";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher } from "react-router";
 import { Card, CardContent } from "~/components/ui/card";
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import { SearchFilters } from "~/lib/types";
 
-export async function loader({ context, request }: LoaderFunctionArgs) {
+export async function loader({
+    context,
+    request,
+}: LoaderFunctionArgs<{
+    analyticsEngine: AnalyticsEngineAPI;
+}>) {
+    if (!context) throw new Error("Context is not defined");
+
     const { analyticsEngine } = context;
     const { interval, site } = paramsFromUrl(request.url);
     const url = new URL(request.url);
