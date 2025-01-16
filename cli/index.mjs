@@ -55,7 +55,7 @@ function fetchCloudflareSecrets() {
     });
     spinner.start();
 
-    const child = shell.exec("npx wrangler secret list", {
+    const child = shell.exec("cd packages/server && npx wrangler secret list", {
         silent: true,
         async: true,
     });
@@ -151,7 +151,7 @@ async function promptDeploy() {
         ])
         .then((answers) => {
             if (answers.deploy) {
-                shell.exec("npm run deploy", { silent });
+                shell.exec("npx turbo run deploy", { silent });
             }
         });
 }
