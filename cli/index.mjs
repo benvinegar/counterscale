@@ -11,12 +11,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const silent = false;
 
+const CLI_COLORS = {
+    orange: [245, 107, 61],
+    tan: [243, 227, 190],
+};
+
 console.log(
-    chalk.rgb(
-        245,
-        107,
-        61,
-    )(
+    chalk.rgb(...CLI_COLORS.orange)(
         figlet.textSync("Counterscale", {
             font: "slant",
         }),
@@ -159,7 +160,7 @@ async function promptDeploy() {
 if (createDotDirectory()) {
     console.log(
         chalk
-            .rgb(243, 227, 190)
+            .rgb(...CLI_COLORS.tan)
             .bold("Created .counterscale directory in project root"),
     );
 }
@@ -167,7 +168,7 @@ const secrets = await getCloudflareSecrets();
 
 if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
     console.log(
-        chalk.rgb(243, 227, 190).bold("Cloudflare secrets already set!"),
+        chalk.rgb(...CLI_COLORS.tan).bold("Cloudflare secrets already set!"),
     );
 } else {
     await promptCloudFlareSecrets();
