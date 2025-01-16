@@ -399,7 +399,10 @@ describe("Dashboard route", () => {
         render(<RemixStub />);
 
         // wait until the rows render in the document
-        await waitFor(() => screen.findByText("Chrome"));
+        await waitFor(() => screen.findByText("Chrome"), {
+            // increased timeout because this test was failing on slower environments, e.g. GitHub actions
+            timeout: 5_000,
+        });
 
         // assert some of the data we mocked actually rendered into the document
         expect(screen.getByText("2.1K")).toBeInTheDocument(); // view count
