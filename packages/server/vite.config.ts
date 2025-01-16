@@ -1,7 +1,5 @@
-import {
-    vitePlugin as remix,
-    cloudflareDevProxyVitePlugin as remixCloudflareDevProxy,
-} from "@remix-run/dev";
+import { reactRouter } from "@react-router/dev/vite";
+import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
 import { defineConfig, loadEnv } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -12,20 +10,8 @@ export default defineConfig({
         port: 3005,
     },
     plugins: [
-        remixCloudflareDevProxy({ getLoadContext }),
-        !process.env.VITEST &&
-            remix({
-                ignoredRouteFiles: ["**/.*", "**/*.test.{ts,tsx}"],
-                serverModuleFormat: "esm",
-                future: {
-                    v3_fetcherPersist: true,
-                    v3_relativeSplatPath: true,
-                    v3_throwAbortReason: true,
-                    v3_routeConfig: true,
-                    v3_lazyRouteDiscovery: true,
-                    v3_singleFetch: true,
-                },
-            }),
+        cloudflareDevProxy({ getLoadContext }),
+        !process.env.VITEST && reactRouter(),
         tsconfigPaths(),
     ],
     ssr: {

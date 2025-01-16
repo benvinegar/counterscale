@@ -1,11 +1,11 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "react-router";
 import {
     getDateTimeRange,
     getFiltersFromSearchParams,
     paramsFromUrl,
 } from "~/lib/utils";
 import { useEffect } from "react";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher } from "react-router";
 import { Card } from "~/components/ui/card";
 import { SearchFilters } from "~/lib/types";
 

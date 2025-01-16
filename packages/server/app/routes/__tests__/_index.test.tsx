@@ -2,14 +2,14 @@
 import { test, describe, expect } from "vitest";
 import "vitest-dom/extend-expect";
 
-import { createRemixStub } from "@remix-run/testing";
+import { createRoutesStub } from "react-router";
 import { render, screen } from "@testing-library/react";
 
 import Index from "../_index";
 
 describe("Index route", () => {
     test("renders index route", async () => {
-        const RemixStub = createRemixStub([
+        const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Index,

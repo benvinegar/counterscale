@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs } from "react-router";
 import { collectRequestHandler } from "~/analytics/collect";
 
 // NOTE: This is the Remix/Vite entry point for the /collect endpoin

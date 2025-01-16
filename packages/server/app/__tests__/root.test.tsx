@@ -2,7 +2,7 @@
 import { beforeAll, afterEach, describe, expect, test, vitest } from "vitest";
 import "vitest-dom/extend-expect";
 import { render, waitFor, screen, cleanup } from "@testing-library/react";
-import { createRemixStub } from "@remix-run/testing";
+import { createRoutesStub } from "react-router";
 
 import Root, { Layout } from "../root";
 
@@ -23,7 +23,7 @@ describe("Root", () => {
             };
         }
 
-        const RemixStub = createRemixStub([
+        const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Root,
@@ -48,7 +48,7 @@ describe("Layout", () => {
     });
 
     test("renders with default data when no route data is available", async () => {
-        const RemixStub = createRemixStub([
+        const RemixStub = createRoutesStub([
             {
                 path: "/",
                 // @ts-expect-error TODO: Figure out how t
@@ -81,7 +81,7 @@ describe("Layout", () => {
             };
         }
 
-        const RemixStub = createRemixStub([
+        const RemixStub = createRoutesStub([
             {
                 path: "/",
                 // @ts-expect-error TODO: Figure out how to type this

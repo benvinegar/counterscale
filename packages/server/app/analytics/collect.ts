@@ -1,6 +1,8 @@
+import type {
+    RequestInit,
+    AnalyticsEngineDataset,
+} from "@cloudflare/workers-types";
 import { UAParser } from "ua-parser-js";
-
-import type { RequestInit } from "@cloudflare/workers-types";
 import { maskBrowserVersion } from "~/lib/utils";
 
 // Cookieless visitor/session tracking
