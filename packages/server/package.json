@@ -10,8 +10,8 @@
     "scripts": {
         "dev": "react-router dev",
         "build": "react-router build",
-        "preview": "wrangler pages dev ./build/client",
-        "deploy": "wrangler pages deploy ./build/client",
+        "preview": "wrangler dev",
+        "deploy": "wrangler deploy",
         "lint": "eslint --ignore-path ../../.gitignore --ignore-pattern public/tracker.js --cache --cache-location ./node_modules/.cache/eslint .",
         "test": "TZ=EST vitest run",
         "test-ci": "TZ=EST vitest run --coverage",
