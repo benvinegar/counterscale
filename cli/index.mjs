@@ -1,13 +1,18 @@
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
 import inquirer from "inquirer";
 import figlet from "figlet";
 import shell from "shelljs";
 import chalk from "chalk";
 import ora from "ora";
-import path from "node:path";
 
+import path from "node:path";
+import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 
 const silent = false;
 
@@ -42,8 +47,8 @@ console.log(
 // }
 
 function createDotDirectory() {
-    if (!shell.test("-d", path.join(__dirname, "..", ".counterscale"))) {
-        shell.mkdir(path.join(__dirname, "..", ".counterscale"));
+    if (!shell.test("-d", COUNTERSCALE_DIR)) {
+        shell.mkdir(COUNTERSCALE_DIR);
         return true;
     }
     return false;
@@ -157,21 +162,54 @@ async function promptDeploy() {
         });
 }
 
-if (createDotDirectory()) {
-    console.log(
-        chalk
-            .rgb(...CLI_COLORS.tan)
-            .bold("Created .counterscale directory in project root"),
-    );
+async function initializeDb(db) {
+    console.log("Building database ...");
+    db.exec(`
+    CREATE TABLE deployments(
+        project TEXT, 
+        account_id TEXT, 
+        api_token TEXT, 
+        version TEXT, 
+        deployed_at DATETIME, 
+        url TEXT
+    );`);
 }
-const secrets = await getCloudflareSecrets();
+async function main() {
+    if (createDotDirectory()) {
+        console.log(
+            chalk
+                .rgb(...CLI_COLORS.tan)
+                .bold("Created .counterscale directory in project root"),
+        );
+    }
 
-if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
-    console.log(
-        chalk.rgb(...CLI_COLORS.tan).bold("Cloudflare secrets already set!"),
+    const db = await open({
+        filename: path.join(COUNTERSCALE_DIR, "counterscale.db"),
+        driver: sqlite3.Database,
+    });
+
+    // check if table exists
+    const tableExists = await db.get(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name='deployments';`,
     );
-} else {
-    await promptCloudFlareSecrets();
+
+    if (!tableExists) {
+        await initializeDb(db);
+    }
+
+    const secrets = await getCloudflareSecrets();
+
+    if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
+        console.log(
+            chalk
+                .rgb(...CLI_COLORS.tan)
+                .bold("Cloudflare secrets already set!"),
+        );
+    } else {
+        await promptCloudFlareSecrets();
+    }
+
+    await promptDeploy();
 }
 
-await promptDeploy();
+await main();
