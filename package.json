@@ -12,6 +12,8 @@
         "ora": "^8.1.0",
         "prettier": "^3.3.2",
         "shelljs": "^0.8.5",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^5.1.7",
         "turbo": "latest",
         "wrangler": "^3.61.0"
     },
