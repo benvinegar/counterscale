@@ -54,17 +54,20 @@ function createDotDirectory() {
     return false;
 }
 
-function fetchCloudflareSecrets() {
+async function fetchCloudflareSecrets(workerName) {
     const spinner = ora({
-        text: "Fetching Cloudflare config ...",
+        text: `Fetching Cloudflare config for ${workerName} ...`,
         hideCursor: false,
     });
     spinner.start();
 
-    const child = shell.exec("cd packages/server && npx wrangler secret list", {
-        silent: true,
-        async: true,
-    });
+    const child = shell.exec(
+        `cd packages/server && npx wrangler secret list --name ${workerName}`,
+        {
+            silent: true,
+            async: true,
+        },
+    );
 
     return new Promise((resolve, reject) => {
         child.stdout.on("data", function (data) {
@@ -82,10 +85,10 @@ function fetchCloudflareSecrets() {
     });
 }
 
-async function getCloudflareSecrets() {
+async function getCloudflareSecrets(workerName) {
     let rawSecrets;
     try {
-        rawSecrets = await fetchCloudflareSecrets();
+        rawSecrets = await fetchCloudflareSecrets(workerName);
         // rawSecrets = "[]";
     } catch (err) {
         console.error("Wrangler failed:", err);
@@ -229,7 +232,7 @@ async function main() {
     });
 
     const accountId = await getAccountId();
-
+    console.log("Using Account ID:", accountId);
     // check if table exists
     const tableExists = await db.get(
         `SELECT name FROM sqlite_master WHERE type='table' AND name='deployments';`,
@@ -243,16 +246,28 @@ async function main() {
         `SELECT count(*) as count FROM deployments ORDER BY deployed_at DESC LIMIT 1;`,
     );
 
+    let workerName, analyticsDataset;
     if (!deploymentExists || deploymentExists.count === 0) {
-        const answers = await promptNewProject();
+        ({ workerName, analyticsDataset } = await promptNewProject());
         // insert answers into deployments table
         await db.run(
-            `INSERT INTO deployments (worker_name, analytics_dataset) VALUES (?, ?)`,
-            [answers.workerName, answers.analyticsDataset],
+            `INSERT INTO deployments (account_id, worker_name, analytics_dataset) VALUES (?, ?, ?)`,
+            [accountId, workerName, analyticsDataset],
         );
+    } else {
+        // select workerName from db
+        ({ workerName, analyticsDataset } = await db.get(`
+            SELECT 
+                worker_name as workerName, 
+                analytics_dataset as analyticsDataset 
+            FROM deployments 
+            ORDER BY deployed_at 
+            DESC
+            LIMIT 1;
+        `));
     }
 
-    const secrets = await getCloudflareSecrets();
+    const secrets = await getCloudflareSecrets(workerName);
 
     if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
         console.log(
