@@ -1,5 +1,4 @@
 # default deploy name
-name = "counterscale"
 main = "./workers/app.ts"
 
 # https://developers.cloudflare.com/workers/platform/compatibility-dates
@@ -9,4 +8,3 @@ assets = { directory = "build/client" }
 
 [[analytics_engine_datasets]]
   binding = "WEB_COUNTER_AE"
-  dataset = "metricsDataset"

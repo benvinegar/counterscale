@@ -95,6 +95,7 @@ async function getCloudflareSecrets() {
 
     // parse wrangler secrets json output
     let secretsList;
+    console.log(secretsList);
     try {
         secretsList = JSON.parse(rawSecrets);
     } catch (err) {
@@ -166,14 +167,53 @@ async function initializeDb(db) {
     console.log("Building database ...");
     db.exec(`
     CREATE TABLE deployments(
-        project TEXT, 
-        account_id TEXT, 
-        api_token TEXT, 
-        version TEXT, 
+        worker_name TEXT, 
+        account_id TEXT,
+        analytics_dataset TEXT,
+        version TEXT,
         deployed_at DATETIME, 
-        url TEXT
+        deploy_url TEXT
     );`);
 }
+
+async function promptNewProject() {
+    return await inquirer.prompt([
+        {
+            type: "input",
+            name: "workerName",
+            message:
+                "What do you want to name your worker? [default: counterscale]",
+            default: "counterscale",
+        },
+        {
+            type: "input",
+            name: "analyticsDataset",
+            message:
+                "What do you want to name your analytics dataset? [default: counterscale-data]",
+            default: "counterscale-data",
+        },
+    ]);
+}
+
+async function getAccountId() {
+    const spinner = ora({
+        text: "Fetching Cloudflare Account ID ...",
+        hideCursor: false,
+    });
+    spinner.start();
+
+    // regex account id from output of "npx wrangler whoami"
+    const whoamiResult = await shell.exec("npx wrangler whoami", {
+        silent: true,
+    }).stdout;
+
+    spinner.stop();
+
+    const accountId = whoamiResult.match(/([0-9a-f]{32})/)[0];
+
+    return accountId;
+}
+
 async function main() {
     if (createDotDirectory()) {
         console.log(
@@ -188,6 +228,8 @@ async function main() {
         driver: sqlite3.Database,
     });
 
+    const accountId = await getAccountId();
+
     // check if table exists
     const tableExists = await db.get(
         `SELECT name FROM sqlite_master WHERE type='table' AND name='deployments';`,
@@ -195,6 +237,19 @@ async function main() {
 
     if (!tableExists) {
         await initializeDb(db);
+    }
+
+    const deploymentExists = await db.get(
+        `SELECT count(*) as count FROM deployments ORDER BY deployed_at DESC LIMIT 1;`,
+    );
+
+    if (!deploymentExists || deploymentExists.count === 0) {
+        const answers = await promptNewProject();
+        // insert answers into deployments table
+        await db.run(
+            `INSERT INTO deployments (worker_name, analytics_dataset) VALUES (?, ?)`,
+            [answers.workerName, answers.analyticsDataset],
+        );
     }
 
     const secrets = await getCloudflareSecrets();
