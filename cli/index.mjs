@@ -62,7 +62,8 @@ async function fetchCloudflareSecrets(workerName) {
     spinner.start();
 
     const child = shell.exec(
-        `cd packages/server && npx wrangler secret list --name ${workerName}`,
+        `cd packages/server && npx wrangler secret list --name`,
+        workerName,
         {
             silent: true,
             async: true,
@@ -149,7 +150,7 @@ async function promptCloudFlareSecrets() {
     }
 }
 
-async function promptDeploy() {
+async function promptDeploy(workerName) {
     inquirer
         .prompt([
             {
@@ -161,7 +162,9 @@ async function promptDeploy() {
         ])
         .then((answers) => {
             if (answers.deploy) {
-                shell.exec("npx turbo run deploy", { silent });
+                shell.exec(`npx turbo run deploy -- --name`, workerName, {
+                    silent,
+                });
             }
         });
 }
@@ -279,7 +282,7 @@ async function main() {
         await promptCloudFlareSecrets();
     }
 
-    await promptDeploy();
+    await promptDeploy(workerName);
 }
 
 await main();
