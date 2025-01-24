@@ -2,7 +2,7 @@
     "name": "@counterscale/tracker",
     "sideEffects": false,
     "type": "module",
-    "version": "2.5.0",
+    "version": "2.5.1",
     "engines": {
         "node": ">=20.0.0"
     },
