@@ -1,0 +1,12 @@
+{
+    "main": "./workers/app.ts",
+    "compatibility_date": "2024-12-13",
+    "assets": {
+        "directory": "./build/client"
+    },
+    "analytics_engine_datasets": [
+        {
+            "binding": "WEB_COUNTER_AE"
+        }
+    ]
+}
