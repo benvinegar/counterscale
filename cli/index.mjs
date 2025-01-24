@@ -92,27 +92,24 @@ async function fetchCloudflareSecrets(workerName) {
     });
     spinner.start();
 
-    const child = shell.exec(
-        `npx wrangler secret list --config $HOME/.counterscale/wrangler.json`,
-        {
-            silent: true,
-            async: true,
-        },
-    );
-
     return new Promise((resolve, reject) => {
-        child.stdout.on("data", function (data) {
-            spinner.stop();
-            resolve(data);
-        });
-        child.on("exit", function () {
-            spinner.stop();
-        });
+        shell.exec(
+            `npx wrangler secret list --config $HOME/.counterscale/wrangler.json`,
+            {
+                silent: true,
+                async: true,
+            },
+            (code, stdout, _stderr) => {
+                if (code === 0) {
+                    spinner.stop();
+                    resolve(stdout);
+                }
 
-        child.on("error", function (err) {
-            spinner.stop();
-            reject(err);
-        });
+                spinner.stop();
+                // Wrangler outputs to stdout, not stderr
+                reject(stdout);
+            },
+        );
     });
 }
 
@@ -122,10 +119,9 @@ async function getCloudflareSecrets(workerName) {
         rawSecrets = await fetchCloudflareSecrets(workerName);
         // rawSecrets = "[]";
     } catch (err) {
-        console.error("Wrangler failed:", err);
+        console.error(err);
         shell.exit(1);
     }
-    // const rawSecrets = await getCloudflareSecrets();
 
     // parse wrangler secrets json output
     let secretsList;
@@ -143,18 +139,10 @@ async function getCloudflareSecrets(workerName) {
     return secrets;
 }
 
-async function promptCloudFlareSecrets() {
+async function promptCloudFlareSecrets(accountId) {
     let answers;
     try {
         answers = await inquirer.prompt([
-            /* Pass your questions in here */
-            // {
-            //     type: "input",
-            //     name: "cfAccountId",
-            //     message: "What's your Cloudflare Account ID?",
-            //     default: false,
-            // },
-            /* Pass your questions in here */
             {
                 type: "password",
                 name: "cfApiToken",
@@ -169,7 +157,7 @@ async function promptCloudFlareSecrets() {
     if (answers.cfAccountId && answers.cfApiToken) {
         shell.env["CLOUDFLARE_API_TOKEN"] = answers.cfApiToken;
         shell.exec(
-            `echo ${answers.cfAccountId} | npx wrangler secret put CF_ACCOUNT_ID --config $HOME/.counterscale/wrangler.json`,
+            `echo ${accountId} | npx wrangler secret put CF_ACCOUNT_ID --config $HOME/.counterscale/wrangler.json`,
             { silent },
         );
         shell.exec(
@@ -234,9 +222,9 @@ async function getAccountId() {
 
     spinner.stop();
 
-    const accountId = whoamiResult.match(/([0-9a-f]{32})/)[0];
+    const match = whoamiResult.match(/([0-9a-f]{32})/);
 
-    return accountId;
+    return match ? match[0] : null;
 }
 
 async function main() {
@@ -249,7 +237,18 @@ async function main() {
     }
 
     const accountId = await getAccountId();
-    console.log("Using Account ID:", accountId);
+    if (!accountId) {
+        console.log("Not authenticated with Cloudflare.\n");
+        console.log(
+            `Run ${chalk.red(`npx wrangler login`)} first, then try again.`,
+        );
+        process.exit(1);
+    }
+    console.log(
+        "Authenticated as Account ID ending with:",
+        accountId.slice(-6), // show only last 6 digits for privacy
+        "\n",
+    );
 
     let workerName, analyticsDataset;
     // check if wrangler.json in .counterscale dir
@@ -284,10 +283,10 @@ async function main() {
         console.log(
             chalk
                 .rgb(...CLI_COLORS.tan)
-                .bold("Cloudflare secrets already set!"),
+                .bold("Cloudflare secrets are already configured."),
         );
     } else {
-        await promptCloudFlareSecrets();
+        await promptCloudFlareSecrets(accountId);
     }
 
     await promptDeploy(workerName);
