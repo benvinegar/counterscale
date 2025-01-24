@@ -1,5 +1,3 @@
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
 import inquirer from "inquirer";
 import figlet from "figlet";
 import shell from "shelljs";
@@ -21,6 +19,23 @@ const silent = false;
 const CLI_COLORS = {
     orange: [245, 107, 61],
     tan: [243, 227, 190],
+};
+
+// Recursively convert all relative paths to absolute
+const makePathsAbsolute = (obj) => {
+    if (!obj || typeof obj !== "object") return;
+
+    for (const [key, value] of Object.entries(obj)) {
+        if (
+            typeof value === "string" &&
+            value.includes("/") &&
+            !path.isAbsolute(value)
+        ) {
+            obj[key] = path.join(__dirname, "..", "packages", "server", value);
+        } else if (typeof value === "object") {
+            makePathsAbsolute(value);
+        }
+    }
 };
 
 console.log(
@@ -51,20 +66,23 @@ console.log(
 function createDotDirectory() {
     if (!shell.test("-d", COUNTERSCALE_DIR)) {
         shell.mkdir(COUNTERSCALE_DIR);
-        // Copy wrangler.default.json to .counterscale directory
-        shell.cp(
-            path.join(
-                __dirname,
-                "..",
-                "packages",
-                "server",
-                "wrangler.default.json",
-            ),
-            path.join(COUNTERSCALE_DIR, "wrangler.json"),
-        );
         return true;
     }
     return false;
+}
+
+function copyWranglerConfig() {
+    // Copy wrangler.default.json to .counterscale directory
+    shell.cp(
+        path.join(
+            __dirname,
+            "..",
+            "packages",
+            "server",
+            "wrangler.default.json",
+        ),
+        path.join(COUNTERSCALE_DIR, "wrangler.json"),
+    );
 }
 
 async function fetchCloudflareSecrets(workerName) {
@@ -74,7 +92,6 @@ async function fetchCloudflareSecrets(workerName) {
     });
     spinner.start();
 
-    shell.pushd("packages/server");
     const child = shell.exec(
         `npx wrangler secret list --config $HOME/.counterscale/wrangler.json`,
         {
@@ -86,17 +103,14 @@ async function fetchCloudflareSecrets(workerName) {
     return new Promise((resolve, reject) => {
         child.stdout.on("data", function (data) {
             spinner.stop();
-            shell.popd();
             resolve(data);
         });
         child.on("exit", function () {
             spinner.stop();
-            shell.popd();
         });
 
         child.on("error", function (err) {
             spinner.stop();
-            shell.popd();
             reject(err);
         });
     });
@@ -180,24 +194,11 @@ async function promptDeploy(workerName) {
                 shell.exec(
                     `npx turbo run deploy -- --config $HOME/.counterscale/wrangler.json`,
                     {
-                        silent: true,
+                        silent: false,
                     },
                 );
             }
         });
-}
-
-async function initializeDb(db) {
-    console.log("Building database ...");
-    db.exec(`
-    CREATE TABLE deployments(
-        worker_name TEXT, 
-        account_id TEXT,
-        analytics_dataset TEXT,
-        version TEXT,
-        deployed_at DATETIME, 
-        deploy_url TEXT
-    );`);
 }
 
 async function promptNewProject() {
@@ -247,84 +248,35 @@ async function main() {
         );
     }
 
-    const db = await open({
-        filename: path.join(COUNTERSCALE_DIR, "counterscale.db"),
-        driver: sqlite3.Database,
-    });
-
     const accountId = await getAccountId();
     console.log("Using Account ID:", accountId);
-    // check if table exists
-    const tableExists = await db.get(
-        `SELECT name FROM sqlite_master WHERE type='table' AND name='deployments';`,
-    );
-
-    if (!tableExists) {
-        await initializeDb(db);
-    }
-
-    const deploymentExists = await db.get(
-        `SELECT count(*) as count FROM deployments ORDER BY deployed_at DESC LIMIT 1;`,
-    );
 
     let workerName, analyticsDataset;
-    if (!deploymentExists || deploymentExists.count === 0) {
+    // check if wrangler.json in .counterscale dir
+    const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
+    if (!fs.existsSync(wranglerConfigPath)) {
         ({ workerName, analyticsDataset } = await promptNewProject());
-        // insert answers into deployments table
-        await db.run(
-            `INSERT INTO deployments (account_id, worker_name, analytics_dataset) VALUES (?, ?, ?)`,
-            [accountId, workerName, analyticsDataset],
+
+        copyWranglerConfig();
+
+        // Update wrangler.json with worker name and analytics dataset
+        const wranglerConfig = JSON.parse(
+            fs.readFileSync(wranglerConfigPath, "utf8"),
+        );
+        wranglerConfig.name = workerName;
+        wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+        makePathsAbsolute(wranglerConfig);
+        fs.writeFileSync(
+            wranglerConfigPath,
+            JSON.stringify(wranglerConfig, null, 2),
         );
     } else {
-        // select workerName from db
-        ({ workerName, analyticsDataset } = await db.get(`
-            SELECT 
-                worker_name as workerName, 
-                analytics_dataset as analyticsDataset 
-            FROM deployments 
-            ORDER BY deployed_at 
-            DESC
-            LIMIT 1;
-        `));
+        const wranglerConfig = JSON.parse(
+            fs.readFileSync(wranglerConfigPath, "utf8"),
+        );
+        workerName = wranglerConfig.name;
+        analyticsDataset = wranglerConfig.analytics_engine_datasets[0].dataset;
     }
-
-    // Update wrangler.json with worker name and analytics dataset
-    const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
-    const wranglerConfig = JSON.parse(
-        fs.readFileSync(wranglerConfigPath, "utf8"),
-    );
-    wranglerConfig.name = workerName;
-    wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
-
-    // Recursively convert all relative paths to absolute
-    const makePathsAbsolute = (obj) => {
-        if (!obj || typeof obj !== "object") return;
-
-        for (const [key, value] of Object.entries(obj)) {
-            if (
-                typeof value === "string" &&
-                value.includes("/") &&
-                !path.isAbsolute(value)
-            ) {
-                obj[key] = path.join(
-                    __dirname,
-                    "..",
-                    "packages",
-                    "server",
-                    value,
-                );
-            } else if (typeof value === "object") {
-                makePathsAbsolute(value);
-            }
-        }
-    };
-
-    makePathsAbsolute(wranglerConfig);
-
-    fs.writeFileSync(
-        wranglerConfigPath,
-        JSON.stringify(wranglerConfig, null, 2),
-    );
 
     const secrets = await getCloudflareSecrets(workerName);
 
