@@ -3,8 +3,10 @@ import { open } from "sqlite";
 import inquirer from "inquirer";
 import figlet from "figlet";
 import shell from "shelljs";
+// import shell from "shelljs-exec-proxy";
 import chalk from "chalk";
 import ora from "ora";
+import fs from "node:fs";
 
 import path from "node:path";
 import { homedir } from "node:os";
@@ -49,6 +51,17 @@ console.log(
 function createDotDirectory() {
     if (!shell.test("-d", COUNTERSCALE_DIR)) {
         shell.mkdir(COUNTERSCALE_DIR);
+        // Copy wrangler.default.json to .counterscale directory
+        shell.cp(
+            path.join(
+                __dirname,
+                "..",
+                "packages",
+                "server",
+                "wrangler.default.json",
+            ),
+            path.join(COUNTERSCALE_DIR, "wrangler.json"),
+        );
         return true;
     }
     return false;
@@ -61,9 +74,9 @@ async function fetchCloudflareSecrets(workerName) {
     });
     spinner.start();
 
+    shell.pushd("packages/server");
     const child = shell.exec(
-        `cd packages/server && npx wrangler secret list --name`,
-        workerName,
+        `npx wrangler secret list --config $HOME/.counterscale/wrangler.json`,
         {
             silent: true,
             async: true,
@@ -73,14 +86,17 @@ async function fetchCloudflareSecrets(workerName) {
     return new Promise((resolve, reject) => {
         child.stdout.on("data", function (data) {
             spinner.stop();
+            shell.popd();
             resolve(data);
         });
         child.on("exit", function () {
             spinner.stop();
+            shell.popd();
         });
 
         child.on("error", function (err) {
             spinner.stop();
+            shell.popd();
             reject(err);
         });
     });
@@ -99,7 +115,6 @@ async function getCloudflareSecrets(workerName) {
 
     // parse wrangler secrets json output
     let secretsList;
-    console.log(secretsList);
     try {
         secretsList = JSON.parse(rawSecrets);
     } catch (err) {
@@ -119,12 +134,12 @@ async function promptCloudFlareSecrets() {
     try {
         answers = await inquirer.prompt([
             /* Pass your questions in here */
-            {
-                type: "input",
-                name: "cfAccountId",
-                message: "What's your Cloudflare Account ID?",
-                default: false,
-            },
+            // {
+            //     type: "input",
+            //     name: "cfAccountId",
+            //     message: "What's your Cloudflare Account ID?",
+            //     default: false,
+            // },
             /* Pass your questions in here */
             {
                 type: "password",
@@ -140,11 +155,11 @@ async function promptCloudFlareSecrets() {
     if (answers.cfAccountId && answers.cfApiToken) {
         shell.env["CLOUDFLARE_API_TOKEN"] = answers.cfApiToken;
         shell.exec(
-            `echo ${answers.cfAccountId} | npx wrangler secret put CF_ACCOUNT_ID`,
+            `echo ${answers.cfAccountId} | npx wrangler secret put CF_ACCOUNT_ID --config $HOME/.counterscale/wrangler.json`,
             { silent },
         );
         shell.exec(
-            `echo ${answers.cfApiToken} | npx wrangler secret put CF_BEARER_TOKEN`,
+            `echo ${answers.cfApiToken} | npx wrangler secret put CF_BEARER_TOKEN --config $HOME/.counterscale/wrangler.json`,
             { silent },
         );
     }
@@ -162,9 +177,12 @@ async function promptDeploy(workerName) {
         ])
         .then((answers) => {
             if (answers.deploy) {
-                shell.exec(`npx turbo run deploy -- --name`, workerName, {
-                    silent,
-                });
+                shell.exec(
+                    `npx turbo run deploy -- --config $HOME/.counterscale/wrangler.json`,
+                    {
+                        silent: true,
+                    },
+                );
             }
         });
 }
@@ -269,6 +287,44 @@ async function main() {
             LIMIT 1;
         `));
     }
+
+    // Update wrangler.json with worker name and analytics dataset
+    const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
+    const wranglerConfig = JSON.parse(
+        fs.readFileSync(wranglerConfigPath, "utf8"),
+    );
+    wranglerConfig.name = workerName;
+    wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+
+    // Recursively convert all relative paths to absolute
+    const makePathsAbsolute = (obj) => {
+        if (!obj || typeof obj !== "object") return;
+
+        for (const [key, value] of Object.entries(obj)) {
+            if (
+                typeof value === "string" &&
+                value.includes("/") &&
+                !path.isAbsolute(value)
+            ) {
+                obj[key] = path.join(
+                    __dirname,
+                    "..",
+                    "packages",
+                    "server",
+                    value,
+                );
+            } else if (typeof value === "object") {
+                makePathsAbsolute(value);
+            }
+        }
+    };
+
+    makePathsAbsolute(wranglerConfig);
+
+    fs.writeFileSync(
+        wranglerConfigPath,
+        JSON.stringify(wranglerConfig, null, 2),
+    );
 
     const secrets = await getCloudflareSecrets(workerName);
 
