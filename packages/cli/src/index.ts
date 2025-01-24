@@ -266,16 +266,8 @@ async function getAccountId(): Promise<string | null> {
             ((code: number, stdout: string, stderr: string) => {
                 spinner.stop();
                 if (code === 0) {
-                    try {
-                        const response = JSON.parse(
-                            stdout,
-                        ) as AccountIdResponse;
-                        resolve(response.result.id);
-                    } catch (err) {
-                        reject(
-                            new Error("Failed to parse account ID response"),
-                        );
-                    }
+                    const match = stdout.match(/([0-9a-f]{32})/);
+                    -resolve(match ? match[0] : null);
                 }
                 reject(new Error(stderr || stdout));
             }) as ShellExecCallback,
