@@ -25,6 +25,7 @@
     },
     "devDependencies": {
         "@types/figlet": "^1.5.8",
+        "@types/inquirer": "^9.0.7",
         "@vitejs/plugin-react": "^4.2.1",
         "rollup-plugin-node-externals": "^8.0.0",
         "typescript": "^5.3.3",
