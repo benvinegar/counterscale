@@ -10,13 +10,5 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 
     // Similarly, convert Response to Cloudflare Response type by adding
     // webSocket property
-    const response = collectRequestHandler(
-        _request,
-        env,
-    ) as unknown as CfResponse;
-
-    return {
-        ...response,
-        webSocket: null,
-    } as CfResponse;
+    return collectRequestHandler(_request, env) as unknown as CfResponse;
 };
