@@ -1,7 +1,7 @@
+#!/usr/bin/env node
 import inquirer from "inquirer";
 import figlet from "figlet";
 import shell from "shelljs";
-// import shell from "shelljs-exec-proxy";
 import chalk from "chalk";
 import ora from "ora";
 import fs from "node:fs";
@@ -38,13 +38,15 @@ const makePathsAbsolute = (obj) => {
     }
 };
 
-console.log(
-    chalk.rgb(...CLI_COLORS.orange)(
-        figlet.textSync("Counterscale", {
-            font: "slant",
-        }),
-    ),
-);
+function printTitle() {
+    console.log(
+        chalk.rgb(...CLI_COLORS.orange)(
+            figlet.textSync("Counterscale", {
+                font: "slant",
+            }),
+        ),
+    );
+}
 
 // async function promptDotDirectory() {
 //     await inquirer
@@ -87,7 +89,7 @@ function copyWranglerConfig() {
 
 async function fetchCloudflareSecrets(workerName) {
     const spinner = ora({
-        text: `Fetching Cloudflare config for ${workerName} ...`,
+        text: `Fetching Cloudflare config for worker: ${workerName}`,
         hideCursor: false,
     });
     spinner.start();
@@ -100,13 +102,11 @@ async function fetchCloudflareSecrets(workerName) {
                 async: true,
             },
             (code, stdout, _stderr) => {
+                spinner.stop();
                 if (code === 0) {
-                    spinner.stop();
                     resolve(stdout);
                 }
-
-                spinner.stop();
-                // Wrangler outputs to stdout, not stderr
+                // NOTE: wrangler sends error text to stdout, not stderr
                 reject(stdout);
             },
         );
@@ -117,8 +117,12 @@ async function getCloudflareSecrets(workerName) {
     let rawSecrets;
     try {
         rawSecrets = await fetchCloudflareSecrets(workerName);
-        // rawSecrets = "[]";
     } catch (err) {
+        // worker not created yet
+        if (err.indexOf("[code: 10007]") !== -1) {
+            return {};
+        }
+        // all other errors
         console.error(err);
         shell.exit(1);
     }
@@ -145,6 +149,7 @@ async function promptCloudFlareSecrets(accountId) {
         answers = await inquirer.prompt([
             {
                 type: "password",
+                mask: "*",
                 name: "cfApiToken",
                 message: "What's your Cloudflare API Token?",
                 default: false,
@@ -154,20 +159,20 @@ async function promptCloudFlareSecrets(accountId) {
         console.error(err);
     }
 
-    if (answers.cfAccountId && answers.cfApiToken) {
-        shell.env["CLOUDFLARE_API_TOKEN"] = answers.cfApiToken;
+    if (answers.cfApiToken) {
         shell.exec(
             `echo ${accountId} | npx wrangler secret put CF_ACCOUNT_ID --config $HOME/.counterscale/wrangler.json`,
-            { silent },
+            {},
         );
         shell.exec(
             `echo ${answers.cfApiToken} | npx wrangler secret put CF_BEARER_TOKEN --config $HOME/.counterscale/wrangler.json`,
-            { silent },
+            {},
         );
+        console.log("");
     }
 }
 
-async function promptDeploy(workerName) {
+async function promptDeploy() {
     inquirer
         .prompt([
             {
@@ -216,18 +221,28 @@ async function getAccountId() {
     spinner.start();
 
     // regex account id from output of "npx wrangler whoami"
-    const whoamiResult = await shell.exec("npx wrangler whoami", {
-        silent: true,
-    }).stdout;
+    return new Promise((resolve, reject) => {
+        shell.exec(
+            "npx wrangler whoami",
+            {
+                silent: true,
+            },
+            (code, stdout, stderr) => {
+                spinner.stop();
+                if (code === 0) {
+                    const match = stdout.match(/([0-9a-f]{32})/);
+                    resolve(match ? match[0] : null);
+                }
 
-    spinner.stop();
-
-    const match = whoamiResult.match(/([0-9a-f]{32})/);
-
-    return match ? match[0] : null;
+                reject(stderr);
+            },
+        );
+    });
 }
 
 async function main() {
+    printTitle();
+
     if (createDotDirectory()) {
         console.log(
             chalk
@@ -245,8 +260,8 @@ async function main() {
         process.exit(1);
     }
     console.log(
-        "Authenticated as Account ID ending with:",
-        accountId.slice(-6), // show only last 6 digits for privacy
+        chalk.green("✅ Authenticated as Account ID ending with:"),
+        chalk.underline(accountId.slice(-6)), // show only last 6 digits for privacy
         "\n",
     );
 
@@ -281,15 +296,14 @@ async function main() {
 
     if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
         console.log(
-            chalk
-                .rgb(...CLI_COLORS.tan)
-                .bold("Cloudflare secrets are already configured."),
+            chalk.green("✅ Cloudflare secrets are already configured"),
+            "\n",
         );
     } else {
         await promptCloudFlareSecrets(accountId);
     }
 
-    await promptDeploy(workerName);
+    await promptDeploy();
 }
 
 await main();

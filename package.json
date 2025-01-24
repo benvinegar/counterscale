@@ -14,7 +14,7 @@
         "shelljs": "^0.8.5",
         "shelljs-exec-proxy": "^0.2.1",
         "turbo": "latest",
-        "wrangler": "^3.61.0"
+        "wrangler": "^3.105.0"
     },
     "optionalDependencies": {
         "@rollup/rollup-linux-x64-gnu": "4.9.5"
