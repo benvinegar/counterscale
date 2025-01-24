@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import inquirer from "inquirer";
 import figlet from "figlet";
-import shell from "shelljs";
+
+// @ts-expect-error 7016
+import shell from "shelljs"; // see https://stackoverflow.com/a/78649918
+
 import chalk from "chalk";
 import ora from "ora";
 import fs from "node:fs";
@@ -14,15 +17,19 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 
-const silent = false;
+// Types for CLI colors
+interface CliColors {
+    orange: [number, number, number];
+    tan: [number, number, number];
+}
 
-const CLI_COLORS = {
+const CLI_COLORS: CliColors = {
     orange: [245, 107, 61],
     tan: [243, 227, 190],
 };
 
 // Recursively convert all relative paths to absolute
-const makePathsAbsolute = (obj) => {
+const makePathsAbsolute = (obj: Record<string, any>): void => {
     if (!obj || typeof obj !== "object") return;
 
     for (const [key, value] of Object.entries(obj)) {
@@ -38,11 +45,11 @@ const makePathsAbsolute = (obj) => {
     }
 };
 
-function printTitle() {
+function printTitle(): void {
     console.log(
         chalk.rgb(...CLI_COLORS.orange)(
             figlet.textSync("Counterscale", {
-                font: "slant",
+                font: "Slant",
             }),
         ),
     );
@@ -65,7 +72,7 @@ function printTitle() {
 //         });
 // }
 
-function createDotDirectory() {
+function createDotDirectory(): boolean {
     if (!shell.test("-d", COUNTERSCALE_DIR)) {
         shell.mkdir(COUNTERSCALE_DIR);
         return true;
@@ -73,7 +80,7 @@ function createDotDirectory() {
     return false;
 }
 
-function copyWranglerConfig() {
+function copyWranglerConfig(): void {
     // Copy wrangler.default.json to .counterscale directory
     shell.cp(
         path.join(
@@ -87,64 +94,80 @@ function copyWranglerConfig() {
     );
 }
 
-async function fetchCloudflareSecrets(workerName) {
+// Types for shell.exec callback
+interface ShellExecCallback {
+    (code: number, stdout: string, stderr: string): void;
+}
+
+async function fetchCloudflareSecrets(workerName: string): Promise<string> {
     const spinner = ora({
         text: `Fetching Cloudflare config for worker: ${workerName}`,
         hideCursor: false,
     });
     spinner.start();
 
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
         shell.exec(
             `npx wrangler secret list --config $HOME/.counterscale/wrangler.json`,
             {
                 silent: true,
                 async: true,
             },
-            (code, stdout, _stderr) => {
+            ((code: number, stdout: string, stderr: string) => {
                 spinner.stop();
                 if (code === 0) {
                     resolve(stdout);
                 }
                 // NOTE: wrangler sends error text to stdout, not stderr
                 reject(stdout);
-            },
+            }) as ShellExecCallback,
         );
     });
 }
 
-async function getCloudflareSecrets(workerName) {
-    let rawSecrets;
+interface SecretItem {
+    name: string;
+    type: string;
+}
+
+async function getCloudflareSecrets(
+    workerName: string,
+): Promise<Record<string, string>> {
+    let rawSecrets: string;
     try {
         rawSecrets = await fetchCloudflareSecrets(workerName);
     } catch (err) {
         // worker not created yet
-        if (err.indexOf("[code: 10007]") !== -1) {
+        if (typeof err === "string" && err.indexOf("[code: 10007]") !== -1) {
             return {};
         }
         // all other errors
         console.error(err);
-        shell.exit(1);
+        return shell.exit(1);
     }
 
     // parse wrangler secrets json output
-    let secretsList;
+    let secretsList: SecretItem[];
     try {
         secretsList = JSON.parse(rawSecrets);
     } catch (err) {
         console.error("Error: Unable to parse wrangler secrets");
-        shell.exit(1);
+        return shell.exit(1);
     }
 
-    const secrets = {};
-    Array.from(secretsList).forEach((secret) => {
+    const secrets: Record<string, string> = {};
+    secretsList.forEach((secret: SecretItem) => {
         secrets[secret.name] = secret.type;
     });
     return secrets;
 }
 
-async function promptCloudFlareSecrets(accountId) {
-    let answers;
+async function promptCloudFlareSecrets(accountId: string): Promise<void> {
+    interface CloudflareAnswers {
+        cfApiToken: string;
+    }
+
+    let answers: CloudflareAnswers;
     try {
         answers = await inquirer.prompt([
             {
@@ -157,6 +180,7 @@ async function promptCloudFlareSecrets(accountId) {
         ]);
     } catch (err) {
         console.error(err);
+        return shell.exit(-1);
     }
 
     if (answers.cfApiToken) {
@@ -172,9 +196,13 @@ async function promptCloudFlareSecrets(accountId) {
     }
 }
 
-async function promptDeploy() {
+async function promptDeploy(): Promise<void> {
+    interface DeployAnswers {
+        deploy: boolean;
+    }
+
     inquirer
-        .prompt([
+        .prompt<DeployAnswers>([
             {
                 type: "confirm",
                 name: "deploy",
@@ -194,8 +222,13 @@ async function promptDeploy() {
         });
 }
 
-async function promptNewProject() {
-    return await inquirer.prompt([
+interface NewProjectAnswers {
+    workerName: string;
+    analyticsDataset: string;
+}
+
+async function promptNewProject(): Promise<NewProjectAnswers> {
+    return await inquirer.prompt<NewProjectAnswers>([
         {
             type: "input",
             name: "workerName",
@@ -213,34 +246,44 @@ async function promptNewProject() {
     ]);
 }
 
-async function getAccountId() {
+interface AccountIdResponse {
+    result: {
+        id: string;
+    };
+}
+
+async function getAccountId(): Promise<string | null> {
     const spinner = ora({
         text: "Fetching Cloudflare Account ID ...",
         hideCursor: false,
     });
     spinner.start();
 
-    // regex account id from output of "npx wrangler whoami"
-    return new Promise((resolve, reject) => {
+    return new Promise<string | null>((resolve, reject) => {
         shell.exec(
-            "npx wrangler whoami",
-            {
-                silent: true,
-            },
-            (code, stdout, stderr) => {
+            `npx wrangler whoami --config $HOME/.counterscale/wrangler.json`,
+            { silent: true, async: true },
+            ((code: number, stdout: string, stderr: string) => {
                 spinner.stop();
                 if (code === 0) {
-                    const match = stdout.match(/([0-9a-f]{32})/);
-                    resolve(match ? match[0] : null);
+                    try {
+                        const response = JSON.parse(
+                            stdout,
+                        ) as AccountIdResponse;
+                        resolve(response.result.id);
+                    } catch (err) {
+                        reject(
+                            new Error("Failed to parse account ID response"),
+                        );
+                    }
                 }
-
-                reject(stderr);
-            },
+                reject(new Error(stderr || stdout));
+            }) as ShellExecCallback,
         );
     });
 }
 
-async function main() {
+async function main(): Promise<void> {
     printTitle();
 
     if (createDotDirectory()) {

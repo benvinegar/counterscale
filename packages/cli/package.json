@@ -1,0 +1,38 @@
+{
+    "name": "@counterscale/cli",
+    "version": "2.5.1",
+    "type": "module",
+    "private": true,
+    "bin": {
+        "counterscale": "./dist/index.js"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "build": "tsc --build",
+        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+        "test": "TZ=EST vitest run",
+        "test-ci": "TZ=EST vitest run --coverage"
+    },
+    "dependencies": {
+        "chalk": "^5.3.0",
+        "figlet": "^1.7.0",
+        "inquirer": "^9.2.12",
+        "shelljs": "^0.8.5",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^5.1.7"
+    },
+    "devDependencies": {
+        "@types/figlet": "^1.5.8",
+        "@vitejs/plugin-react": "^4.2.1",
+        "rollup-plugin-node-externals": "^8.0.0",
+        "typescript": "^5.3.3",
+        "vite": "^5.0.10",
+        "vitest": "^1.1.0"
+    },
+    "overrides": {
+        "minimatch": "5.1.2",
+        "glob": "8.1.0"
+    }
+}
