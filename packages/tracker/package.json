@@ -12,7 +12,8 @@
         "test": "vitest run && playwright test",
         "test-ci": "vitest run --coverage && playwright test",
         "start": "node ./integration/server.cjs",
-        "typecheck": "tsc"
+        "typecheck": "tsc",
+        "publish": "npm publish"
     },
     "devDependencies": {
         "@playwright/test": "^1.49.1",

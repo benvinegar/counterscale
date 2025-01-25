@@ -43,6 +43,9 @@
         },
         "typecheck": {
             "dependsOn": ["build"]
+        },
+        "@counterscale/tracker#publish": {
+            "dependsOn": ["build"]
         }
     }
 }
