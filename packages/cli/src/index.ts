@@ -17,6 +17,39 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 
+function getDistDir(): string {
+    const npmRoot = shell.exec("npm root", {
+        silent: true,
+    }).stdout;
+
+    // find the @counterscale/server package
+    // 1) first check local node_modules dir
+    const localPath = path.join(npmRoot, "@counterscale", "server", "build");
+    if (fs.existsSync(localPath)) {
+        return localPath;
+    }
+
+    // 2) if not found, check root project directory (e.g. if this is a monorepo checkout)
+    const monoRepoPath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "packages",
+        "server",
+        "build",
+    );
+    if (fs.existsSync(monoRepoPath)) {
+        return monoRepoPath;
+    }
+
+    throw new Error(
+        "Could not find @counterscale/server package. Is it installed?",
+    );
+}
+
+const DIST_DIR = getDistDir();
+
 // Types for CLI colors
 interface CliColors {
     orange: [number, number, number];
@@ -267,7 +300,7 @@ async function getAccountId(): Promise<string | null> {
                 spinner.stop();
                 if (code === 0) {
                     const match = stdout.match(/([0-9a-f]{32})/);
-                    -resolve(match ? match[0] : null);
+                    resolve(match ? match[0] : null);
                 }
                 reject(new Error(stderr || stdout));
             }) as ShellExecCallback,
@@ -277,6 +310,12 @@ async function getAccountId(): Promise<string | null> {
 
 async function main(): Promise<void> {
     printTitle();
+
+    console.log(
+        chalk.green("✅ Using server package found in:"),
+        DIST_DIR,
+        "\n",
+    );
 
     if (createDotDirectory()) {
         console.log(

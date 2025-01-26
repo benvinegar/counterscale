@@ -1,12 +1,14 @@
 {
     "name": "@counterscale/server",
-    "private": true,
     "sideEffects": false,
     "type": "module",
-    "version": "2.5.1",
+    "version": "3.0.0-alpha.1",
     "engines": {
         "node": ">=20.0.0"
     },
+    "files": [
+        "build"
+    ],
     "scripts": {
         "dev": "react-router dev",
         "build": "react-router build",

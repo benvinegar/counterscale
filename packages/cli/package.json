@@ -1,6 +1,6 @@
 {
     "name": "@counterscale/cli",
-    "version": "2.5.1",
+    "version": "3.0.0-alpha.1",
     "type": "module",
     "private": true,
     "bin": {
@@ -16,12 +16,12 @@
         "test-ci": "TZ=EST vitest run --coverage"
     },
     "dependencies": {
+        "@counterscale/tracker": "*",
         "chalk": "^5.3.0",
         "figlet": "^1.7.0",
         "inquirer": "^9.2.12",
         "shelljs": "^0.8.5",
-        "sqlite": "^5.1.1",
-        "sqlite3": "^5.1.7"
+        "wrangler": "^3.105.0"
     },
     "devDependencies": {
         "@types/figlet": "^1.5.8",
