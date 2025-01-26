@@ -1,6 +1,6 @@
 {
     "name": "@counterscale/server",
-    "version": "3.0.0-alpha.2",
+    "version": "3.0.0-alpha.3",
     "description": "Counterscale Server",
     "homepage": "https://counterscale.dev",
     "license": "MIT",
@@ -13,7 +13,8 @@
         "node": ">=20.0.0"
     },
     "files": [
-        "build"
+        "build",
+        "workers"
     ],
     "scripts": {
         "dev": "react-router dev",

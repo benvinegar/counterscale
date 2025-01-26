@@ -24,7 +24,12 @@ function getDistDir(): string {
 
     // find the @counterscale/server package
     // 1) first check local node_modules dir
-    const localPath = path.join(npmRoot, "@counterscale", "server", "build");
+    const localPath = path.join(
+        npmRoot.trim(),
+        "@counterscale",
+        "server",
+        "build",
+    );
     if (fs.existsSync(localPath)) {
         return localPath;
     }
@@ -246,7 +251,7 @@ async function promptDeploy(): Promise<void> {
         .then((answers) => {
             if (answers.deploy) {
                 shell.exec(
-                    `npx turbo run deploy -- --config $HOME/.counterscale/wrangler.json`,
+                    `npx wrangler deploy --config $HOME/.counterscale/wrangler.json`,
                     {
                         silent: false,
                     },
