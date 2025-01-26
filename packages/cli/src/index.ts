@@ -17,21 +17,16 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 
-function getDistDir(): string {
+function getServerPkgDir(): string {
     const npmRoot = shell.exec("npm root", {
         silent: true,
     }).stdout;
 
     // find the @counterscale/server package
     // 1) first check local node_modules dir
-    const localPath = path.join(
-        npmRoot.trim(),
-        "@counterscale",
-        "server",
-        "build",
-    );
-    if (fs.existsSync(localPath)) {
-        return localPath;
+    const nodeModulePath = path.join(npmRoot.trim(), "@counterscale", "server");
+    if (fs.existsSync(nodeModulePath)) {
+        return nodeModulePath;
     }
 
     // 2) if not found, check root project directory (e.g. if this is a monorepo checkout)
@@ -42,7 +37,6 @@ function getDistDir(): string {
         "..",
         "packages",
         "server",
-        "build",
     );
     if (fs.existsSync(monoRepoPath)) {
         return monoRepoPath;
@@ -53,7 +47,7 @@ function getDistDir(): string {
     );
 }
 
-const DIST_DIR = getDistDir();
+const SERVER_PKG_DIR = getServerPkgDir();
 
 // Types for CLI colors
 interface CliColors {
@@ -76,7 +70,7 @@ const makePathsAbsolute = (obj: Record<string, any>): void => {
             value.includes("/") &&
             !path.isAbsolute(value)
         ) {
-            obj[key] = path.join(__dirname, "..", "packages", "server", value);
+            obj[key] = path.join(SERVER_PKG_DIR, value);
         } else if (typeof value === "object") {
             makePathsAbsolute(value);
         }
@@ -121,7 +115,7 @@ function createDotDirectory(): boolean {
 function copyWranglerConfig(): void {
     // Copy wrangler.json to .counterscale directory
     shell.cp(
-        path.join(__dirname, "..", "packages", "server", "wrangler.json"),
+        path.join(SERVER_PKG_DIR, "wrangler.json"),
         path.join(COUNTERSCALE_DIR, "wrangler.json"),
     );
 }
@@ -292,18 +286,18 @@ async function getAccountId(): Promise<string | null> {
     spinner.start();
 
     return new Promise<string | null>((resolve, reject) => {
-        shell.exec(
-            `npx wrangler whoami --config $HOME/.counterscale/wrangler.json`,
-            { silent: true, async: true },
-            ((code: number, stdout: string, stderr: string) => {
-                spinner.stop();
-                if (code === 0) {
-                    const match = stdout.match(/([0-9a-f]{32})/);
-                    resolve(match ? match[0] : null);
-                }
-                reject(new Error(stderr || stdout));
-            }) as ShellExecCallback,
-        );
+        shell.exec(`npx wrangler whoami`, { silent: true, async: true }, ((
+            code: number,
+            stdout: string,
+            stderr: string,
+        ) => {
+            spinner.stop();
+            if (code === 0) {
+                const match = stdout.match(/([0-9a-f]{32})/);
+                resolve(match ? match[0] : null);
+            }
+            reject(new Error(stderr || stdout));
+        }) as ShellExecCallback);
     });
 }
 
@@ -312,7 +306,7 @@ async function main(): Promise<void> {
 
     console.log(
         chalk.green("✅ Using server package found in:"),
-        DIST_DIR,
+        SERVER_PKG_DIR,
         "\n",
     );
 
