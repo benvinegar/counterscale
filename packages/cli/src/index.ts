@@ -119,15 +119,9 @@ function createDotDirectory(): boolean {
 }
 
 function copyWranglerConfig(): void {
-    // Copy wrangler.default.json to .counterscale directory
+    // Copy wrangler.json to .counterscale directory
     shell.cp(
-        path.join(
-            __dirname,
-            "..",
-            "packages",
-            "server",
-            "wrangler.default.json",
-        ),
+        path.join(__dirname, "..", "packages", "server", "wrangler.json"),
         path.join(COUNTERSCALE_DIR, "wrangler.json"),
     );
 }

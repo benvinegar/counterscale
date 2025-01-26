@@ -14,7 +14,8 @@
     },
     "files": [
         "build",
-        "workers"
+        "workers",
+        "wrangler.json"
     ],
     "scripts": {
         "dev": "react-router dev",
