@@ -253,21 +253,22 @@ interface NewProjectAnswers {
     analyticsDataset: string;
 }
 
-async function promptNewProject(): Promise<NewProjectAnswers> {
+async function promptNewProject(
+    defaultWorkerName?: string,
+    defaultAnalyticsDataset?: string,
+): Promise<NewProjectAnswers> {
     return await inquirer.prompt<NewProjectAnswers>([
         {
             type: "input",
             name: "workerName",
-            message:
-                "What do you want to name your worker? [default: counterscale]",
-            default: "counterscale",
+            message: `What do you want to name your worker? [default: ${defaultWorkerName}]`,
+            default: defaultWorkerName,
         },
         {
             type: "input",
             name: "analyticsDataset",
-            message:
-                "What do you want to name your analytics dataset? [default: counterscale-data]",
-            default: "counterscale-data",
+            message: `What do you want to name your analytics dataset? [default: ${defaultAnalyticsDataset}]`,
+            default: defaultAnalyticsDataset,
         },
     ]);
 }
@@ -301,42 +302,26 @@ async function getAccountId(): Promise<string | null> {
     });
 }
 
-async function main(): Promise<void> {
-    printTitle();
-
-    console.log(
-        chalk.green("✅ Using server package found in:"),
-        SERVER_PKG_DIR,
-        "\n",
-    );
-
-    if (createDotDirectory()) {
-        console.log(
-            chalk
-                .rgb(...CLI_COLORS.tan)
-                .bold("Created .counterscale directory in project root"),
-        );
-    }
-
-    const accountId = await getAccountId();
-    if (!accountId) {
-        console.log("Not authenticated with Cloudflare.\n");
-        console.log(
-            `Run ${chalk.red(`npx wrangler login`)} first, then try again.`,
-        );
-        process.exit(1);
-    }
-    console.log(
-        chalk.green("✅ Authenticated as Account ID ending with:"),
-        chalk.underline(accountId.slice(-6)), // show only last 6 digits for privacy
-        "\n",
-    );
-
+async function prepareDeployConfig(): Promise<{
+    workerName: string;
+    analyticsDataset: string;
+}> {
     let workerName, analyticsDataset;
     // check if wrangler.json in .counterscale dir
     const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
     if (!fs.existsSync(wranglerConfigPath)) {
-        ({ workerName, analyticsDataset } = await promptNewProject());
+        const distConfig = JSON.parse(
+            fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
+        );
+
+        const defaultWorkerName = distConfig.name;
+        const defaultAnalyticsDataset =
+            distConfig.analytics_engine_datasets[0].dataset;
+
+        ({ workerName, analyticsDataset } = await promptNewProject(
+            defaultWorkerName,
+            defaultAnalyticsDataset,
+        ));
 
         copyWranglerConfig();
 
@@ -357,7 +342,60 @@ async function main(): Promise<void> {
         );
         workerName = wranglerConfig.name;
         analyticsDataset = wranglerConfig.analytics_engine_datasets[0].dataset;
+
+        // rewrite paths just-in-case we're re-using an earlier ~/.counterscale/wrangler.json
+        makePathsAbsolute(wranglerConfig);
+        console.log(wranglerConfig);
+        console.log(SERVER_PKG_DIR);
+        fs.writeFileSync(
+            wranglerConfigPath,
+            JSON.stringify(wranglerConfig, null, 2),
+        );
     }
+
+    return new Promise((resolve) => resolve({ workerName, analyticsDataset }));
+}
+
+async function main(): Promise<void> {
+    printTitle();
+
+    console.log(
+        chalk.green("✅ Using server package found in:"),
+        SERVER_PKG_DIR,
+        "\n",
+    );
+
+    if (createDotDirectory()) {
+        console.log(
+            chalk.green("✅ Created .counterscale in:"),
+            COUNTERSCALE_DIR,
+            "\n",
+        );
+    } else {
+        console.log(
+            chalk.green("✅ Found .counterscale in:"),
+            COUNTERSCALE_DIR,
+            "\n",
+        );
+    }
+
+    const accountId = await getAccountId();
+    if (!accountId) {
+        console.log("Not authenticated with Cloudflare.\n");
+        console.log(
+            `Run ${chalk.red(`npx wrangler login`)} first, then try again.`,
+        );
+        process.exit(1);
+    }
+    console.log(
+        chalk.green(
+            "✅ Authenticated with Cloudflare using Account ID ending in:",
+        ),
+        chalk.underline(accountId.slice(-6)), // show only last 6 digits for privacy
+        "\n",
+    );
+
+    const { workerName } = await prepareDeployConfig();
 
     const secrets = await getCloudflareSecrets(workerName);
 
