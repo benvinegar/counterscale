@@ -1,13 +1,19 @@
 {
     "name": "@counterscale/cli",
     "version": "3.0.0-alpha.1",
-    "type": "module",
-    "private": true,
-    "bin": {
-        "counterscale": "./dist/index.js"
+    "descriptrion": "CLI for managing Counterscale deployments",
+    "homepage": "https://counterscale.dev",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/benvinegar/counterscale",
+        "directory": "packages/cli"
     },
     "engines": {
         "node": ">=20.0.0"
+    },
+    "bin": {
+        "counterscale": "./dist/index.js"
     },
     "scripts": {
         "build": "tsc --build",

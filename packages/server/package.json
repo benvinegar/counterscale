@@ -1,8 +1,14 @@
 {
     "name": "@counterscale/server",
-    "sideEffects": false,
-    "type": "module",
     "version": "3.0.0-alpha.1",
+    "description": "Counterscale Server",
+    "homepage": "https://counterscale.dev",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/benvinegar/counterscale",
+        "directory": "packages/server"
+    },
     "engines": {
         "node": ">=20.0.0"
     },
