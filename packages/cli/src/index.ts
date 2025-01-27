@@ -12,7 +12,6 @@ const argv = yargs(hideBin(process.argv))
     })
     .parseSync();
 
-// @ts-expect-error 7016
 import shell from "shelljs"; // see https://stackoverflow.com/a/78649918
 
 import chalk from "chalk";
@@ -27,35 +26,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
 
-function getServerPkgDir(): string {
-    const npmRoot = shell.exec("npm root", {
-        silent: true,
-    }).stdout;
-
-    // find the @counterscale/server package
-    // 1) first check local node_modules dir
-    const nodeModulePath = path.join(npmRoot.trim(), "@counterscale", "server");
-    if (fs.existsSync(nodeModulePath)) {
-        return nodeModulePath;
-    }
-
-    // 2) if not found, check root project directory (e.g. if this is a monorepo checkout)
-    const monoRepoPath = path.join(
-        __dirname,
-        "..",
-        "..",
-        "..",
-        "packages",
-        "server",
-    );
-    if (fs.existsSync(monoRepoPath)) {
-        return monoRepoPath;
-    }
-
-    throw new Error(
-        "Could not find @counterscale/server package. Is it installed?",
-    );
-}
+import { getServerPkgDir } from "./utils.js";
 
 const SERVER_PKG_DIR = getServerPkgDir();
 
