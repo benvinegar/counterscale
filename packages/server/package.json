@@ -1,12 +1,23 @@
 {
     "name": "@counterscale/server",
-    "private": true,
-    "sideEffects": false,
-    "type": "module",
-    "version": "2.5.0",
+    "version": "3.0.0-alpha.9",
+    "description": "Counterscale Server",
+    "homepage": "https://counterscale.dev",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/benvinegar/counterscale",
+        "directory": "packages/server"
+    },
     "engines": {
         "node": ">=20.0.0"
     },
+    "files": [
+        "build",
+        "app",
+        "workers",
+        "wrangler.json"
+    ],
     "scripts": {
         "dev": "react-router dev",
         "build": "react-router build",
@@ -78,5 +89,9 @@
             "tailwindcss": {},
             "autoprefixer": {}
         }
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
     }
 }
