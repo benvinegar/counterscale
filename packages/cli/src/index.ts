@@ -10,7 +10,7 @@ const argv = yargs(hideBin(process.argv))
             default: false,
         },
     })
-    .parse();
+    .parseSync();
 
 // @ts-expect-error 7016
 import shell from "shelljs"; // see https://stackoverflow.com/a/78649918
@@ -19,9 +19,8 @@ import chalk from "chalk";
 import ora from "ora";
 import fs from "node:fs";
 
-import path from "node:path";
 import { homedir } from "node:os";
-import { dirname } from "node:path";
+import path, { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -74,7 +73,7 @@ const CLI_COLORS: CliColors = {
 };
 
 // Recursively convert all relative paths to absolute
-const makePathsAbsolute = (obj: Record<string, any>): void => {
+const makePathsAbsolute = (obj: Record<string, string>): void => {
     if (!obj || typeof obj !== "object") return;
 
     for (const [key, value] of Object.entries(obj)) {
@@ -166,8 +165,7 @@ async function fetchCloudflareSecrets(workerName: string): Promise<string> {
                 if (code === 0) {
                     resolve(stdout);
                 }
-                // NOTE: wrangler sends error text to stdout, not stderr
-                reject(stdout);
+                reject(stdout || stderr);
             }) as ShellExecCallback,
         );
     });
@@ -297,12 +295,6 @@ async function promptProjectConfig(
     ]);
 }
 
-interface AccountIdResponse {
-    result: {
-        id: string;
-    };
-}
-
 async function getAccountId(): Promise<string | null> {
     const spinner = ora({
         text: "Fetching Cloudflare Account ID ...",
@@ -327,7 +319,7 @@ async function getAccountId(): Promise<string | null> {
 }
 
 const TICK_LENGTH = 500;
-async function tick(fn: Function) {
+async function tick(fn: () => void): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, TICK_LENGTH));
     fn();
 }
