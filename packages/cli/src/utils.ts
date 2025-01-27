@@ -2,15 +2,18 @@ import shell from "shelljs";
 import path from "path";
 import { existsSync } from "node:fs";
 
+/**
+ * Finds the directory of the @counterscale/server package.
+ * @returns The path to the @counterscale/server package directory.
+ */
 export function getServerPkgDir(): string {
     const npmRoot = shell.exec("npm root", {
         silent: true,
     }).stdout;
 
-    // find the @counterscale/server package
-    // 1) first check local node_modules dir
+    // 1) first check local node_modules dir (using "npm root")
     const nodeModulePath = path.join(npmRoot.trim(), "@counterscale", "server");
-    console.log(existsSync);
+
     if (existsSync(nodeModulePath)) {
         return nodeModulePath;
     }
