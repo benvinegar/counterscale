@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 import inquirer from "inquirer";
 import figlet from "figlet";
+import yargs from "yargs/yargs";
+import { hideBin } from "yargs/helpers";
+const argv = yargs(hideBin(process.argv))
+    .options({
+        advanced: {
+            type: "boolean",
+            default: false,
+        },
+    })
+    .parse();
 
 // @ts-expect-error 7016
 import shell from "shelljs"; // see https://stackoverflow.com/a/78649918
@@ -80,7 +90,7 @@ const makePathsAbsolute = (obj: Record<string, any>): void => {
     }
 };
 
-function printTitle(): void {
+function printTitle(counterscaleVersion: string): void {
     console.log(
         chalk.rgb(...CLI_COLORS.orange)(
             figlet.textSync("Counterscale", {
@@ -90,13 +100,11 @@ function printTitle(): void {
     );
 
     // output version number derived from package.json
-    const pkg = JSON.parse(
-        fs.readFileSync(path.join(SERVER_PKG_DIR, "package.json"), "utf8"),
-    );
+
     console.log(
         chalk.rgb(...CLI_COLORS.tan).underline(COUNTERSCALE_HOMEPAGE),
         "•",
-        chalk.rgb(...CLI_COLORS.tan)(pkg.version),
+        chalk.rgb(...CLI_COLORS.tan)(counterscaleVersion),
     );
     console.log("");
 }
@@ -237,7 +245,7 @@ async function promptCloudFlareSecrets(accountId: string): Promise<void> {
     }
 }
 
-async function promptDeploy(): Promise<void> {
+async function promptDeploy(counterscaleVersion: string): Promise<void> {
     interface DeployAnswers {
         deploy: boolean;
     }
@@ -247,7 +255,7 @@ async function promptDeploy(): Promise<void> {
             {
                 type: "confirm",
                 name: "deploy",
-                message: "Do you want to deploy the site now?",
+                message: `Do you want to deploy version ${counterscaleVersion} now?`,
                 default: false,
             },
         ])
@@ -268,7 +276,7 @@ interface NewProjectAnswers {
     analyticsDataset: string;
 }
 
-async function promptNewProject(
+async function promptProjectConfig(
     defaultWorkerName?: string,
     defaultAnalyticsDataset?: string,
 ): Promise<NewProjectAnswers> {
@@ -318,6 +326,12 @@ async function getAccountId(): Promise<string | null> {
     });
 }
 
+const TICK_LENGTH = 500;
+async function tick(fn: Function) {
+    await new Promise((resolve) => setTimeout(resolve, TICK_LENGTH));
+    fn();
+}
+
 async function prepareDeployConfig(): Promise<{
     workerName: string;
     analyticsDataset: string;
@@ -325,63 +339,60 @@ async function prepareDeployConfig(): Promise<{
     let workerName, analyticsDataset;
     // check if wrangler.json in .counterscale dir
     const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
-    if (!fs.existsSync(wranglerConfigPath)) {
-        const distConfig = JSON.parse(
-            fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
-        );
 
-        const defaultWorkerName = distConfig.name;
-        const defaultAnalyticsDataset =
-            distConfig.analytics_engine_datasets[0].dataset;
+    const distConfig = JSON.parse(
+        fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
+    );
 
-        ({ workerName, analyticsDataset } = await promptNewProject(
+    const defaultWorkerName = distConfig.name;
+    const defaultAnalyticsDataset =
+        distConfig.analytics_engine_datasets[0].dataset;
+
+    if (argv.advanced) {
+        ({ workerName, analyticsDataset } = await promptProjectConfig(
             defaultWorkerName,
             defaultAnalyticsDataset,
         ));
-        console.log("");
-
-        copyWranglerConfig();
-
-        // Update wrangler.json with worker name and analytics dataset
-        const wranglerConfig = JSON.parse(
-            fs.readFileSync(wranglerConfigPath, "utf8"),
-        );
-        wranglerConfig.name = workerName;
-        wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
-        makePathsAbsolute(wranglerConfig);
-        fs.writeFileSync(
-            wranglerConfigPath,
-            JSON.stringify(wranglerConfig, null, 2),
-        );
     } else {
-        const wranglerConfig = JSON.parse(
-            fs.readFileSync(wranglerConfigPath, "utf8"),
-        );
-        workerName = wranglerConfig.name;
-        analyticsDataset = wranglerConfig.analytics_engine_datasets[0].dataset;
+        workerName = distConfig.name;
+        analyticsDataset = distConfig.analytics_engine_datasets[0].dataset;
+    }
 
+    await tick(() =>
         console.log(
             chalk.rgb(...CLI_COLORS.teal)("✓ Using worker:"),
             workerName,
-        );
+        ),
+    );
+    await tick(() =>
         console.log(
             chalk.rgb(...CLI_COLORS.teal)("✓ Using analytics dataset:"),
             analyticsDataset,
-        );
+        ),
+    );
 
-        // rewrite paths just-in-case we're re-using an earlier ~/.counterscale/wrangler.json
-        makePathsAbsolute(wranglerConfig);
-        fs.writeFileSync(
-            wranglerConfigPath,
-            JSON.stringify(wranglerConfig, null, 2),
-        );
-    }
+    copyWranglerConfig();
+
+    // Update wrangler.json with worker name and analytics dataset
+    const wranglerConfig = JSON.parse(
+        fs.readFileSync(wranglerConfigPath, "utf8"),
+    );
+    wranglerConfig.name = workerName;
+    wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+    makePathsAbsolute(wranglerConfig);
+    fs.writeFileSync(
+        wranglerConfigPath,
+        JSON.stringify(wranglerConfig, null, 2),
+    );
 
     return new Promise((resolve) => resolve({ workerName, analyticsDataset }));
 }
 
 async function main(): Promise<void> {
-    printTitle();
+    const pkg = JSON.parse(
+        fs.readFileSync(path.join(SERVER_PKG_DIR, "package.json"), "utf8"),
+    );
+    printTitle(pkg.version);
 
     const accountId = await getAccountId();
     if (!accountId) {
@@ -399,21 +410,29 @@ async function main(): Promise<void> {
         "\n",
     );
 
-    console.log(
-        chalk.rgb(...CLI_COLORS.teal)("✓ Using server package found in:"),
-        SERVER_PKG_DIR,
-    );
+    await tick(() => {
+        console.log(
+            chalk.rgb(...CLI_COLORS.teal)("✓ Using server package found in:"),
+            SERVER_PKG_DIR,
+        );
+    });
 
     if (createDotDirectory()) {
-        console.log(
-            chalk.rgb(...CLI_COLORS.teal)("✓ Created .counterscale in:"),
-            COUNTERSCALE_DIR,
-        );
+        await tick(() => {
+            console.log(
+                chalk.rgb(...CLI_COLORS.teal)("✓ Created .counterscale in:"),
+                COUNTERSCALE_DIR,
+            );
+        });
     } else {
-        console.log(
-            chalk.rgb(...CLI_COLORS.teal)("✓ Using .counterscale found in:"),
-            COUNTERSCALE_DIR,
-        );
+        await tick(() => {
+            console.log(
+                chalk.rgb(...CLI_COLORS.teal)(
+                    "✓ Using .counterscale found in:",
+                ),
+                COUNTERSCALE_DIR,
+            );
+        });
     }
 
     const { workerName } = await prepareDeployConfig();
@@ -431,7 +450,7 @@ async function main(): Promise<void> {
     }
 
     console.log("");
-    await promptDeploy();
+    await promptDeploy(pkg.version);
 }
 
 await main();
