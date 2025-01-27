@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
+const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
 
 function getServerPkgDir(): string {
     const npmRoot = shell.exec("npm root", {
@@ -53,11 +54,13 @@ const SERVER_PKG_DIR = getServerPkgDir();
 interface CliColors {
     orange: [number, number, number];
     tan: [number, number, number];
+    teal: [number, number, number];
 }
 
 const CLI_COLORS: CliColors = {
     orange: [245, 107, 61],
     tan: [243, 227, 190],
+    teal: [0, 205, 205],
 };
 
 // Recursively convert all relative paths to absolute
@@ -85,6 +88,17 @@ function printTitle(): void {
             }),
         ),
     );
+
+    // output version number derived from package.json
+    const pkg = JSON.parse(
+        fs.readFileSync(path.join(SERVER_PKG_DIR, "package.json"), "utf8"),
+    );
+    console.log(
+        chalk.rgb(...CLI_COLORS.tan).underline(COUNTERSCALE_HOMEPAGE),
+        "•",
+        chalk.rgb(...CLI_COLORS.tan)(pkg.version),
+    );
+    console.log("");
 }
 
 // async function promptDotDirectory() {
@@ -193,6 +207,7 @@ async function promptCloudFlareSecrets(accountId: string): Promise<void> {
         cfApiToken: string;
     }
 
+    console.log("");
     let answers: CloudflareAnswers;
     try {
         answers = await inquirer.prompt([
@@ -257,6 +272,7 @@ async function promptNewProject(
     defaultWorkerName?: string,
     defaultAnalyticsDataset?: string,
 ): Promise<NewProjectAnswers> {
+    console.log("");
     return await inquirer.prompt<NewProjectAnswers>([
         {
             type: "input",
@@ -322,6 +338,7 @@ async function prepareDeployConfig(): Promise<{
             defaultWorkerName,
             defaultAnalyticsDataset,
         ));
+        console.log("");
 
         copyWranglerConfig();
 
@@ -343,10 +360,17 @@ async function prepareDeployConfig(): Promise<{
         workerName = wranglerConfig.name;
         analyticsDataset = wranglerConfig.analytics_engine_datasets[0].dataset;
 
+        console.log(
+            chalk.rgb(...CLI_COLORS.teal)("✓ Using worker:"),
+            workerName,
+        );
+        console.log(
+            chalk.rgb(...CLI_COLORS.teal)("✓ Using analytics dataset:"),
+            analyticsDataset,
+        );
+
         // rewrite paths just-in-case we're re-using an earlier ~/.counterscale/wrangler.json
         makePathsAbsolute(wranglerConfig);
-        console.log(wranglerConfig);
-        console.log(SERVER_PKG_DIR);
         fs.writeFileSync(
             wranglerConfigPath,
             JSON.stringify(wranglerConfig, null, 2),
@@ -359,26 +383,6 @@ async function prepareDeployConfig(): Promise<{
 async function main(): Promise<void> {
     printTitle();
 
-    console.log(
-        chalk.green("✅ Using server package found in:"),
-        SERVER_PKG_DIR,
-        "\n",
-    );
-
-    if (createDotDirectory()) {
-        console.log(
-            chalk.green("✅ Created .counterscale in:"),
-            COUNTERSCALE_DIR,
-            "\n",
-        );
-    } else {
-        console.log(
-            chalk.green("✅ Found .counterscale in:"),
-            COUNTERSCALE_DIR,
-            "\n",
-        );
-    }
-
     const accountId = await getAccountId();
     if (!accountId) {
         console.log("Not authenticated with Cloudflare.\n");
@@ -388,26 +392,45 @@ async function main(): Promise<void> {
         process.exit(1);
     }
     console.log(
-        chalk.green(
-            "✅ Authenticated with Cloudflare using Account ID ending in:",
+        chalk.rgb(...CLI_COLORS.teal)(
+            "✓ Authenticated with Cloudflare using Account ID ending in:",
         ),
-        chalk.underline(accountId.slice(-6)), // show only last 6 digits for privacy
+        accountId.slice(-6), // show only last 6 digits for privacy
         "\n",
     );
 
+    console.log(
+        chalk.rgb(...CLI_COLORS.teal)("✓ Using server package found in:"),
+        SERVER_PKG_DIR,
+    );
+
+    if (createDotDirectory()) {
+        console.log(
+            chalk.rgb(...CLI_COLORS.teal)("✓ Created .counterscale in:"),
+            COUNTERSCALE_DIR,
+        );
+    } else {
+        console.log(
+            chalk.rgb(...CLI_COLORS.teal)("✓ Using .counterscale found in:"),
+            COUNTERSCALE_DIR,
+        );
+    }
+
     const { workerName } = await prepareDeployConfig();
 
+    console.log("");
     const secrets = await getCloudflareSecrets(workerName);
-
-    if (secrets.CF_ACCOUNT_ID && secrets.CF_BEARER_TOKEN) {
+    if (Object.keys(secrets).length > 0) {
         console.log(
-            chalk.green("✅ Cloudflare secrets are already configured"),
-            "\n",
+            chalk.rgb(...CLI_COLORS.teal)(
+                "✓ Cloudflare secrets are already set.",
+            ),
         );
     } else {
         await promptCloudFlareSecrets(accountId);
     }
 
+    console.log("");
     await promptDeploy();
 }
 
