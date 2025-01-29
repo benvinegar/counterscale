@@ -422,6 +422,7 @@ export class AnalyticsEngineAPI {
             ColumnMappingToType<(typeof ColumnMappings)[T]>
         >;
 
+        console.log(query);
         const queryResult = this.query(query);
         const returnPromise = new Promise<
             [ColumnMappingToType<typeof _column>, number][]
@@ -451,6 +452,63 @@ export class AnalyticsEngineAPI {
                 );
             })(),
         );
+        return returnPromise;
+    }
+
+    async getAllCountsByAllColumnsForAllSites(
+        columns: (keyof typeof ColumnMappings)[],
+        interval: string,
+        tz?: string,
+    ): Promise<any> {
+        const { startIntervalSql, endIntervalSql } = intervalToSql(
+            interval,
+            tz,
+        );
+
+        const columnsStr = columns.map((c) => ColumnMappings[c]).join(", ");
+        const columnsStrWithAliases = columns
+            .map((c) => ColumnMappings[c] + " as " + c)
+            .join(", ");
+
+        const query = `
+            SELECT SUM(_sample_interval) as count,
+                ${ColumnMappings.siteId} as siteId, 
+                ${ColumnMappings.newVisitor} as isVisitor, 
+                ${ColumnMappings.bounce} as isBounce,
+                ${columnsStrWithAliases}
+            FROM metricsDataset
+            WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
+            GROUP BY ${ColumnMappings.siteId}, ${ColumnMappings.newVisitor}, ${ColumnMappings.bounce}, ${columnsStr}
+            ORDER BY count DESC
+        `;
+
+        type SelectionSet = {
+            count: number;
+            isVisitor: number;
+            isBounce: number;
+        } & {
+            [K in keyof typeof ColumnMappings]: string;
+        };
+
+        console.log(query);
+        const queryResult = this.query(query);
+        const returnPromise = new Promise<
+            Record<string, AnalyticsCountResult>[]
+        >(async (resolve, reject) => {
+            const response = await queryResult;
+
+            if (!response.ok) {
+                reject(response.statusText);
+            }
+
+            const responseData =
+                (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+            console.log(responseData);
+
+            resolve({});
+        });
+
         return returnPromise;
     }
 
