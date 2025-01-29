@@ -1,4 +1,5 @@
 import { AnalyticsEngineAPI } from "~/analytics/query";
+import type { AnalyticsCountResult } from "~/analytics/query";
 import parquet from "parquetjs";
 
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID as string;
@@ -6,8 +7,12 @@ const CF_BEARER_TOKEN = process.env.CF_BEARER_TOKEN as string;
 
 var schema = new parquet.ParquetSchema({
     timestamp: { type: "TIMESTAMP_MILLIS" },
-    column_name: { type: "UTF8" },
-    column_value: { type: "UTF8" },
+    siteId: { type: "UTF8" },
+    path: { type: "UTF8" },
+    referrer: { type: "UTF8" },
+    browserName: { type: "UTF8" },
+    browserVersion: { type: "UTF8" },
+    deviceModel: { type: "UTF8" },
     views: { type: "INT64" },
     visitors: { type: "INT64" },
     bounces: { type: "INT64" },
@@ -19,7 +24,7 @@ export default async function dump() {
         CF_BEARER_TOKEN,
     );
 
-    let results;
+    let results: Map<string[], AnalyticsCountResult> | undefined = undefined;
     try {
         results = await analyticsEngine.getAllCountsByAllColumnsForAllSites(
             [
@@ -29,7 +34,7 @@ export default async function dump() {
                 "browserVersion",
                 "deviceModel",
             ],
-            "7d",
+            "90d",
             "UTC",
         );
     } catch (err) {
@@ -46,16 +51,19 @@ export default async function dump() {
         "timeseries.parquet",
     );
 
-    // iterate through the results and append as a row to the parquet file
-    for (const value of results) {
-        const [path, views, visitors] = value;
+    // iterate through the results and write them to the parquet file
+    for (const [keys, value] of results) {
         await writer.appendRow({
             timestamp: new Date(),
-            column_name: "path",
-            column_value: path,
-            views: views,
-            visitors: visitors,
-            bounces: 0,
+            siteId: keys[0],
+            path: keys[1],
+            referrer: keys[2],
+            browserName: keys[3],
+            browserVersion: keys[4],
+            deviceModel: keys[5],
+            views: value.views,
+            visitors: value.visitors,
+            bounces: value.bounces,
         });
     }
     await writer.close();

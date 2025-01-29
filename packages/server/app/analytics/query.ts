@@ -505,7 +505,10 @@ export class AnalyticsEngineAPI {
 
                 const result = responseData.data.reduce((acc, row) => {
                     // key is the comma joined string of siteId + all columns
-                    const key = [row.siteId, ...columns.map((c) => row[c])];
+                    const key = [
+                        row.siteId,
+                        ...columns.map((c) => row[c].trim()),
+                    ];
 
                     if (!acc.has(key)) {
                         acc.set(key, {
