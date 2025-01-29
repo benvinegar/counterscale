@@ -459,7 +459,7 @@ export class AnalyticsEngineAPI {
         columns: (keyof typeof ColumnMappings)[],
         interval: string,
         tz?: string,
-    ): Promise<any> {
+    ): Promise<Map<string[], AnalyticsCountResult>> {
         const { startIntervalSql, endIntervalSql } = intervalToSql(
             interval,
             tz,
@@ -492,22 +492,37 @@ export class AnalyticsEngineAPI {
 
         console.log(query);
         const queryResult = this.query(query);
-        const returnPromise = new Promise<
-            Record<string, AnalyticsCountResult>[]
-        >(async (resolve, reject) => {
-            const response = await queryResult;
+        const returnPromise = new Promise<Map<string[], AnalyticsCountResult>>(
+            async (resolve, reject) => {
+                const response = await queryResult;
 
-            if (!response.ok) {
-                reject(response.statusText);
-            }
+                if (!response.ok) {
+                    reject(response.statusText);
+                }
 
-            const responseData =
-                (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+                const responseData =
+                    (await response.json()) as AnalyticsQueryResult<SelectionSet>;
 
-            console.log(responseData);
+                const result = responseData.data.reduce((acc, row) => {
+                    // key is the comma joined string of siteId + all columns
+                    const key = [row.siteId, ...columns.map((c) => row[c])];
 
-            resolve({});
-        });
+                    if (!acc.has(key)) {
+                        acc.set(key, {
+                            views: 0,
+                            visitors: 0,
+                            bounces: 0,
+                        } as AnalyticsCountResult);
+                    }
+                    console.log(key);
+
+                    accumulateCountsFromRowResult(acc.get(key)!, row);
+                    return acc;
+                }, new Map<string[], AnalyticsCountResult>());
+
+                resolve(result);
+            },
+        );
 
         return returnPromise;
     }

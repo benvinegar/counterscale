@@ -22,7 +22,13 @@ export default async function dump() {
     let results;
     try {
         results = await analyticsEngine.getAllCountsByAllColumnsForAllSites(
-            ["path", "referrer"],
+            [
+                "path",
+                "referrer",
+                "browserName",
+                "browserVersion",
+                "deviceModel",
+            ],
             "7d",
             "UTC",
         );
