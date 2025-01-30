@@ -34,6 +34,7 @@
     "dependencies": {
         "@cloudflare/kv-asset-handler": "^0.3.3",
         "@counterscale/tracker": "*",
+        "@dsnp/parquetjs": "^1.8.5",
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
         "@react-router/cloudflare": "^7.0.0",
@@ -42,7 +43,7 @@
         "dayjs": "^1.11.11",
         "isbot": "^5.1.9",
         "lucide-react": "^0.395.0",
-        "parquetjs": "^0.11.2",
+        "parquet-wasm": "^0.6.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "react-router": "^7.0.0",

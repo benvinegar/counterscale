@@ -503,7 +503,6 @@ export class AnalyticsEngineAPI {
             [K in keyof typeof ColumnMappings]: string;
         };
 
-        console.log(query);
         const queryResult = this.query(query);
         const returnPromise = new Promise<Map<string[], AnalyticsCountResult>>(
             async (resolve, reject) => {
@@ -536,7 +535,6 @@ export class AnalyticsEngineAPI {
                     return acc;
                 }, new Map<string[], AnalyticsCountResult>());
 
-                console.log(result);
                 resolve(result);
             },
         );

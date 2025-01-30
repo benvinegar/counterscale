@@ -1,6 +1,8 @@
 import { AnalyticsEngineAPI } from "~/analytics/query";
 import type { AnalyticsCountResult } from "~/analytics/query";
-import parquet from "parquetjs";
+import type { WriteStreamMinimal } from "@dsnp/parquetjs/dist/lib/util";
+import parquet from "@dsnp/parquetjs";
+import { WriteStream } from "node:fs";
 
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID as string;
 const CF_BEARER_TOKEN = process.env.CF_BEARER_TOKEN as string;
@@ -51,10 +53,44 @@ export default async function dump() {
         return;
     }
 
-    var writer = await parquet.ParquetWriter.openFile(
-        schema,
-        "counterscale_by_hour.parquet",
-    );
+    const { readable, writable } = new TransformStream();
+
+    class Writer implements WriteStreamMinimal {
+        private writer: WritableStreamDefaultWriter<Uint8Array>;
+        private _ended = false;
+        public bytesWritten = 0;
+
+        constructor(writer: WritableStreamDefaultWriter<Uint8Array>) {
+            this.writer = writer;
+        }
+
+        write(
+            chunk: Buffer | string,
+            encoding?: BufferEncoding | ((error?: Error | null) => void),
+            callback?: (error?: Error | null) => void,
+        ): boolean {
+            this.writer.write(Buffer.from(chunk));
+            this.bytesWritten += chunk.length;
+            console.log(chunk);
+            if (typeof callback === "function") {
+                callback();
+            }
+            return true;
+        }
+
+        // @ts-expect-error fudging a stream
+        end(cb?: () => void): WriteStream {
+            if (this._ended) {
+                throw new Error("Stream already ended");
+            }
+            this.writer.close().then(() => {
+                if (cb) cb();
+                this._ended = true;
+            });
+        }
+    }
+    const _writer = new Writer(writable.getWriter());
+    const writer = await parquet.ParquetWriter.openStream(schema, _writer);
 
     // iterate through the results and write them to the parquet file
     for (const [keys, value] of results) {
