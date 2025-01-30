@@ -180,6 +180,7 @@ export class AnalyticsEngineAPI {
     }
 
     async query(query: string) {
+        console.log(this.defaultHeaders);
         return fetch(this.defaultUrl, {
             method: "POST",
             body: query,
@@ -478,7 +479,7 @@ export class AnalyticsEngineAPI {
 
         const query = `
             SELECT 
-                toStartOfInterval(timestamp, INTERVAL '1' HOUR) as date,
+                toStartOfInterval(timestamp, INTERVAL '1' DAY) as date,
                 SUM(_sample_interval) as count,
                 ${ColumnMappings.siteId} as siteId, 
                 ${ColumnMappings.newVisitor} as isVisitor, 
@@ -503,6 +504,7 @@ export class AnalyticsEngineAPI {
             [K in keyof typeof ColumnMappings]: string;
         };
 
+        console.log(query);
         const queryResult = this.query(query);
         const returnPromise = new Promise<Map<string[], AnalyticsCountResult>>(
             async (resolve, reject) => {

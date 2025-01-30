@@ -44,6 +44,7 @@
         "isbot": "^5.1.9",
         "lucide-react": "^0.395.0",
         "parquet-wasm": "^0.6.1",
+        "parquetjs": "^0.11.2",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "react-router": "^7.0.0",
@@ -93,6 +94,7 @@
             "autoprefixer": {}
         }
     },
+    "overrides": {},
     "publishConfig": {
         "access": "public",
         "registry": "https://registry.npmjs.org/"

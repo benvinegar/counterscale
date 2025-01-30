@@ -1,26 +1,27 @@
 import { AnalyticsEngineAPI } from "~/analytics/query";
 import type { AnalyticsCountResult } from "~/analytics/query";
 import type { WriteStreamMinimal } from "@dsnp/parquetjs/dist/lib/util";
-import parquet from "@dsnp/parquetjs";
+import parquet from "parquetjs";
 import { WriteStream } from "node:fs";
 
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID as string;
 const CF_BEARER_TOKEN = process.env.CF_BEARER_TOKEN as string;
 
-var schema = new parquet.ParquetSchema({
-    date: { type: "DATE" },
-    siteId: { type: "UTF8" },
-    path: { type: "UTF8" },
-    referrer: { type: "UTF8" },
-    browserName: { type: "UTF8" },
-    browserVersion: { type: "UTF8" },
-    deviceModel: { type: "UTF8" },
-    views: { type: "INT64" },
-    visitors: { type: "INT64" },
-    bounces: { type: "INT64" },
-});
 // get
-export default async function dump() {
+export async function extractAsParquet() {
+    var schema = new parquet.ParquetSchema({
+        date: { type: "DATE" },
+        siteId: { type: "UTF8" },
+        path: { type: "UTF8" },
+        referrer: { type: "UTF8" },
+        browserName: { type: "UTF8" },
+        browserVersion: { type: "UTF8" },
+        deviceModel: { type: "UTF8" },
+        views: { type: "INT64" },
+        visitors: { type: "INT64" },
+        bounces: { type: "INT64" },
+    });
+
     const analyticsEngine = new AnalyticsEngineAPI(
         CF_ACCOUNT_ID,
         CF_BEARER_TOKEN,
@@ -113,4 +114,3 @@ export default async function dump() {
     }
     await writer.close();
 }
-dump();
