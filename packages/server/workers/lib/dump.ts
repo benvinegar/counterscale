@@ -6,7 +6,7 @@ const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID as string;
 const CF_BEARER_TOKEN = process.env.CF_BEARER_TOKEN as string;
 
 var schema = new parquet.ParquetSchema({
-    timestamp: { type: "TIMESTAMP_MILLIS" },
+    date: { type: "DATE" },
     siteId: { type: "UTF8" },
     path: { type: "UTF8" },
     referrer: { type: "UTF8" },
@@ -24,6 +24,10 @@ export default async function dump() {
         CF_BEARER_TOKEN,
     );
 
+    const startDate = new Date("2024-01-28T00:00:00.000Z");
+    // endDate is startDate's end of day
+    const endDate = new Date("2025-01-28T23:59:59.000Z");
+
     let results: Map<string[], AnalyticsCountResult> | undefined = undefined;
     try {
         results = await analyticsEngine.getAllCountsByAllColumnsForAllSites(
@@ -34,7 +38,8 @@ export default async function dump() {
                 "browserVersion",
                 "deviceModel",
             ],
-            "90d",
+            startDate,
+            endDate,
             "UTC",
         );
     } catch (err) {
@@ -48,23 +53,27 @@ export default async function dump() {
 
     var writer = await parquet.ParquetWriter.openFile(
         schema,
-        "timeseries.parquet",
+        "counterscale_by_hour.parquet",
     );
 
     // iterate through the results and write them to the parquet file
     for (const [keys, value] of results) {
-        await writer.appendRow({
-            timestamp: new Date(),
-            siteId: keys[0],
-            path: keys[1],
-            referrer: keys[2],
-            browserName: keys[3],
-            browserVersion: keys[4],
-            deviceModel: keys[5],
-            views: value.views,
-            visitors: value.visitors,
-            bounces: value.bounces,
-        });
+        try {
+            await writer.appendRow({
+                date: new Date(keys[0]),
+                siteId: keys[1],
+                path: keys[2],
+                referrer: keys[3],
+                browserName: keys[4],
+                browserVersion: keys[5],
+                deviceModel: keys[6],
+                views: value.views,
+                visitors: value.visitors,
+                bounces: value.bounces,
+            });
+        } catch (err) {
+            console.error(err);
+        }
     }
     await writer.close();
 }

@@ -8,7 +8,8 @@ import timezone from "dayjs/plugin/timezone";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-interface AnalyticsQueryResult<
+
+export interface AnalyticsQueryResult<
     SelectionSet extends Record<string, string | number>,
 > {
     meta: string;
@@ -17,7 +18,7 @@ interface AnalyticsQueryResult<
     rows_before_limit_at_least: number;
 }
 
-interface AnalyticsCountResult {
+export interface AnalyticsCountResult {
     views: number;
     visitors: number;
     bounces: number;
@@ -457,32 +458,44 @@ export class AnalyticsEngineAPI {
 
     async getAllCountsByAllColumnsForAllSites(
         columns: (keyof typeof ColumnMappings)[],
-        interval: string,
+        startDateTime: Date,
+        endDateTime: Date,
         tz?: string,
     ): Promise<Map<string[], AnalyticsCountResult>> {
-        const { startIntervalSql, endIntervalSql } = intervalToSql(
-            interval,
-            tz,
-        );
-
         const columnsStr = columns.map((c) => ColumnMappings[c]).join(", ");
         const columnsStrWithAliases = columns
             .map((c) => ColumnMappings[c] + " as " + c)
             .join(", ");
 
+        const startDateTimeSql = dayjs(startDateTime)
+            .tz(tz)
+            .utc()
+            .format("YYYY-MM-DD HH:mm:ss");
+        const endDateTimeSql = dayjs(endDateTime)
+            .tz(tz)
+            .utc()
+            .format("YYYY-MM-DD HH:mm:ss");
+
         const query = `
-            SELECT SUM(_sample_interval) as count,
+            SELECT 
+                toStartOfInterval(timestamp, INTERVAL '1' HOUR) as date,
+                SUM(_sample_interval) as count,
                 ${ColumnMappings.siteId} as siteId, 
                 ${ColumnMappings.newVisitor} as isVisitor, 
                 ${ColumnMappings.bounce} as isBounce,
                 ${columnsStrWithAliases}
             FROM metricsDataset
-            WHERE timestamp >= ${startIntervalSql} AND timestamp < ${endIntervalSql}
-            GROUP BY ${ColumnMappings.siteId}, ${ColumnMappings.newVisitor}, ${ColumnMappings.bounce}, ${columnsStr}
+            WHERE timestamp >= toDateTime('${startDateTimeSql}') AND timestamp < toDateTime('${endDateTimeSql}')
+            GROUP BY date,
+                ${ColumnMappings.siteId}, 
+                ${ColumnMappings.newVisitor}, 
+                ${ColumnMappings.bounce}, 
+                ${columnsStr}
             ORDER BY count DESC
         `;
 
         type SelectionSet = {
+            date: string;
             count: number;
             isVisitor: number;
             isBounce: number;
@@ -506,6 +519,7 @@ export class AnalyticsEngineAPI {
                 const result = responseData.data.reduce((acc, row) => {
                     // key is the comma joined string of siteId + all columns
                     const key = [
+                        row.date,
                         row.siteId,
                         ...columns.map((c) => row[c].trim()),
                     ];
@@ -517,12 +531,12 @@ export class AnalyticsEngineAPI {
                             bounces: 0,
                         } as AnalyticsCountResult);
                     }
-                    console.log(key);
 
                     accumulateCountsFromRowResult(acc.get(key)!, row);
                     return acc;
                 }, new Map<string[], AnalyticsCountResult>());
 
+                console.log(result);
                 resolve(result);
             },
         );
