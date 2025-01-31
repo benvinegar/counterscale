@@ -4,7 +4,6 @@ import type { WriteStreamMinimal } from "@dsnp/parquetjs/dist/lib/util";
 import parquet from "parquetjs";
 import { WriteStream } from "node:fs";
 import { Buffer } from "node:buffer";
-import { writeFileSync } from "node:fs";
 
 // get
 export async function extractAsParquet({ accountId, bearerToken }: any) {
@@ -21,12 +20,9 @@ export async function extractAsParquet({ accountId, bearerToken }: any) {
         bounces: { type: "INT64" },
     });
 
-    console.log("lol");
-
     const analyticsEngine = new AnalyticsEngineAPI(accountId, bearerToken);
 
     const startDate = new Date("2024-01-28T00:00:00.000Z");
-    // endDate is startDate's end of day
     const endDate = new Date("2025-01-28T23:59:59.000Z");
 
     let results: Map<string[], AnalyticsCountResult> | undefined = undefined;
@@ -68,7 +64,6 @@ export async function extractAsParquet({ accountId, bearerToken }: any) {
             chunk: Buffer | string,
             callback?: (error?: Error | null) => void,
         ): Promise<boolean> {
-            console.log(arguments);
             return new Promise(async (reject, resolve) => {
                 try {
                     // write each item in chunk to uint8array according to offset (bytesWritten) and chunk length
@@ -138,18 +133,7 @@ export async function extractAsParquet({ accountId, bearerToken }: any) {
 
     await writer.close();
 
-    console.log(_writer.bytesWritten);
-    const usedBuffer = new Uint8Array(
-        uint8array.buffer,
-        0,
-        _writer.bytesWritten,
-    );
-
-    // // Write the buffer to a file
-    writeFileSync("output.parquet", usedBuffer, "binary");
-
     return new Promise((resolve, reject) => {
-        console.log("DONE");
         resolve(true);
     });
 }
