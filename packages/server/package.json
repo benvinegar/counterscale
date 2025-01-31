@@ -94,7 +94,9 @@
             "autoprefixer": {}
         }
     },
-    "overrides": {},
+    "overrides": {
+        "thrift": "0.11.0"
+    },
     "publishConfig": {
         "access": "public",
         "registry": "https://registry.npmjs.org/"

@@ -1,5 +1,9 @@
 import type { ExportedHandler } from "@cloudflare/workers-types";
 import { createRequestHandler, type ServerBuild } from "react-router";
+import type {
+    ScheduledController,
+    ExecutionContext,
+} from "@cloudflare/workers-types";
 
 import { extractAsParquet } from "./lib/dump";
 import { getLoadContext } from "~/load-context";
@@ -9,9 +13,21 @@ import * as build from "../build/server";
 const requestHandler = createRequestHandler(build as unknown as ServerBuild);
 
 export default {
-    async scheduled(event, env, ctx) {
-        console.log("LOL");
-        ctx.waitUntil(extractAsParquet());
+    async scheduled(
+        controller: ScheduledController,
+        env: Env,
+        ctx: ExecutionContext,
+    ) {
+        try {
+            ctx.waitUntil(
+                extractAsParquet({
+                    accountId: env.CF_ACCOUNT_ID,
+                    bearerToken: env.CF_BEARER_TOKEN,
+                }),
+            );
+        } catch (error) {
+            console.error(error);
+        }
     },
 
     // @ts-expect-error TODO figure out types here
