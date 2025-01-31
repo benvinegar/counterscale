@@ -11,5 +11,12 @@
             "binding": "WEB_COUNTER_AE",
             "dataset": "metricsDataset"
         }
+    ],
+    "r2_buckets": [
+        {
+            "bucket_name": "counterscale-daily-rollups",
+            "preview_bucket_name": "counterscale-daily-rollups-dev",
+            "binding": "DAILY_ROLLUPS"
+        }
     ]
 }

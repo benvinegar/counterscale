@@ -20,10 +20,13 @@ export default {
     ) {
         try {
             ctx.waitUntil(
-                extractAsParquet({
-                    accountId: env.CF_ACCOUNT_ID,
-                    bearerToken: env.CF_BEARER_TOKEN,
-                }),
+                extractAsParquet(
+                    {
+                        accountId: env.CF_ACCOUNT_ID,
+                        bearerToken: env.CF_BEARER_TOKEN,
+                    },
+                    env.DAILY_ROLLUPS,
+                ),
             );
         } catch (error) {
             console.error(error);

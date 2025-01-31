@@ -4,9 +4,13 @@ import type { WriteStreamMinimal } from "@dsnp/parquetjs/dist/lib/util";
 import parquet from "parquetjs";
 import { WriteStream } from "node:fs";
 import { Buffer } from "node:buffer";
+import { R2Bucket } from "@cloudflare/workers-types";
 
 // get
-export async function extractAsParquet({ accountId, bearerToken }: any) {
+export async function extractAsParquet(
+    { accountId, bearerToken }: any,
+    bucket: R2Bucket,
+) {
     var schema = new parquet.ParquetSchema({
         date: { type: "DATE" },
         siteId: { type: "UTF8" },
@@ -132,6 +136,17 @@ export async function extractAsParquet({ accountId, bearerToken }: any) {
     }
 
     await writer.close();
+
+    const finalBuffer = uint8array.slice(0, _writer.bytesWritten);
+    const objectName = "test.parquet";
+
+    console.log(`Writing ${objectName} (${finalBuffer.length} bytes) to R2`);
+
+    try {
+        await bucket.put(objectName, finalBuffer);
+    } catch (err) {
+        console.error(err);
+    }
 
     return new Promise((resolve, reject) => {
         resolve(true);
