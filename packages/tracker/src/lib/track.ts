@@ -52,7 +52,8 @@ export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
 
-    if (location.host === "" && navigator.userAgent.indexOf("Electron") < 0) {
+    // if no valid hostname (e.g. serving from local filesystem), bail out
+    if (location.host === "") {
         return;
     }
 
