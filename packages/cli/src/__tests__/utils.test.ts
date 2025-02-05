@@ -1,22 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import path from "node:path";
-import shell from "shelljs";
 import inquirer from "inquirer";
-
-import { getServerPkgDir } from "../utils.js";
-
 import { existsSync } from "node:fs";
+import { getServerPkgDir } from "../utils.js";
+import { getInstalledPathSync } from "get-installed-path";
 
 // Mock external dependencies
-vi.mock("shelljs", () => ({
-    default: {
-        exec: vi.fn(() => ({ stdout: "", code: 0 })),
-        mkdir: vi.fn(),
-        cp: vi.fn(),
-        test: vi.fn(),
-    },
-}));
-
 vi.mock("inquirer", () => ({
     default: {
         prompt: vi.fn(),
@@ -40,17 +29,17 @@ vi.mock("fs", async () => {
     };
 });
 
+vi.mock("get-installed-path", async () => {
+    const actual = await vi.importActual("get-installed-path");
+    return {
+        ...actual,
+        getInstalledPathSync: vi.fn(),
+    };
+});
+
 describe("CLI Functions", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-
-        // Update shell.exec mock
-        const mockShellExec = vi.mocked(shell.exec);
-        mockShellExec.mockImplementation(() => ({
-            // @ts-expect-error dont mock entire exec return value
-            stdout: "test-output",
-            code: 0,
-        }));
 
         vi.mocked(inquirer.prompt).mockResolvedValue({
             workerName: "test-worker",
@@ -66,12 +55,9 @@ describe("CLI Functions", () => {
         it("should find package in node_modules", async () => {
             const { existsSync } = await import("node:fs");
 
-            // Mock npm root command to return a specific path
-            vi.mocked(shell.exec).mockImplementation(() => ({
-                // @ts-expect-error dont mock entire exec return value
-                stdout: "/test/path/node_modules\n",
-                code: 0,
-            }));
+            vi.mocked(getInstalledPathSync).mockReturnValue(
+                "/test/path/node_modules/@counterscale/server",
+            );
 
             // Mock existsSync to return true only for the node_modules path
             const expectedPath = path.join(
@@ -90,11 +76,9 @@ describe("CLI Functions", () => {
 
         it("should check monorepo path if node_modules not found", async () => {
             // Mock npm root command
-            vi.mocked(shell.exec).mockImplementation(() => ({
-                // @ts-expect-error dont mock entire exec return value
-                stdout: "/test/path/node_modules\n",
-                code: 0,
-            }));
+            vi.mocked(getInstalledPathSync).mockReturnValue(
+                "/test/path/node_modules/@counterscale/server",
+            );
 
             // Mock existsSync to return false for node_modules but true for monorepo path
             vi.mocked(existsSync).mockImplementation((p) =>
@@ -108,11 +92,9 @@ describe("CLI Functions", () => {
         it("should throw if package not found", async () => {
             // Mock both paths to not exist
             vi.mocked(existsSync).mockReturnValue(false);
-            vi.mocked(shell.exec).mockImplementation(() => ({
-                // @ts-expect-error dont mock entire exec return value
-                stdout: "/test/path/node_modules\n",
-                code: 0,
-            }));
+            vi.mocked(getInstalledPathSync).mockReturnValue(
+                "/test/path/node_modules/@counterscale/server",
+            );
 
             expect(() => getServerPkgDir()).toThrow(
                 /Could not find @counterscale\/server package/,

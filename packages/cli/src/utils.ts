@@ -20,7 +20,8 @@ export function getServerPkgDir(): string {
     } catch {
         // ignore
     }
-    if (existsSync(nodeModulePath)) {
+
+    if (nodeModulePath && existsSync(nodeModulePath)) {
         return nodeModulePath;
     }
 
