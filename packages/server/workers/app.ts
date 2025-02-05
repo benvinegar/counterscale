@@ -1,8 +1,12 @@
 import type { ExportedHandler } from "@cloudflare/workers-types";
 import { createRequestHandler, type ServerBuild } from "react-router";
 
-import { getLoadContext } from "~/load-context";
-
+/**
+ * NOTE: Must use relative paths inside this file (no ~ shorthand), because
+ * it gets packaged into Worker and special paths defined in tsconfig will not
+ * resolve.
+ */
+import { getLoadContext } from "../app/load-context";
 import * as build from "../build/server";
 
 const requestHandler = createRequestHandler(build as unknown as ServerBuild);
