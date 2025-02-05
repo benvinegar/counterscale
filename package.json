@@ -14,12 +14,12 @@
     "optionalDependencies": {
         "@rollup/rollup-linux-x64-gnu": "4.9.5"
     },
-    "workspaces": [
-        "packages/*",
-        "@counterscale/tracker"
-    ],
-    "packageManager": "npm@10.0.0",
+    "packageManager": "pnpm@9.15.0",
     "prettier": {
         "tabWidth": 4
+    },
+    "engines": {
+        "node": ">=20",
+        "pnpm": ">=9"
     }
 }

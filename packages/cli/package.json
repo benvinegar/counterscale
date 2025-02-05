@@ -1,6 +1,6 @@
 {
     "name": "@counterscale/cli",
-    "version": "3.0.0-alpha.9",
+    "version": "3.0.0-alpha.10",
     "descriptrion": "CLI for managing Counterscale deployments",
     "homepage": "https://counterscale.dev",
     "license": "MIT",
