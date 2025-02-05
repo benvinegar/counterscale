@@ -28,11 +28,14 @@ importers:
   packages/cli:
     dependencies:
       '@counterscale/server':
-        specifier: 3.0.0-alpha.9
-        version: 3.0.0-alpha.9(@cloudflare/workers-types@4.20250204.0)(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(tsup@8.3.6(@microsoft/api-extractor@7.49.2(@types/node@22.13.1))(jiti@1.21.7)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0))(typescript@5.7.3)
+        specifier: 3.0.0-alpha.11
+        version: link:../server
       '@types/get-installed-path':
         specifier: ^4.0.3
         version: 4.0.3
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.13.1
       chalk:
         specifier: ^5.3.0
         version: 5.4.1
@@ -484,14 +487,6 @@ packages:
 
   '@cloudflare/workers-types@4.20250204.0':
     resolution: {integrity: sha512-mWoQbYaP+nYztx9I7q9sgaiNlT54Cypszz0RfzMxYnT5W3NXDuwGcjGB+5B5H5VB8tEC2dYnBRpa70lX94ueaQ==}
-
-  '@counterscale/server@3.0.0-alpha.9':
-    resolution: {integrity: sha512-/Dc4Djc3II+xNA2aQXS9I39pl4G9vqb1/gBQJC8k3Cxgs5qbfYbJcTEaYj+SN9RZGOneHbt18/snDc0DMAgO2Q==}
-    engines: {node: '>=20.0.0'}
-
-  '@counterscale/tracker@2.5.1':
-    resolution: {integrity: sha512-i/ejnlFWaOVxCY+0ClESD063452i8kDVOXSaVnglSToY+dVZHZYK5hBGJAD6d++x/txVibcEbNS0J0mjjZF3JA==}
-    engines: {node: '>=20.0.0'}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -5194,36 +5189,6 @@ snapshots:
     optional: true
 
   '@cloudflare/workers-types@4.20250204.0': {}
-
-  '@counterscale/server@3.0.0-alpha.9(@cloudflare/workers-types@4.20250204.0)(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(tsup@8.3.6(@microsoft/api-extractor@7.49.2(@types/node@22.13.1))(jiti@1.21.7)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0))(typescript@5.7.3)':
-    dependencies:
-      '@cloudflare/kv-asset-handler': 0.3.4
-      '@counterscale/tracker': 2.5.1
-      '@radix-ui/react-select': 2.1.5(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-slot': 1.1.1(@types/react@18.3.18)(react@18.3.1)
-      '@react-router/cloudflare': 7.1.1(@cloudflare/workers-types@4.20250204.0)(react-router@7.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(tsup@8.3.6(@microsoft/api-extractor@7.49.2(@types/node@22.13.1))(jiti@1.21.7)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0))(typescript@5.7.3)
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      dayjs: 1.11.13
-      isbot: 5.1.22
-      lucide-react: 0.395.0(react@18.3.1)
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      react-router: 7.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      recharts: 2.13.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      run: 1.5.0
-      tailwind-merge: 2.6.0
-      tailwindcss-animate: 1.0.7(tailwindcss@3.4.17)
-      ua-parser-js: 1.0.40
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - '@types/react'
-      - '@types/react-dom'
-      - tailwindcss
-      - tsup
-      - typescript
-
-  '@counterscale/tracker@2.5.1': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
