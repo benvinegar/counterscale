@@ -1,6 +1,6 @@
 {
     "name": "@counterscale/cli",
-    "version": "3.0.0-alpha.11",
+    "version": "3.0.0-alpha.12",
     "descriptrion": "CLI for managing Counterscale deployments",
     "homepage": "https://counterscale.dev",
     "license": "MIT",
@@ -23,7 +23,7 @@
         "test:watch": "vitest"
     },
     "dependencies": {
-        "@counterscale/server": "3.0.0-alpha.11",
+        "@counterscale/server": "3.0.0-alpha.12",
         "@types/get-installed-path": "^4.0.3",
         "@types/node": "^22.10.2",
         "chalk": "^5.3.0",
