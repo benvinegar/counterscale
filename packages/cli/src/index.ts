@@ -3,6 +3,7 @@ import inquirer from "inquirer";
 import figlet from "figlet";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
+
 const argv = yargs(hideBin(process.argv))
     .options({
         advanced: {
@@ -25,7 +26,6 @@ const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
 
 import { getServerPkgDir } from "./utils.js";
-
 const SERVER_PKG_DIR = getServerPkgDir();
 
 // Types for CLI colors

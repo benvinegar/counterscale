@@ -24,9 +24,12 @@
     },
     "dependencies": {
         "@counterscale/server": "3.0.0-alpha.9",
+        "@types/get-installed-path": "^4.0.3",
         "chalk": "^5.3.0",
         "figlet": "^1.7.0",
+        "get-installed-path": "^4.0.8",
         "inquirer": "^9.2.12",
+        "ora": "^8.2.0",
         "shelljs": "^0.8.5",
         "wrangler": "^3.105.0",
         "yargs": "^17.7.2"
