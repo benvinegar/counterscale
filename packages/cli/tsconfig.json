@@ -1,0 +1,11 @@
+{
+    "extends": "../../tsconfig.json",
+    "include": ["src/**/*.ts"],
+    "compilerOptions": {
+        "module": "nodenext",
+        "strict": true,
+        "outDir": "dist",
+        "types": ["node", "vitest/globals"],
+        "esModuleInterop": true
+    }
+}

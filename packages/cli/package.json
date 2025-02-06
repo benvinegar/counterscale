@@ -1,0 +1,57 @@
+{
+    "name": "@counterscale/cli",
+    "version": "3.0.0-alpha.12",
+    "descriptrion": "CLI for managing Counterscale deployments",
+    "homepage": "https://counterscale.dev",
+    "license": "MIT",
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/benvinegar/counterscale",
+        "directory": "packages/cli"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "bin": {
+        "counterscale": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc --build",
+        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "@counterscale/server": "3.0.0-alpha.12",
+        "@types/get-installed-path": "^4.0.3",
+        "@types/node": "^22.10.2",
+        "chalk": "^5.3.0",
+        "figlet": "^1.7.0",
+        "inquirer": "^9.2.12",
+        "ora": "^8.2.0",
+        "shelljs": "^0.8.5",
+        "wrangler": "^3.105.0",
+        "yargs": "^17.7.2"
+    },
+    "devDependencies": {
+        "@types/figlet": "^1.5.8",
+        "@types/inquirer": "^9.0.7",
+        "@types/shelljs": "^0.8.15",
+        "@types/yargs": "^17.0.33",
+        "@vitejs/plugin-react": "^4.2.1",
+        "@vitest/coverage-v8": "^1.1.0",
+        "rollup-plugin-node-externals": "^8.0.0",
+        "typescript": "^5.3.3",
+        "vite": "^5.0.10",
+        "vitest": "^1.1.0"
+    },
+    "overrides": {
+        "minimatch": "5.1.2",
+        "glob": "8.1.0"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    }
+}

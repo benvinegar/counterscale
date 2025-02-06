@@ -1,12 +1,23 @@
 {
     "name": "@counterscale/server",
-    "private": true,
-    "sideEffects": false,
-    "type": "module",
-    "version": "2.5.1",
+    "version": "3.0.0-alpha.12",
+    "description": "Counterscale Server",
+    "homepage": "https://counterscale.dev",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/benvinegar/counterscale",
+        "directory": "packages/server"
+    },
     "engines": {
         "node": ">=20.0.0"
     },
+    "files": [
+        "build",
+        "app",
+        "workers",
+        "wrangler.json"
+    ],
     "scripts": {
         "dev": "react-router dev",
         "build": "react-router build",
@@ -25,7 +36,7 @@
         "@counterscale/tracker": "*",
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
-        "@react-router/cloudflare": "^7.0.0",
+        "@react-router/cloudflare": "7.1.1",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
         "dayjs": "^1.11.11",
@@ -33,7 +44,7 @@
         "lucide-react": "^0.395.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "react-router": "^7.0.0",
+        "react-router": "7.1.1",
         "recharts": "2.13",
         "run": "^1.5.0",
         "tailwind-merge": "^2.3.0",
@@ -42,8 +53,8 @@
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20240620.0",
-        "@react-router/dev": "^7.0.0",
-        "@react-router/fs-routes": "^7.0.0",
+        "@react-router/dev": "7.1.1",
+        "@react-router/fs-routes": "7.1.1",
         "@testing-library/react": "^16.2.0",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
@@ -70,7 +81,9 @@
         "vite": "^5.3.1",
         "vite-tsconfig-paths": "^4.3.2",
         "vitest": "2.1",
-        "vitest-dom": "^0.1.1",
+        "vitest-dom": "^0.1.1"
+    },
+    "peerDependencies": {
         "wrangler": "^3.61.0"
     },
     "postcss": {
@@ -78,5 +91,9 @@
             "tailwindcss": {},
             "autoprefixer": {}
         }
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
     }
 }
