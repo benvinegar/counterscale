@@ -26,20 +26,23 @@ If you don't have one already, [create a Cloudflare account here](https://dash.c
 
 ### Deploy Counterscale
 
-1. Download the [latest Counterscale release](https://github.com/benvinegar/counterscale/releases/latest) (or clone the repository) and extract the source files to a folder.
-1. With your terminal, navigate to the folder containing the source files.
-1. Run `npm install`
-1. Run `npx wrangler pages project create counterscale` and create a new Pages project.
-    1. You will be prompted to enter the "production branch name". Just use the default provided.
-    - _NOTE: If this is your first time invoking `wrangler` on the terminal, you will be prompted to sign into your Cloudflare account._
-1. Run `npx wrangler pages secret put CF_BEARER_TOKEN` → when prompted, paste the API token you created
-1. Run `npx wrangler pages secret put CF_ACCOUNT_ID` → when prompted, paste your Cloudflare Account ID
-    - Find your account ID by visiting Workers and Pages > Overview. It is displayed on the right hand side of the screen.
-1. Run `npx turbo deploy` – this will do several things:
-    1. Create a new Analytics Engine dataset, called `metricsDataset`
-    1. Deploy the site and give you the deployment URL.
-1. The site should now be deployed. Visit `https://{subdomain-emitted-during-deploy}.pages.dev`.
-    - NOTE: _It may take take a few minutes before the subdomain becomes live._
+First, sign into Cloudflare and authorize the Cloudflare CLI (Wrangler) using:
+
+```bash
+npx wrangler login
+```
+
+Afterwards, run the Counterscale installer:
+
+```bash
+npx @counterscale/cli@latest
+```
+
+Follow the prompts. You will be asked for the Cloudflare API token you created earlier.
+
+Once the script has finished, the server application should be deployed. Visit `https://{subdomain-emitted-during-deploy}.pages.dev` to verify.
+
+NOTE: _If this is your first time deploying Counterscale, it may take take a few minutes before the Worker subdomain becomes live._
 
 ### Start Recording Web Traffic from Your Website(s)
 
