@@ -10,6 +10,10 @@ const argv = yargs(hideBin(process.argv))
             type: "boolean",
             default: false,
         },
+        verbose: {
+            type: "boolean",
+            default: false,
+        },
     })
     .parseSync();
 
@@ -228,14 +232,47 @@ async function promptDeploy(counterscaleVersion: string): Promise<void> {
         ])
         .then((answers) => {
             if (answers.deploy) {
-                shell.exec(
-                    `npx wrangler deploy --config $HOME/.counterscale/wrangler.json`,
-                    {
-                        silent: false,
-                    },
-                );
+                deploy();
             }
         });
+}
+
+function deploy() {
+    console.log("");
+
+    const spinner = ora({
+        text: `Deploying Counterscale ...`,
+        hideCursor: false,
+    });
+    spinner.start();
+
+    shell.exec(
+        `npx wrangler deploy --config $HOME/.counterscale/wrangler.json`,
+        {
+            silent: !argv.verbose,
+            async: true,
+        },
+        (code, stdout, stderr) => {
+            if (code !== 0) {
+                spinner.fail();
+                console.log(stderr || stdout);
+                return;
+            }
+            spinner.stop();
+            // Extract the workers.dev domain
+            const match = stdout.match(
+                /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
+            );
+
+            if (match) {
+                console.log("\nDeployed to:", "https://" + match[0]);
+            } else {
+                console.log(
+                    "\nDeployed successfully but cannot determine deploy URL. Run again with --verbose.",
+                );
+            }
+        },
+    );
 }
 
 interface NewProjectAnswers {
