@@ -17,7 +17,7 @@ const argv = yargs(hideBin(process.argv))
     })
     .parseSync();
 
-import shell from "shelljs"; // see https://stackoverflow.com/a/78649918
+import { $, ProcessOutput } from "zx";
 
 import chalk from "chalk";
 import ora from "ora";
@@ -46,8 +46,10 @@ const CLI_COLORS: CliColors = {
 };
 
 // Recursively convert all relative paths to absolute
-const makePathsAbsolute = (obj: Record<string, string>): void => {
-    if (!obj || typeof obj !== "object") return;
+const makePathsAbsolute = (obj: Record<string, any>): Record<string, any> => {
+    if (!obj || typeof obj !== "object") return obj;
+
+    const result: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(obj)) {
         if (
@@ -55,11 +57,17 @@ const makePathsAbsolute = (obj: Record<string, string>): void => {
             value.includes("/") &&
             !path.isAbsolute(value)
         ) {
-            obj[key] = path.join(SERVER_PKG_DIR, value);
+            result[key] = path.join(SERVER_PKG_DIR, value);
+        } else if (Array.isArray(value)) {
+            result[key] = value.map((v) => makePathsAbsolute(v));
         } else if (typeof value === "object") {
-            makePathsAbsolute(value);
+            result[key] = makePathsAbsolute(value);
+        } else {
+            result[key] = value;
         }
     }
+
+    return result;
 };
 
 function printTitle(counterscaleVersion: string): void {
@@ -81,42 +89,14 @@ function printTitle(counterscaleVersion: string): void {
     console.log("");
 }
 
-// async function promptDotDirectory() {
-//     await inquirer
-//         .prompt([
-//             {
-//                 type: "inquirer-fuzzy-path",
-//                 name: "dotDirectory",
-//                 message: "Where should ./counterscale go?",
-//                 default: "~/",
-//             },
-//         ])
-//         .then((answers) => {
-//             if (answers.dotDirectory) {
-//                 shell.mkdir(os.path.join(__dirname, "..", ".counterscale"));
-//             }
-//         });
-// }
-
-function createDotDirectory(): boolean {
-    if (!shell.test("-d", COUNTERSCALE_DIR)) {
-        shell.mkdir(COUNTERSCALE_DIR);
+async function createDotDirectory(): Promise<boolean> {
+    try {
+        await $`test -d ${COUNTERSCALE_DIR}`;
+        return false;
+    } catch {
+        await $`mkdir -p ${COUNTERSCALE_DIR}`;
         return true;
     }
-    return false;
-}
-
-function copyWranglerConfig(): void {
-    // Copy wrangler.json to .counterscale directory
-    shell.cp(
-        path.join(SERVER_PKG_DIR, "wrangler.json"),
-        path.join(COUNTERSCALE_DIR, "wrangler.json"),
-    );
-}
-
-// Types for shell.exec callback
-interface ShellExecCallback {
-    (code: number, stdout: string, stderr: string): void;
 }
 
 async function fetchCloudflareSecrets(workerName: string): Promise<string> {
@@ -126,22 +106,17 @@ async function fetchCloudflareSecrets(workerName: string): Promise<string> {
     });
     spinner.start();
 
-    return new Promise<string>((resolve, reject) => {
-        shell.exec(
-            `npx wrangler secret list --config $HOME/.counterscale/wrangler.json`,
-            {
-                silent: true,
-                async: true,
-            },
-            ((code: number, stdout: string, stderr: string) => {
-                spinner.stop();
-                if (code === 0) {
-                    resolve(stdout);
-                }
-                reject(stdout || stderr);
-            }) as ShellExecCallback,
-        );
-    });
+    try {
+        const result =
+            await $`npx wrangler secret list --config $HOME/.counterscale/wrangler.json`;
+        spinner.stop();
+        return result.stdout;
+    } catch (error) {
+        spinner.stop();
+        throw error instanceof ProcessOutput
+            ? error.stdout || error.stderr
+            : error;
+    }
 }
 
 interface SecretItem {
@@ -162,7 +137,8 @@ async function getCloudflareSecrets(
         }
         // all other errors
         console.error(err);
-        return shell.exit(1);
+        process.exit(1);
+        return {};
     }
 
     // parse wrangler secrets json output
@@ -171,7 +147,8 @@ async function getCloudflareSecrets(
         secretsList = JSON.parse(rawSecrets);
     } catch (err) {
         console.error("Error: Unable to parse wrangler secrets");
-        return shell.exit(1);
+        process.exit(1);
+        return {};
     }
 
     const secrets: Record<string, string> = {};
@@ -200,18 +177,12 @@ async function promptCloudFlareSecrets(accountId: string): Promise<void> {
         ]);
     } catch (err) {
         console.error(err);
-        return shell.exit(-1);
+        process.exit(-1);
     }
 
     if (answers.cfApiToken) {
-        shell.exec(
-            `echo ${accountId} | npx wrangler secret put CF_ACCOUNT_ID --config $HOME/.counterscale/wrangler.json`,
-            {},
-        );
-        shell.exec(
-            `echo ${answers.cfApiToken} | npx wrangler secret put CF_BEARER_TOKEN --config $HOME/.counterscale/wrangler.json`,
-            {},
-        );
+        await $`echo ${accountId} | npx wrangler secret put CF_ACCOUNT_ID --config $HOME/.counterscale/wrangler.json`;
+        await $`echo ${answers.cfApiToken} | npx wrangler secret put CF_BEARER_TOKEN --config $HOME/.counterscale/wrangler.json`;
         console.log("");
     }
 }
@@ -237,7 +208,7 @@ async function promptDeploy(counterscaleVersion: string): Promise<void> {
         });
 }
 
-function deploy() {
+async function deploy() {
     console.log("");
 
     let spinner: ReturnType<typeof ora> | undefined;
@@ -249,40 +220,41 @@ function deploy() {
         spinner.start();
     }
 
-    shell.exec(
-        `npx wrangler deploy --config $HOME/.counterscale/wrangler.json`,
-        {
-            silent: !argv.verbose,
-            async: true,
-        },
-        (code, stdout, stderr) => {
-            if (code !== 0) {
-                spinner?.fail();
-                console.log(stderr || stdout);
-                return;
-            }
+    try {
+        const result =
+            await $`npx wrangler deploy --config $HOME/.counterscale/wrangler.json`;
 
+        if (!argv.verbose) {
             spinner?.stopAndPersist({
                 symbol: chalk.rgb(...CLI_COLORS.teal)("✓"),
                 text: chalk.rgb(...CLI_COLORS.teal)(
                     "Deploying Counterscale ... Done!",
                 ),
             });
+        } else {
+            console.log(result.stdout);
+        }
 
-            // Extract the workers.dev domain
-            const match = stdout.match(
-                /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
+        // Extract the workers.dev domain
+        const match = result.stdout.match(
+            /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
+        );
+
+        if (match) {
+            console.log("\nDeployed to:", "https://" + match[0]);
+        } else {
+            console.log(
+                "\nDeployed successfully but cannot determine deploy URL. Run again with --verbose.",
             );
-
-            if (match) {
-                console.log("\nDeployed to:", "https://" + match[0]);
-            } else {
-                console.log(
-                    "\nDeployed successfully but cannot determine deploy URL. Run again with --verbose.",
-                );
-            }
-        },
-    );
+        }
+    } catch (error) {
+        spinner?.fail();
+        if (error instanceof ProcessOutput) {
+            console.log(error.stderr || error.stdout);
+        } else {
+            console.error(error);
+        }
+    }
 }
 
 interface NewProjectAnswers {
@@ -318,20 +290,18 @@ async function getAccountId(): Promise<string | null> {
     });
     spinner.start();
 
-    return new Promise<string | null>((resolve, reject) => {
-        shell.exec(`npx wrangler whoami`, { silent: true, async: true }, ((
-            code: number,
-            stdout: string,
-            stderr: string,
-        ) => {
-            spinner.stop();
-            if (code === 0) {
-                const match = stdout.match(/([0-9a-f]{32})/);
-                resolve(match ? match[0] : null);
-            }
-            reject(new Error(stderr || stdout));
-        }) as ShellExecCallback);
-    });
+    try {
+        const result = await $({ quiet: true })`npx wrangler whoami`;
+        spinner.stop();
+        return result.stdout;
+    } catch (error) {
+        spinner.stop();
+        if (error instanceof ProcessOutput) {
+            throw new Error(error.stderr || error.stdout);
+        } else {
+            throw error;
+        }
+    }
 }
 
 const TICK_LENGTH = 500;
@@ -340,6 +310,13 @@ async function tick(fn: () => void): Promise<void> {
     fn();
 }
 
+/**
+ * Reads the source wrangler.json from the server package directory, and does two things:
+ *   1. Reads the worker name
+ *   2. Creates a local copy of wrangler.json (in ~/.counterscale) where all the paths are
+ *      converted to be absolute. This makes it so that the `wrangler deploy` command can be
+ *      run from any directory.
+ */
 async function prepareDeployConfig(): Promise<{
     workerName: string;
     analyticsDataset: string;
@@ -379,18 +356,18 @@ async function prepareDeployConfig(): Promise<{
         ),
     );
 
-    copyWranglerConfig();
-
     // Update wrangler.json with worker name and analytics dataset
     const wranglerConfig = JSON.parse(
-        fs.readFileSync(wranglerConfigPath, "utf8"),
+        fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
     );
     wranglerConfig.name = workerName;
     wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
-    makePathsAbsolute(wranglerConfig);
+
+    const updatedConfig = makePathsAbsolute(wranglerConfig);
+
     fs.writeFileSync(
         wranglerConfigPath,
-        JSON.stringify(wranglerConfig, null, 2),
+        JSON.stringify(updatedConfig, null, 2),
     );
 
     return new Promise((resolve) => resolve({ workerName, analyticsDataset }));
@@ -425,7 +402,7 @@ async function main(): Promise<void> {
         );
     });
 
-    if (createDotDirectory()) {
+    if (await createDotDirectory()) {
         await tick(() => {
             console.log(
                 chalk.rgb(...CLI_COLORS.teal)("✓ Created .counterscale in:"),
