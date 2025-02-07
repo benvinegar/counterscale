@@ -30,9 +30,9 @@
         "figlet": "^1.7.0",
         "inquirer": "^9.2.12",
         "ora": "^8.2.0",
-        "shelljs": "^0.8.5",
         "wrangler": "^3.105.0",
-        "yargs": "^17.7.2"
+        "yargs": "^17.7.2",
+        "zx": "^8.3.2"
     },
     "devDependencies": {
         "@types/figlet": "^1.5.8",
