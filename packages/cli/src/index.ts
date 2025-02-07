@@ -240,11 +240,14 @@ async function promptDeploy(counterscaleVersion: string): Promise<void> {
 function deploy() {
     console.log("");
 
-    const spinner = ora({
-        text: `Deploying Counterscale ...`,
-        hideCursor: false,
-    });
-    spinner.start();
+    let spinner: ReturnType<typeof ora> | undefined;
+    if (!argv.verbose) {
+        spinner = ora({
+            text: `Deploying Counterscale ...`,
+            hideCursor: false,
+        });
+        spinner.start();
+    }
 
     shell.exec(
         `npx wrangler deploy --config $HOME/.counterscale/wrangler.json`,
@@ -254,11 +257,18 @@ function deploy() {
         },
         (code, stdout, stderr) => {
             if (code !== 0) {
-                spinner.fail();
+                spinner?.fail();
                 console.log(stderr || stdout);
                 return;
             }
-            spinner.stop();
+
+            spinner?.stopAndPersist({
+                symbol: chalk.rgb(...CLI_COLORS.teal)("✓"),
+                text: chalk.rgb(...CLI_COLORS.teal)(
+                    "Deploying Counterscale ... Done!",
+                ),
+            });
+
             // Extract the workers.dev domain
             const match = stdout.match(
                 /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
