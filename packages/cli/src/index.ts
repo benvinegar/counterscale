@@ -293,7 +293,9 @@ async function getAccountId(): Promise<string | null> {
     try {
         const result = await $({ quiet: true })`npx wrangler whoami`;
         spinner.stop();
-        return result.stdout;
+
+        const match = result.stdout.match(/([0-9a-f]{32})/);
+        return match ? match[0] : null;
     } catch (error) {
         spinner.stop();
         if (error instanceof ProcessOutput) {
