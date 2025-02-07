@@ -1,33 +1,17 @@
 #!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+import { homedir } from "node:os";
+
 import inquirer from "inquirer";
 import figlet from "figlet";
-import yargs from "yargs/yargs";
-import { hideBin } from "yargs/helpers";
-
-const argv = yargs(hideBin(process.argv))
-    .options({
-        advanced: {
-            type: "boolean",
-            default: false,
-        },
-        verbose: {
-            type: "boolean",
-            default: false,
-        },
-    })
-    .parseSync();
-
-import { $, ProcessOutput } from "zx";
-
 import chalk from "chalk";
 import ora from "ora";
-import fs from "node:fs";
-
-import { homedir } from "node:os";
-import path from "node:path";
+import { highlight } from "cli-highlight";
 
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
+const COUNTERSCALE_README = "https://github.com/benvinegar/counterscale/";
 
 import { getServerPkgDir } from "./utils.js";
 const SERVER_PKG_DIR = getServerPkgDir();
@@ -44,6 +28,35 @@ const CLI_COLORS: CliColors = {
     tan: [243, 227, 190],
     teal: [0, 205, 205],
 };
+
+const highlightTheme = {
+    class: chalk.rgb(...CLI_COLORS.teal),
+    literal: chalk.rgb(...CLI_COLORS.teal),
+    keyword: chalk.rgb(...CLI_COLORS.orange),
+    built_in: chalk.rgb(...CLI_COLORS.orange),
+    name: chalk.rgb(...CLI_COLORS.orange),
+    string: chalk.rgb(...CLI_COLORS.tan),
+    default: chalk.white,
+    plain: chalk.white,
+};
+
+import { hideBin } from "yargs/helpers";
+import yargs from "yargs/yargs";
+
+const argv = yargs(hideBin(process.argv))
+    .options({
+        advanced: {
+            type: "boolean",
+            default: false,
+        },
+        verbose: {
+            type: "boolean",
+            default: false,
+        },
+    })
+    .parseSync();
+
+import { $, ProcessOutput } from "zx";
 
 // Recursively convert all relative paths to absolute
 const makePathsAbsolute = (obj: Record<string, any>): Record<string, any> => {
@@ -203,12 +216,12 @@ async function promptDeploy(counterscaleVersion: string): Promise<void> {
         ])
         .then((answers) => {
             if (answers.deploy) {
-                deploy();
+                deploy(counterscaleVersion);
             }
         });
 }
 
-async function deploy() {
+async function deploy(counterscaleVersion: string) {
     console.log("");
 
     let spinner: ReturnType<typeof ora> | undefined;
@@ -220,8 +233,9 @@ async function deploy() {
         spinner.start();
     }
 
+    let result: ProcessOutput | undefined;
     try {
-        const result =
+        result =
             await $`npx wrangler deploy --config $HOME/.counterscale/wrangler.json`;
 
         if (!argv.verbose) {
@@ -234,19 +248,6 @@ async function deploy() {
         } else {
             console.log(result.stdout);
         }
-
-        // Extract the workers.dev domain
-        const match = result.stdout.match(
-            /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
-        );
-
-        if (match) {
-            console.log("\nDeployed to:", "https://" + match[0]);
-        } else {
-            console.log(
-                "\nDeployed successfully but cannot determine deploy URL. Run again with --verbose.",
-            );
-        }
     } catch (error) {
         spinner?.fail();
         if (error instanceof ProcessOutput) {
@@ -255,6 +256,84 @@ async function deploy() {
             console.error(error);
         }
     }
+
+    // Extract the workers.dev domain
+    const match = result?.stdout.match(
+        /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
+    );
+    const deployUrl = match ? "https://" + match[0] : undefined;
+
+    if (!deployUrl) {
+        console.log(
+            "\nDeployed successfully but cannot determine deploy URL. Run again with --verbose.",
+        );
+        return;
+    }
+
+    emitInstallReadme(deployUrl, counterscaleVersion);
+}
+
+function emitInstallReadme(deployUrl: string, counterscaleVersion: string) {
+    console.log("");
+    console.log("To add the tracking script to your web app:");
+    console.log(
+        highlight(
+            `
+    <script
+        id="counterscale-script"
+        data-site-id="YOUR_UNIQUE_SITE_ID__CHANGE_THIS"
+        src="${deployUrl}/tracker.js"
+        defer
+    ></script>`,
+            { language: "html", theme: highlightTheme },
+        ),
+    );
+
+    console.log("");
+    console.log("- OR -");
+    console.log(
+        highlight(
+            `
+  // $ npm install @counterscale/tracker@${counterscaleVersion}
+
+  import * as Counterscale from "@counterscale/tracker";
+
+  Counterscale.init({
+      siteId: "YOUR_UNIQUE_SITE_ID__CHANGE_THIS",
+      reporterUrl: "${deployUrl}/collect",
+  });
+    `,
+            { language: "typescript", theme: highlightTheme },
+        ),
+    );
+
+    const visitYourDashboardPrefix = "👉 Visit your dashboard: ";
+    const visitYourDashboardRaw = visitYourDashboardPrefix + deployUrl;
+    const maxCharLength = visitYourDashboardRaw.length;
+    console.log("=".repeat(maxCharLength));
+    console.log(visitYourDashboardPrefix, chalk.white.bold(deployUrl));
+
+    const availabilityNote =
+        "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.";
+
+    // Break text into chunks that fit within maxCharLength because we're fancy like that
+    const words = availabilityNote.split(" ");
+    let currentLine = "";
+    const lines = [];
+
+    for (const word of words) {
+        if ((currentLine + " " + word).length <= maxCharLength) {
+            currentLine = currentLine ? currentLine + " " + word : word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    console.log("");
+    lines.forEach((line) => console.log(chalk.dim(line)));
+    console.log("=".repeat(maxCharLength));
 }
 
 interface NewProjectAnswers {
