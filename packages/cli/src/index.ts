@@ -200,28 +200,24 @@ async function promptCloudFlareSecrets(accountId: string): Promise<void> {
     }
 }
 
-async function promptDeploy(counterscaleVersion: string): Promise<void> {
+async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
     interface DeployAnswers {
         deploy: boolean;
     }
 
-    inquirer
-        .prompt<DeployAnswers>([
-            {
-                type: "confirm",
-                name: "deploy",
-                message: `Do you want to deploy version ${counterscaleVersion} now?`,
-                default: false,
-            },
-        ])
-        .then((answers) => {
-            if (answers.deploy) {
-                deploy(counterscaleVersion);
-            }
-        });
+    let answers = await inquirer.prompt<DeployAnswers>([
+        {
+            type: "confirm",
+            name: "deploy",
+            message: `Do you want to deploy version ${counterscaleVersion} now?`,
+            default: false,
+        },
+    ]);
+
+    return new Promise((resolve) => resolve(answers.deploy));
 }
 
-async function deploy(counterscaleVersion: string) {
+async function deploy(): Promise<string | undefined> {
     console.log("");
 
     let spinner: ReturnType<typeof ora> | undefined;
@@ -270,7 +266,7 @@ async function deploy(counterscaleVersion: string) {
         return;
     }
 
-    emitInstallReadme(deployUrl, counterscaleVersion);
+    return new Promise((resolve) => resolve(deployUrl));
 }
 
 function emitInstallReadme(deployUrl: string, counterscaleVersion: string) {
@@ -516,7 +512,13 @@ async function main(): Promise<void> {
     }
 
     console.log("");
-    await promptDeploy(pkg.version);
+    if (await promptDeploy(pkg.version)) {
+        const deployUrl = await deploy();
+
+        if (deployUrl) {
+            emitInstallReadme(deployUrl, pkg.version);
+        }
+    }
 }
 
 await main();
