@@ -244,10 +244,7 @@ async function deploy(
     );
     const deployUrl = match ? "https://" + match[0] : "<unknown>";
 
-    s?.stop(
-        "Deploying Counterscale ... Done: " +
-            chalk.rgb(...CLI_COLORS.teal)(deployUrl),
-    );
+    s?.stop("Deploying Counterscale ... Done.");
 
     return new Promise((resolve) => resolve(deployUrl));
 }
