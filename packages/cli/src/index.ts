@@ -12,6 +12,8 @@ import {
     confirm,
     spinner,
     note,
+    isCancel,
+    cancel,
 } from "@clack/prompts";
 import figlet from "figlet";
 import chalk from "chalk";
@@ -81,6 +83,11 @@ yargs(hideBin(process.argv))
 
 import { $, ProcessOutput } from "zx";
 import { ArgumentsCamelCase } from "yargs";
+
+function bail() {
+    cancel("Operation canceled.");
+    process.exit(0);
+}
 
 // Recursively convert all relative paths to absolute
 const makePathsAbsolute = (obj: Record<string, any>): Record<string, any> => {
@@ -190,6 +197,10 @@ async function promptApiToken(): Promise<string> {
         message: "What's your Cloudflare API Token?",
         mask: "*",
     });
+
+    if (isCancel(cfApiToken)) {
+        bail();
+    }
 
     if (typeof cfApiToken !== "string") {
         throw new Error("API token is required");
@@ -329,14 +340,26 @@ async function promptProjectConfig(
     defaultAnalyticsDataset?: string,
 ): Promise<NewProjectAnswers> {
     const workerName = (await text({
-        message: `What do you want to name your worker?`,
+        message:
+            `What do you want to name your worker? ` +
+            chalk.dim(`[default: ${defaultWorkerName}]`),
         initialValue: defaultWorkerName,
     })) as string;
 
+    if (isCancel(workerName)) {
+        bail();
+    }
+
     const analyticsDataset = (await text({
-        message: `What do you want to name your analytics dataset?`,
+        message:
+            `What do you want to name your analytics dataset? ` +
+            chalk.dim(`[default: ${defaultAnalyticsDataset}]`),
         initialValue: defaultAnalyticsDataset,
     })) as string;
+
+    if (isCancel(analyticsDataset)) {
+        bail();
+    }
 
     return { workerName, analyticsDataset };
 }
@@ -374,7 +397,9 @@ async function prepareDeployConfig(
     workerName: string;
     analyticsDataset: string;
 }> {
-    let workerName, analyticsDataset;
+    let workerName: string = "";
+    let analyticsDataset: string = "";
+
     // check if wrangler.json in .counterscale dir
     const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
 
@@ -392,21 +417,20 @@ async function prepareDeployConfig(
             defaultAnalyticsDataset,
         ));
     } else {
-        workerName = distConfig.name;
+        workerName = distConfig.name as string;
         analyticsDataset = distConfig.analytics_engine_datasets[0].dataset;
+
+        await tick(() =>
+            info("Using worker:", chalk.rgb(...CLI_COLORS.teal)(workerName)),
+        );
+
+        await tick(() =>
+            info(
+                "Using analytics dataset: " +
+                    chalk.rgb(...CLI_COLORS.teal)(analyticsDataset),
+            ),
+        );
     }
-
-    await tick(() =>
-        info("Using worker:", chalk.rgb(...CLI_COLORS.teal)(workerName)),
-    );
-
-    await tick(() =>
-        info(
-            "Using analytics dataset: " +
-                chalk.rgb(...CLI_COLORS.teal)(analyticsDataset),
-        ),
-    );
-
     // Update wrangler.json with worker name and analytics dataset
     const wranglerConfig = JSON.parse(
         fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
@@ -459,12 +483,14 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
         );
     }
 
-    await tick(() => {
-        info(
-            "Using server package found in: " +
-                chalk.rgb(...CLI_COLORS.teal)(SERVER_PKG_DIR),
-        );
-    });
+    if (argv.verbose) {
+        await tick(() => {
+            info(
+                "Using server package found in: " +
+                    chalk.rgb(...CLI_COLORS.teal)(SERVER_PKG_DIR),
+            );
+        });
+    }
 
     if (await createDotDirectory()) {
         await tick(() => {
@@ -474,30 +500,32 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
             );
         });
     } else {
-        await tick(() => {
-            info(
-                "Using .counterscale found in:",
-                chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
-            );
-        });
+        if (argv.verbose) {
+            await tick(() => {
+                info(
+                    "Using .counterscale found in:",
+                    chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
+                );
+            });
+        }
     }
 
     const { workerName } = await prepareDeployConfig(opts);
 
     s = spinner();
-    s.start(`Verifying Cloudflare worker is configured ...`);
+    s.start(`Verifying Cloudflare API token is configured ...`);
 
     const secrets = await getCloudflareSecrets(workerName);
 
     if (Object.keys(secrets).length > 0) {
-        s.stop(`Cloudflare worker is configured.`);
+        s.stop(`Cloudflare API token is configured.`);
     } else {
-        s.stop(`Remote Cloudflare worker not configured.`);
+        s.stop(`Cloudflare API token not configured.`, 1);
         try {
             const apiToken = await promptApiToken();
             if (apiToken) {
                 const s = spinner();
-                s.start(`Setting Cloudflare secrets ...`);
+                s.start(`Setting Cloudflare API token ...`);
 
                 if (
                     await syncSecrets({
@@ -505,14 +533,10 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
                         CF_BEARER_TOKEN: apiToken,
                     })
                 ) {
-                    s.stop(
-                        chalk.rgb(...CLI_COLORS.teal)(
-                            "Setting Cloudflare secrets ... Done!",
-                        ),
-                    );
+                    s.stop("Setting Cloudflare API token ... Done!");
                 } else {
-                    s.stop(chalk.red("Error setting Cloudflare Secrets"));
-                    throw new Error("Error setting Cloudflare Secrets");
+                    s.stop("Error setting Cloudflare API token", 1);
+                    throw new Error("Error setting Cloudflare API token");
                 }
             }
         } catch (err) {
