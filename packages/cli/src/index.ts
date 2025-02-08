@@ -5,7 +5,6 @@ import { homedir } from "node:os";
 
 import {
     intro,
-    outro,
     log,
     password,
     text,
@@ -221,72 +220,54 @@ async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
 async function deploy(
     opts: Record<string, boolean | unknown>,
 ): Promise<string | undefined> {
-    let s;
-    if (!opts.verbose) {
-        s = spinner();
-        s.start(`Deploying Counterscale ...`);
-    }
+    const s = spinner();
+    s.start(`Deploying Counterscale ...`);
 
     let result: ProcessOutput | undefined;
     try {
         result =
             await $`npx wrangler deploy --config $HOME/.counterscale/wrangler.json`;
-
-        if (!opts.verbose) {
-            s?.stop(
-                chalk.rgb(...CLI_COLORS.teal)(
-                    "Deploying Counterscale ... Done!",
-                ),
-            );
-        } else {
-            console.log(result.stdout);
-        }
     } catch (error) {
-        if (!opts.verbose) {
-            s?.stop(chalk.red("Deploy failed"));
-        }
+        s?.stop(chalk.red("Deploy failed"));
+
         if (error instanceof ProcessOutput) {
             console.log(error.stderr || error.stdout);
         } else {
             console.error(error);
         }
+        process.exit(-1);
     }
 
     // Extract the workers.dev domain
     const match = result?.stdout.match(
         /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
     );
-    const deployUrl = match ? "https://" + match[0] : undefined;
+    const deployUrl = match ? "https://" + match[0] : "<unknown>";
 
-    if (!deployUrl) {
-        console.log(
-            "\nDeployed successfully but cannot determine deploy URL. Run again with --verbose.",
-        );
-        return;
-    }
+    s?.stop(
+        "Deploying Counterscale ... Done: " +
+            chalk.rgb(...CLI_COLORS.teal)(deployUrl),
+    );
 
     return new Promise((resolve) => resolve(deployUrl));
 }
 
-function emitInstallReadme(deployUrl: string, counterscaleVersion: string) {
-    console.log("To add the tracking script to your web app:");
-    console.log(
-        highlight(
-            `
+function getScriptSnippet(deployUrl: string, counterscaleVersion: string) {
+    return highlight(
+        `
     <script
         id="counterscale-script"
         data-site-id="YOUR_UNIQUE_SITE_ID__CHANGE_THIS"
         src="${deployUrl}/tracker.js"
         defer
     ></script>`,
-            { language: "html", theme: highlightTheme },
-        ),
+        { language: "html", theme: highlightTheme },
     );
+}
 
-    console.log("- OR -");
-    console.log(
-        highlight(
-            `
+function getPackageSnippet(deployUrl: string, counterscaleVersion: string) {
+    return highlight(
+        `
   // $ npm install @counterscale/tracker@${counterscaleVersion}
 
   import * as Counterscale from "@counterscale/tracker";
@@ -296,38 +277,8 @@ function emitInstallReadme(deployUrl: string, counterscaleVersion: string) {
       reporterUrl: "${deployUrl}/collect",
   });
     `,
-            { language: "typescript", theme: highlightTheme },
-        ),
+        { language: "typescript", theme: highlightTheme },
     );
-
-    const visitYourDashboardPrefix = "👉 Visit your dashboard: ";
-    const visitYourDashboardRaw = visitYourDashboardPrefix + deployUrl;
-    const maxCharLength = visitYourDashboardRaw.length + 1; // +1 for emoji character
-
-    // make the ========= border match the length of the string (looks a little cleaner)
-    console.log("=".repeat(maxCharLength));
-    console.log(visitYourDashboardPrefix, chalk.white.bold(deployUrl));
-
-    const availabilityNote =
-        "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.";
-
-    // Break text into chunks that fit within maxCharLength because we're fancy like that
-    const words = availabilityNote.split(" ");
-    let currentLine = "";
-    const lines = [];
-
-    for (const word of words) {
-        if ((currentLine + " " + word).length <= maxCharLength) {
-            currentLine = currentLine ? currentLine + " " + word : word;
-        } else {
-            lines.push(currentLine);
-            currentLine = word;
-        }
-    }
-    if (currentLine) lines.push(currentLine);
-
-    lines.forEach((line) => console.log(chalk.dim(line)));
-    console.log("=".repeat(maxCharLength));
 }
 
 interface NewProjectAnswers {
@@ -464,7 +415,6 @@ function info(...str: string[]): void {
 }
 async function install(argv: ArgumentsCamelCase): Promise<void> {
     intro("install");
-
     // convert argv to opts (Record)
     const opts = argv as Record<string, boolean | unknown>;
 
@@ -549,7 +499,12 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
         const deployUrl = await deploy(opts);
 
         if (deployUrl) {
-            emitInstallReadme(deployUrl, SERVER_PKG.version);
+            note(
+                `Visit your dashboard: ${chalk.white.bold(deployUrl)}
+
+NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.`,
+            );
+            // emitInstallReadme(deployUrl, SERVER_PKG.version);
         }
     }
 }
