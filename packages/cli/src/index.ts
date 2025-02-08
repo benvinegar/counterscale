@@ -193,8 +193,17 @@ async function getCloudflareSecrets(
 
 async function promptApiToken(): Promise<string> {
     const cfApiToken = await password({
-        message: "What's your Cloudflare API Token?",
+        message: "Enter your Cloudflare API Token",
         mask: "*",
+        validate: (val) => {
+            if (val.length === 0) {
+                return "Value is required";
+            } else if (val.length !== 40) {
+                return "Value must be exactly 40 characters";
+            } else if (!/^[a-zA-Z0-9_]+$/.test(val)) {
+                return "Value must only have alphanumeric characters and underscores";
+            }
+        },
     });
 
     if (isCancel(cfApiToken)) {
@@ -459,15 +468,16 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
 
     const { workerName } = await prepareDeployConfig(opts);
 
-    s = spinner();
-    s.start(`Verifying Cloudflare API token is configured ...`);
-
     const secrets = await getCloudflareSecrets(workerName);
 
-    if (Object.keys(secrets).length > 0) {
-        s.stop(`Cloudflare API token is configured.`);
-    } else {
-        s.stop(`Cloudflare API token not configured.`, 1);
+    if (Object.keys(secrets).length === 0) {
+        note(
+            `Create an API token from your Cloudflare Profile page: ${chalk.bold("https://dash.cloudflare.com/profile/api-tokens")}
+
+Your token needs these permissions:
+
+- Account Analytics: Read`,
+        );
         try {
             const apiToken = await promptApiToken();
             if (apiToken) {
