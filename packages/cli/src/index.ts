@@ -13,16 +13,20 @@ const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
 
 import { getServerPkgDir } from "./utils.js";
+
 const SERVER_PKG_DIR = getServerPkgDir();
 
-// Types for CLI colors
-interface CliColors {
-    orange: [number, number, number];
-    tan: [number, number, number];
-    teal: [number, number, number];
+let SERVER_PKG: ReturnType<typeof JSON.parse>;
+try {
+    SERVER_PKG = JSON.parse(
+        fs.readFileSync(path.join(SERVER_PKG_DIR, "package.json"), "utf8"),
+    );
+} catch (err) {
+    console.error("Error: Unable to parse server package.json");
+    process.exit(1);
 }
 
-const CLI_COLORS: CliColors = {
+const CLI_COLORS: Record<string, [number, number, number]> = {
     orange: [245, 107, 61],
     tan: [243, 227, 190],
     teal: [0, 205, 205],
@@ -42,20 +46,33 @@ const highlightTheme = {
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs/yargs";
 
-const argv = yargs(hideBin(process.argv))
-    .options({
-        advanced: {
-            type: "boolean",
-            default: false,
+printTitle();
+
+yargs(hideBin(process.argv))
+    .command(
+        "install",
+        "Configure and deploy to Cloudflare Workers",
+        (yargs) => {
+            yargs.option("advanced", {
+                type: "boolean",
+                default: false,
+            });
         },
+        async (argv) => {
+            await install(argv);
+        },
+    )
+    .options({
         verbose: {
             type: "boolean",
             default: false,
         },
     })
-    .parseSync();
+    .demandCommand(1)
+    .parse();
 
 import { $, ProcessOutput } from "zx";
+import { ArgumentsCamelCase } from "yargs";
 
 // Recursively convert all relative paths to absolute
 const makePathsAbsolute = (obj: Record<string, any>): Record<string, any> => {
@@ -82,7 +99,8 @@ const makePathsAbsolute = (obj: Record<string, any>): Record<string, any> => {
     return result;
 };
 
-function printTitle(counterscaleVersion: string): void {
+function printTitle(): void {
+    const counterscaleVersion = SERVER_PKG.version;
     console.log(
         chalk.rgb(...CLI_COLORS.orange)(
             figlet.textSync("Counterscale", {
@@ -195,11 +213,13 @@ async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
     return deploy;
 }
 
-async function deploy(): Promise<string | undefined> {
+async function deploy(
+    opts: Record<string, boolean | unknown>,
+): Promise<string | undefined> {
     console.log("");
 
     let spinner: ReturnType<typeof ora> | undefined;
-    if (!argv.verbose) {
+    if (!opts.verbose) {
         spinner = ora({
             text: `Deploying Counterscale ...`,
             hideCursor: false,
@@ -212,7 +232,7 @@ async function deploy(): Promise<string | undefined> {
         result =
             await $`npx wrangler deploy --config $HOME/.counterscale/wrangler.json`;
 
-        if (!argv.verbose) {
+        if (!opts.verbose) {
             spinner?.stopAndPersist({
                 symbol: chalk.rgb(...CLI_COLORS.teal)("✓"),
                 text: chalk.rgb(...CLI_COLORS.teal)(
@@ -282,8 +302,10 @@ function emitInstallReadme(deployUrl: string, counterscaleVersion: string) {
     );
 
     const visitYourDashboardPrefix = "👉 Visit your dashboard: ";
-    const visitYourDashboardRaw = visitYourDashboardPrefix + " " + deployUrl;
-    const maxCharLength = visitYourDashboardRaw.length;
+    const visitYourDashboardRaw = visitYourDashboardPrefix + deployUrl;
+    const maxCharLength = visitYourDashboardRaw.length + 1; // +1 for emoji character
+
+    // make the ========= border match the length of the string (looks a little cleaner)
     console.log("=".repeat(maxCharLength));
     console.log(visitYourDashboardPrefix, chalk.white.bold(deployUrl));
 
@@ -371,7 +393,9 @@ async function tick(fn: () => void): Promise<void> {
  *      converted to be absolute. This makes it so that the `wrangler deploy` command can be
  *      run from any directory.
  */
-async function prepareDeployConfig(): Promise<{
+async function prepareDeployConfig(
+    opts: Record<string, boolean | unknown>,
+): Promise<{
     workerName: string;
     analyticsDataset: string;
 }> {
@@ -387,7 +411,7 @@ async function prepareDeployConfig(): Promise<{
     const defaultAnalyticsDataset =
         distConfig.analytics_engine_datasets[0].dataset;
 
-    if (argv.advanced) {
+    if (opts.advanced) {
         console.log("");
         ({ workerName, analyticsDataset } = await promptProjectConfig(
             defaultWorkerName,
@@ -439,11 +463,9 @@ async function syncSecrets(secrets: Record<string, string>): Promise<boolean> {
     return true;
 }
 
-async function main(): Promise<void> {
-    const pkg = JSON.parse(
-        fs.readFileSync(path.join(SERVER_PKG_DIR, "package.json"), "utf8"),
-    );
-    printTitle(pkg.version);
+async function install(argv: ArgumentsCamelCase): Promise<void> {
+    // convert argv to opts (Record)
+    const opts = argv as Record<string, boolean | unknown>;
 
     const accountId = await getAccountId();
     if (!accountId) {
@@ -486,7 +508,7 @@ async function main(): Promise<void> {
         });
     }
 
-    const { workerName } = await prepareDeployConfig();
+    const { workerName } = await prepareDeployConfig(opts);
 
     console.log("");
     const secrets = await getCloudflareSecrets(workerName);
@@ -530,13 +552,11 @@ async function main(): Promise<void> {
     }
 
     console.log("");
-    if (await promptDeploy(pkg.version)) {
-        const deployUrl = await deploy();
+    if (await promptDeploy(SERVER_PKG.version)) {
+        const deployUrl = await deploy(opts);
 
         if (deployUrl) {
-            emitInstallReadme(deployUrl, pkg.version);
+            emitInstallReadme(deployUrl, SERVER_PKG.version);
         }
     }
 }
-
-await main();

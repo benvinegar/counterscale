@@ -35,7 +35,7 @@ npx wrangler login
 Afterwards, run the Counterscale installer:
 
 ```bash
-npx @counterscale/cli@latest
+npx @counterscale/cli@latest install
 ```
 
 Follow the prompts. You will be asked for the Cloudflare API token you created earlier.
