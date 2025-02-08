@@ -11,7 +11,6 @@ import { highlight } from "cli-highlight";
 
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
-const COUNTERSCALE_README = "https://github.com/benvinegar/counterscale/";
 
 import { getServerPkgDir } from "./utils.js";
 const SERVER_PKG_DIR = getServerPkgDir();
@@ -171,41 +170,21 @@ async function getCloudflareSecrets(
     return secrets;
 }
 
-async function promptCloudFlareSecrets(accountId: string): Promise<void> {
-    interface CloudflareAnswers {
-        cfApiToken: string;
-    }
-
-    console.log("");
-    let answers: CloudflareAnswers;
-    try {
-        answers = await inquirer.prompt([
-            {
-                type: "password",
-                mask: "*",
-                name: "cfApiToken",
-                message: "What's your Cloudflare API Token?",
-                default: false,
-            },
-        ]);
-    } catch (err) {
-        console.error(err);
-        process.exit(-1);
-    }
-
-    if (answers.cfApiToken) {
-        await $`echo ${accountId} | npx wrangler secret put CF_ACCOUNT_ID --config $HOME/.counterscale/wrangler.json`;
-        await $`echo ${answers.cfApiToken} | npx wrangler secret put CF_BEARER_TOKEN --config $HOME/.counterscale/wrangler.json`;
-        console.log("");
-    }
+async function promptApiToken(): Promise<string> {
+    const { cfApiToken } = await inquirer.prompt([
+        {
+            type: "password",
+            mask: "*",
+            name: "cfApiToken",
+            message: "What's your Cloudflare API Token?",
+            default: false,
+        },
+    ]);
+    return cfApiToken;
 }
 
 async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
-    interface DeployAnswers {
-        deploy: boolean;
-    }
-
-    let answers = await inquirer.prompt<DeployAnswers>([
+    const { deploy } = await inquirer.prompt([
         {
             type: "confirm",
             name: "deploy",
@@ -213,8 +192,7 @@ async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
             default: false,
         },
     ]);
-
-    return new Promise((resolve) => resolve(answers.deploy));
+    return deploy;
 }
 
 async function deploy(): Promise<string | undefined> {
@@ -304,7 +282,7 @@ function emitInstallReadme(deployUrl: string, counterscaleVersion: string) {
     );
 
     const visitYourDashboardPrefix = "👉 Visit your dashboard: ";
-    const visitYourDashboardRaw = visitYourDashboardPrefix + deployUrl;
+    const visitYourDashboardRaw = visitYourDashboardPrefix + " " + deployUrl;
     const maxCharLength = visitYourDashboardRaw.length;
     console.log("=".repeat(maxCharLength));
     console.log(visitYourDashboardPrefix, chalk.white.bold(deployUrl));
@@ -341,7 +319,6 @@ async function promptProjectConfig(
     defaultWorkerName?: string,
     defaultAnalyticsDataset?: string,
 ): Promise<NewProjectAnswers> {
-    console.log("");
     return await inquirer.prompt<NewProjectAnswers>([
         {
             type: "input",
@@ -411,6 +388,7 @@ async function prepareDeployConfig(): Promise<{
         distConfig.analytics_engine_datasets[0].dataset;
 
     if (argv.advanced) {
+        console.log("");
         ({ workerName, analyticsDataset } = await promptProjectConfig(
             defaultWorkerName,
             defaultAnalyticsDataset,
@@ -447,7 +425,18 @@ async function prepareDeployConfig(): Promise<{
         JSON.stringify(updatedConfig, null, 2),
     );
 
-    return new Promise((resolve) => resolve({ workerName, analyticsDataset }));
+    return { workerName, analyticsDataset };
+}
+
+async function syncSecrets(secrets: Record<string, string>): Promise<boolean> {
+    for (const [key, value] of Object.entries(secrets)) {
+        try {
+            await $`echo ${value} | npx wrangler secret put ${key} --config $HOME/.counterscale/wrangler.json`;
+        } catch (err) {
+            return false;
+        }
+    }
+    return true;
 }
 
 async function main(): Promise<void> {
@@ -508,7 +497,26 @@ async function main(): Promise<void> {
             ),
         );
     } else {
-        await promptCloudFlareSecrets(accountId);
+        try {
+            const apiToken = await promptApiToken();
+            if (apiToken) {
+                if (
+                    await syncSecrets({
+                        CF_ACCOUNT_ID: accountId,
+                        CF_BEARER_TOKEN: apiToken,
+                    })
+                ) {
+                    console.log(
+                        chalk.rgb(...CLI_COLORS.teal)(
+                            "✓ Cloudflare secrets set.",
+                        ),
+                    );
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            process.exit(1);
+        }
     }
 
     console.log("");
