@@ -500,17 +500,27 @@ async function main(): Promise<void> {
         try {
             const apiToken = await promptApiToken();
             if (apiToken) {
+                const spinner = ora({
+                    text: `Setting Cloudflare secrets ...`,
+                    hideCursor: false,
+                });
+                spinner.start();
+
                 if (
                     await syncSecrets({
                         CF_ACCOUNT_ID: accountId,
                         CF_BEARER_TOKEN: apiToken,
                     })
                 ) {
-                    console.log(
-                        chalk.rgb(...CLI_COLORS.teal)(
-                            "✓ Cloudflare secrets set.",
+                    spinner.stopAndPersist({
+                        symbol: chalk.rgb(...CLI_COLORS.teal)("✓"),
+                        text: chalk.rgb(...CLI_COLORS.teal)(
+                            "Setting Cloudflare secrets ... Done!",
                         ),
-                    );
+                    });
+                } else {
+                    spinner.stop();
+                    throw new Error("Error setting Cloudflare Secrets");
                 }
             }
         } catch (err) {
