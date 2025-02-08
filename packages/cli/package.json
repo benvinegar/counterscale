@@ -23,6 +23,7 @@
         "test:watch": "vitest"
     },
     "dependencies": {
+        "@clack/prompts": "^0.10.0",
         "@counterscale/server": "3.0.0-alpha.17",
         "@types/get-installed-path": "^4.0.3",
         "@types/node": "^22.10.2",
