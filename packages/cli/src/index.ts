@@ -15,9 +15,11 @@ import {
     isCancel,
     cancel,
 } from "@clack/prompts";
+
 import figlet from "figlet";
 import chalk from "chalk";
 import { highlight } from "cli-highlight";
+import { $ } from "zx";
 
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
@@ -81,7 +83,12 @@ yargs(hideBin(process.argv))
     .demandCommand(1)
     .parse();
 
-import { $, ProcessOutput } from "zx";
+import {
+    getAccountId,
+    getCloudflareSecrets,
+    syncSecrets,
+    deploy,
+} from "./cloudflare.js";
 import { ArgumentsCamelCase } from "yargs";
 
 function bail() {
@@ -143,55 +150,6 @@ async function createDotDirectory(): Promise<boolean> {
     }
 }
 
-async function fetchCloudflareSecrets(): Promise<string> {
-    try {
-        const result =
-            await $`npx wrangler secret list --config $HOME/.counterscale/wrangler.json`;
-        return result.stdout;
-    } catch (error) {
-        throw error instanceof ProcessOutput
-            ? error.stdout || error.stderr
-            : error;
-    }
-}
-
-interface SecretItem {
-    name: string;
-    type: string;
-}
-
-async function getCloudflareSecrets(): Promise<Record<string, string>> {
-    let rawSecrets: string;
-    try {
-        rawSecrets = await fetchCloudflareSecrets();
-    } catch (err) {
-        // worker not created yet
-        if (typeof err === "string" && err.indexOf("[code: 10007]") !== -1) {
-            return {};
-        }
-        // all other errors
-        console.error(err);
-        process.exit(1);
-        return {};
-    }
-
-    // parse wrangler secrets json output
-    let secretsList: SecretItem[];
-    try {
-        secretsList = JSON.parse(rawSecrets);
-    } catch (err) {
-        console.error("Error: Unable to parse wrangler secrets");
-        process.exit(1);
-        return {};
-    }
-
-    const secrets: Record<string, string> = {};
-    secretsList.forEach((secret: SecretItem) => {
-        secrets[secret.name] = secret.type;
-    });
-    return secrets;
-}
-
 async function promptApiToken(): Promise<string> {
     const cfApiToken = await password({
         message: "Enter your Cloudflare API Token",
@@ -225,36 +183,6 @@ async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
     });
 
     return deploy === true;
-}
-
-async function deploy(): Promise<string | undefined> {
-    const s = spinner();
-    s.start(`Deploying Counterscale ...`);
-
-    let result: ProcessOutput | undefined;
-    try {
-        result =
-            await $`npx wrangler deploy --config $HOME/.counterscale/wrangler.json`;
-    } catch (error) {
-        s?.stop(chalk.red("Deploy failed"));
-
-        if (error instanceof ProcessOutput) {
-            console.log(error.stderr || error.stdout);
-        } else {
-            console.error(error);
-        }
-        process.exit(-1);
-    }
-
-    // Extract the workers.dev domain
-    const match = result?.stdout.match(
-        /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
-    );
-    const deployUrl = match ? "https://" + match[0] : "<unknown>";
-
-    s?.stop("Deploying Counterscale ... Done.");
-
-    return new Promise((resolve) => resolve(deployUrl));
 }
 
 function getScriptSnippet(deployUrl: string) {
@@ -317,20 +245,6 @@ async function promptProjectConfig(
     }
 
     return { workerName, analyticsDataset };
-}
-
-async function getAccountId(): Promise<string | null> {
-    try {
-        const result = await $({ quiet: true })`npx wrangler whoami`;
-        const match = result.stdout.match(/([0-9a-f]{32})/);
-        return match ? match[0] : null;
-    } catch (error) {
-        if (error instanceof ProcessOutput) {
-            throw new Error(error.stderr || error.stdout);
-        } else {
-            throw error;
-        }
-    }
 }
 
 const TICK_LENGTH = 500;
@@ -401,17 +315,6 @@ async function prepareDeployConfig(
     );
 
     return { workerName, analyticsDataset };
-}
-
-async function syncSecrets(secrets: Record<string, string>): Promise<boolean> {
-    for (const [key, value] of Object.entries(secrets)) {
-        try {
-            await $`echo ${value} | npx wrangler secret put ${key} --config $HOME/.counterscale/wrangler.json`;
-        } catch (err) {
-            return false;
-        }
-    }
-    return true;
 }
 
 function info(...str: string[]): void {
