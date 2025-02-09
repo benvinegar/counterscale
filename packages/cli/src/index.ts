@@ -18,7 +18,7 @@ import {
 import chalk from "chalk";
 import { $ } from "zx";
 
-import { getServerPkgDir, makePathsAbsolute } from "./utils.js";
+import { getServerPkgDir, makePathsAbsolute } from "./config.js";
 
 import {
     getAccountId,

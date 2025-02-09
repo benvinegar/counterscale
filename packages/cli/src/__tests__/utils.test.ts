@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import inquirer from "inquirer";
 import { existsSync } from "node:fs";
-import { getServerPkgDir } from "../utils.js";
+import { getServerPkgDir } from "../config.js";
 import { join } from "node:path";
 
 // Mock external dependencies
