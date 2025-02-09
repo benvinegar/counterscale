@@ -6,7 +6,6 @@ import { homedir } from "node:os";
 import {
     intro,
     outro,
-    log,
     password,
     text,
     confirm,
@@ -16,15 +15,32 @@ import {
     cancel,
 } from "@clack/prompts";
 
-import figlet from "figlet";
 import chalk from "chalk";
-import { highlight } from "cli-highlight";
 import { $ } from "zx";
+
+import { getServerPkgDir, makePathsAbsolute } from "./utils.js";
+
+import {
+    getAccountId,
+    getCloudflareSecrets,
+    syncSecrets,
+    deploy,
+} from "./cloudflare.js";
+
+import {
+    getTitle,
+    getScriptSnippet,
+    getPackageSnippet,
+    info,
+    CLI_COLORS,
+} from "./ui.js";
+
+import { ArgumentsCamelCase } from "yargs";
+import { hideBin } from "yargs/helpers";
+import yargs from "yargs/yargs";
 
 const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
-
-import { getServerPkgDir } from "./utils.js";
 
 const SERVER_PKG_DIR = getServerPkgDir();
 
@@ -38,27 +54,7 @@ try {
     process.exit(1);
 }
 
-const CLI_COLORS: Record<string, [number, number, number]> = {
-    orange: [245, 107, 61],
-    tan: [243, 227, 190],
-    teal: [0, 205, 205],
-};
-
-const highlightTheme = {
-    class: chalk.rgb(...CLI_COLORS.teal),
-    literal: chalk.rgb(...CLI_COLORS.teal),
-    keyword: chalk.rgb(...CLI_COLORS.orange),
-    built_in: chalk.rgb(...CLI_COLORS.orange),
-    name: chalk.rgb(...CLI_COLORS.orange),
-    string: chalk.rgb(...CLI_COLORS.tan),
-    default: chalk.white,
-    plain: chalk.white,
-};
-
-import { hideBin } from "yargs/helpers";
-import yargs from "yargs/yargs";
-
-console.log(getTitle() + "\n");
+console.log(getTitle(SERVER_PKG.version, COUNTERSCALE_HOMEPAGE) + "\n");
 
 yargs(hideBin(process.argv))
     .command(
@@ -83,61 +79,9 @@ yargs(hideBin(process.argv))
     .demandCommand(1)
     .parse();
 
-import {
-    getAccountId,
-    getCloudflareSecrets,
-    syncSecrets,
-    deploy,
-} from "./cloudflare.js";
-import { ArgumentsCamelCase } from "yargs";
-
 function bail() {
     cancel("Operation canceled.");
     process.exit(0);
-}
-
-// Recursively convert all relative paths to absolute
-const makePathsAbsolute = (
-    obj: ReturnType<typeof JSON.parse>,
-): ReturnType<typeof JSON.parse> => {
-    if (!obj || typeof obj !== "object") return obj;
-
-    const result: ReturnType<typeof JSON.parse> = {};
-
-    for (const [key, value] of Object.entries(obj)) {
-        if (
-            typeof value === "string" &&
-            value.includes("/") &&
-            !path.isAbsolute(value)
-        ) {
-            result[key] = path.join(SERVER_PKG_DIR, value);
-        } else if (Array.isArray(value)) {
-            result[key] = value.map((v) => makePathsAbsolute(v));
-        } else if (typeof value === "object") {
-            result[key] = makePathsAbsolute(value);
-        } else {
-            result[key] = value;
-        }
-    }
-
-    return result;
-};
-
-function getTitle(): string {
-    const counterscaleVersion = SERVER_PKG.version;
-    const title = chalk.rgb(...CLI_COLORS.orange)(
-        figlet.textSync("Counterscale", {
-            font: "Slant",
-        }),
-    );
-
-    const subtitle = [
-        chalk.rgb(...CLI_COLORS.tan).underline(COUNTERSCALE_HOMEPAGE),
-        "•",
-        chalk.rgb(...CLI_COLORS.tan)(counterscaleVersion),
-    ].join(" ");
-
-    return `${title}\n${subtitle}`;
 }
 
 async function createDotDirectory(): Promise<boolean> {
@@ -183,34 +127,6 @@ async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
     });
 
     return deploy === true;
-}
-
-function getScriptSnippet(deployUrl: string) {
-    return highlight(
-        `
-<script
-    id="counterscale-script"
-    data-site-id="YOUR_UNIQUE_SITE_ID__CHANGE_THIS"
-    src="${deployUrl}/tracker.js"
-    defer
-></script>`,
-        { language: "html", theme: highlightTheme },
-    );
-}
-
-function getPackageSnippet(deployUrl: string, counterscaleVersion: string) {
-    return highlight(
-        `
-// $ npm install @counterscale/tracker@${counterscaleVersion}
-
-import * as Counterscale from "@counterscale/tracker";
-
-Counterscale.init({
-    siteId: "YOUR_UNIQUE_SITE_ID__CHANGE_THIS",
-    reporterUrl: "${deployUrl}/collect",
-});`,
-        { language: "typescript", theme: highlightTheme },
-    );
 }
 
 interface NewProjectAnswers {
@@ -307,7 +223,7 @@ async function prepareDeployConfig(
     wranglerConfig.name = workerName;
     wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
 
-    const updatedConfig = makePathsAbsolute(wranglerConfig);
+    const updatedConfig = makePathsAbsolute(wranglerConfig, SERVER_PKG_DIR);
 
     fs.writeFileSync(
         wranglerConfigPath,
@@ -317,15 +233,18 @@ async function prepareDeployConfig(
     return { workerName, analyticsDataset };
 }
 
-function info(...str: string[]): void {
-    log.info(str.join(" "));
-}
+/**
+ * Main CLI install script, takes various user input (e.g. target worker name, Cloudflare API key, etc.)
+ * and installs the CounterScale worker on Cloudflare.
+ *
+ * @param argv yargs-processed arguments
+ */
 async function install(argv: ArgumentsCamelCase): Promise<void> {
     intro("install");
     // convert argv to opts (Record)
     const opts = argv as Record<string, boolean | unknown>;
 
-    const s = spinner();
+    let s = spinner();
     s.start("Fetching Cloudflare Account ID ...");
     const accountId = await getAccountId();
 
@@ -404,7 +323,12 @@ Your token needs these permissions:
     }
 
     if (await promptDeploy(SERVER_PKG.version)) {
+        s = spinner();
+        s.start(`Deploying CounterScale ...`);
+
         const deployUrl = await deploy();
+
+        s.stop("Deploying CounterScale ... Done.");
 
         if (deployUrl) {
             await tick(() =>

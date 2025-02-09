@@ -43,3 +43,31 @@ export function getServerPkgDir(): string {
         "Could not find @counterscale/server package. Is it installed?",
     );
 }
+
+// Recursively convert all relative paths to absolute
+export const makePathsAbsolute = (
+    obj: ReturnType<typeof JSON.parse>,
+    fullDir: string,
+): ReturnType<typeof JSON.parse> => {
+    if (!obj || typeof obj !== "object") return obj;
+
+    const result: ReturnType<typeof JSON.parse> = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+        if (
+            typeof value === "string" &&
+            value.includes("/") &&
+            !path.isAbsolute(value)
+        ) {
+            result[key] = path.join(fullDir, value);
+        } else if (Array.isArray(value)) {
+            result[key] = value.map((v) => makePathsAbsolute(v, fullDir));
+        } else if (typeof value === "object") {
+            result[key] = makePathsAbsolute(value, fullDir);
+        } else {
+            result[key] = value;
+        }
+    }
+
+    return result;
+};
