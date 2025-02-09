@@ -23,6 +23,7 @@ import {
     stageDeployConfig,
     COUNTERSCALE_DIR,
     readInitialServerConfig,
+    getWorkerAndDatasetName,
 } from "./config.js";
 
 import {
@@ -218,19 +219,16 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
 
     const initialDeployConfig = readInitialServerConfig();
 
-    const { defaultWorkerName, defaultAnalyticsDataset } = initialDeployConfig;
+    let { workerName, analyticsDataset } =
+        getWorkerAndDatasetName(initialDeployConfig);
 
     // If --advanced is true, prompt the user for worker name and analytics dataset name.
     // Otherwise, stick to the default values read from the server package.
-    let workerName, analyticsDataset;
     if (opts.advanced) {
         ({ workerName, analyticsDataset } = await promptProjectConfig(
-            defaultWorkerName,
-            defaultAnalyticsDataset,
+            workerName,
+            analyticsDataset,
         ));
-    } else {
-        workerName = defaultWorkerName;
-        analyticsDataset = defaultAnalyticsDataset;
     }
 
     if (opts.verbose) {
