@@ -504,20 +504,28 @@ Your token needs these permissions:
         const deployUrl = await deploy();
 
         if (deployUrl) {
-            note(
-                "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
+            await tick(() =>
+                note(
+                    "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
+                ),
             );
 
-            outro(
-                `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
+            await tick(() =>
+                outro(
+                    `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
+                ),
             );
 
-            console.log(
-                "\nTo start capturing data, add the tracking script to your website: ",
+            await tick(() =>
+                console.log(
+                    "\nTo start capturing data, add the tracking script to your website: ",
+                ),
             );
-            console.log(getScriptSnippet(deployUrl));
-            console.log("\n\n" + chalk.dim("-- OR --") + "\n");
-            console.log(getPackageSnippet(deployUrl, SERVER_PKG.version));
+            await tick(() => {
+                console.log(getScriptSnippet(deployUrl));
+                console.log("\n\n" + chalk.dim("-- OR --") + "\n");
+                console.log(getPackageSnippet(deployUrl, SERVER_PKG.version));
+            });
         }
     }
 }
