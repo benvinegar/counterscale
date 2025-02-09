@@ -7,6 +7,7 @@ import {
     outro,
     password,
     text,
+    log,
     confirm,
     spinner,
     note,
@@ -35,7 +36,6 @@ import {
     getTitle,
     getScriptSnippet,
     getPackageSnippet,
-    info,
     CLI_COLORS,
 } from "./ui.js";
 
@@ -178,7 +178,9 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
 
     if (!accountId) {
         s.stop("Not authenticated with Cloudflare.\n");
-        info(`Run ${chalk.red(`npx wrangler login`)} first, then try again.`);
+        log.info(
+            `Run ${chalk.red(`npx wrangler login`)} first, then try again.`,
+        );
         process.exit(1);
     } else {
         s.stop(
@@ -189,7 +191,7 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
 
     if (argv.verbose) {
         await tick(() => {
-            info(
+            log.info(
                 "Using server package found in: " +
                     chalk.rgb(...CLI_COLORS.teal)(SERVER_PKG_DIR),
             );
@@ -198,17 +200,17 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
 
     if (await createDotDirectory()) {
         await tick(() => {
-            info(
-                "Created .counterscale in:",
-                chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
+            log.info(
+                "Created .counterscale in: " +
+                    chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
             );
         });
     } else {
         if (argv.verbose) {
             await tick(() => {
-                info(
-                    "Using .counterscale found in:",
-                    chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
+                log.info(
+                    "Using .counterscale found in: " +
+                        chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
                 );
             });
         }
@@ -233,13 +235,13 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
 
     if (opts.verbose) {
         await tick(() => {
-            info(
+            log.info(
                 "Using worker name: " +
                     chalk.rgb(...CLI_COLORS.teal)(workerName),
             );
         });
         await tick(() => {
-            info(
+            log.info(
                 "Using analytics dataset: " +
                     chalk.rgb(...CLI_COLORS.teal)(analyticsDataset),
             );

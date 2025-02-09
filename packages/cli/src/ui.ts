@@ -1,4 +1,3 @@
-import { log } from "@clack/prompts";
 import figlet from "figlet";
 import chalk from "chalk";
 import { highlight } from "cli-highlight";
@@ -68,8 +67,4 @@ Counterscale.init({
 });`,
         { language: "typescript", theme: highlightTheme },
     );
-}
-
-export function info(...str: string[]): void {
-    log.info(str.join(" "));
 }
