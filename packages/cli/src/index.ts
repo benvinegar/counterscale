@@ -5,6 +5,7 @@ import { homedir } from "node:os";
 
 import {
     intro,
+    outro,
     log,
     password,
     text,
@@ -89,10 +90,12 @@ function bail() {
 }
 
 // Recursively convert all relative paths to absolute
-const makePathsAbsolute = (obj: Record<string, any>): Record<string, any> => {
+const makePathsAbsolute = (
+    obj: ReturnType<typeof JSON.parse>,
+): ReturnType<typeof JSON.parse> => {
     if (!obj || typeof obj !== "object") return obj;
 
-    const result: Record<string, any> = {};
+    const result: ReturnType<typeof JSON.parse> = {};
 
     for (const [key, value] of Object.entries(obj)) {
         if (
@@ -140,7 +143,7 @@ async function createDotDirectory(): Promise<boolean> {
     }
 }
 
-async function fetchCloudflareSecrets(workerName: string): Promise<string> {
+async function fetchCloudflareSecrets(): Promise<string> {
     try {
         const result =
             await $`npx wrangler secret list --config $HOME/.counterscale/wrangler.json`;
@@ -157,12 +160,10 @@ interface SecretItem {
     type: string;
 }
 
-async function getCloudflareSecrets(
-    workerName: string,
-): Promise<Record<string, string>> {
+async function getCloudflareSecrets(): Promise<Record<string, string>> {
     let rawSecrets: string;
     try {
-        rawSecrets = await fetchCloudflareSecrets(workerName);
+        rawSecrets = await fetchCloudflareSecrets();
     } catch (err) {
         // worker not created yet
         if (typeof err === "string" && err.indexOf("[code: 10007]") !== -1) {
@@ -226,9 +227,7 @@ async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
     return deploy === true;
 }
 
-async function deploy(
-    opts: Record<string, boolean | unknown>,
-): Promise<string | undefined> {
+async function deploy(): Promise<string | undefined> {
     const s = spinner();
     s.start(`Deploying Counterscale ...`);
 
@@ -258,15 +257,15 @@ async function deploy(
     return new Promise((resolve) => resolve(deployUrl));
 }
 
-function getScriptSnippet(deployUrl: string, counterscaleVersion: string) {
+function getScriptSnippet(deployUrl: string) {
     return highlight(
         `
-    <script
-        id="counterscale-script"
-        data-site-id="YOUR_UNIQUE_SITE_ID__CHANGE_THIS"
-        src="${deployUrl}/tracker.js"
-        defer
-    ></script>`,
+<script
+    id="counterscale-script"
+    data-site-id="YOUR_UNIQUE_SITE_ID__CHANGE_THIS"
+    src="${deployUrl}/tracker.js"
+    defer
+></script>`,
         { language: "html", theme: highlightTheme },
     );
 }
@@ -274,15 +273,14 @@ function getScriptSnippet(deployUrl: string, counterscaleVersion: string) {
 function getPackageSnippet(deployUrl: string, counterscaleVersion: string) {
     return highlight(
         `
-  // $ npm install @counterscale/tracker@${counterscaleVersion}
+// $ npm install @counterscale/tracker@${counterscaleVersion}
 
-  import * as Counterscale from "@counterscale/tracker";
+import * as Counterscale from "@counterscale/tracker";
 
-  Counterscale.init({
-      siteId: "YOUR_UNIQUE_SITE_ID__CHANGE_THIS",
-      reporterUrl: "${deployUrl}/collect",
-  });
-    `,
+Counterscale.init({
+    siteId: "YOUR_UNIQUE_SITE_ID__CHANGE_THIS",
+    reporterUrl: "${deployUrl}/collect",
+});`,
         { language: "typescript", theme: highlightTheme },
     );
 }
@@ -424,7 +422,7 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
     // convert argv to opts (Record)
     const opts = argv as Record<string, boolean | unknown>;
 
-    let s = spinner();
+    const s = spinner();
     s.start("Fetching Cloudflare Account ID ...");
     const accountId = await getAccountId();
 
@@ -466,9 +464,9 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
         }
     }
 
-    const { workerName } = await prepareDeployConfig(opts);
+    await prepareDeployConfig(opts);
 
-    const secrets = await getCloudflareSecrets(workerName);
+    const secrets = await getCloudflareSecrets();
 
     if (Object.keys(secrets).length === 0) {
         note(
@@ -503,15 +501,23 @@ Your token needs these permissions:
     }
 
     if (await promptDeploy(SERVER_PKG.version)) {
-        const deployUrl = await deploy(opts);
+        const deployUrl = await deploy();
 
         if (deployUrl) {
             note(
-                `Visit your dashboard: ${chalk.white.bold(deployUrl)}
-
-NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.`,
+                "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
             );
-            // emitInstallReadme(deployUrl, SERVER_PKG.version);
+
+            outro(
+                `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
+            );
+
+            console.log(
+                "\nTo start capturing data, add the tracking script to your website: ",
+            );
+            console.log(getScriptSnippet(deployUrl));
+            console.log("\n\n" + chalk.dim("-- OR --") + "\n");
+            console.log(getPackageSnippet(deployUrl, SERVER_PKG.version));
         }
     }
 }
