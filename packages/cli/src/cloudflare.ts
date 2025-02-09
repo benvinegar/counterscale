@@ -2,7 +2,11 @@ import { $, ProcessOutput } from "zx";
 import path from "path";
 import { homedir } from "node:os";
 
-const WRANGLER_CONFIG_PATH = path.join(homedir(), ".counterscale", "wrangler.json");
+const WRANGLER_CONFIG_PATH = path.join(
+    homedir(),
+    ".counterscale",
+    "wrangler.json",
+);
 
 export async function getAccountId(): Promise<string | null> {
     try {
@@ -19,7 +23,8 @@ export async function getAccountId(): Promise<string | null> {
 
 export async function fetchCloudflareSecrets(): Promise<string> {
     try {
-        const result = await $`npx wrangler secret list --config ${WRANGLER_CONFIG_PATH}`;
+        const result =
+            await $`npx wrangler secret list --config ${WRANGLER_CONFIG_PATH}`;
         return result.stdout;
     } catch (error) {
         throw error instanceof ProcessOutput
@@ -53,7 +58,9 @@ export async function getCloudflareSecrets(): Promise<Record<string, string>> {
     return secrets;
 }
 
-export async function syncSecrets(secrets: Record<string, string>): Promise<boolean> {
+export async function setCloudflareSecrets(
+    secrets: Record<string, string>,
+): Promise<boolean> {
     for (const [key, value] of Object.entries(secrets)) {
         try {
             await $`echo ${value} | npx wrangler secret put ${key} --config ${WRANGLER_CONFIG_PATH}`;
@@ -65,7 +72,10 @@ export async function syncSecrets(secrets: Record<string, string>): Promise<bool
 }
 
 export async function deploy(): Promise<string> {
-    const result = await $`npx wrangler deploy --config ${WRANGLER_CONFIG_PATH}`;
-    const match = result.stdout.match(/([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i);
+    const result =
+        await $`npx wrangler deploy --config ${WRANGLER_CONFIG_PATH}`;
+    const match = result.stdout.match(
+        /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
+    );
     return match ? "https://" + match[0] : "<unknown>";
 }

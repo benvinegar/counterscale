@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { homedir } from "node:os";
 
 import {
     intro,
@@ -16,14 +15,19 @@ import {
 } from "@clack/prompts";
 
 import chalk from "chalk";
-import { $ } from "zx";
 
-import { getServerPkgDir, makePathsAbsolute } from "./config.js";
+import {
+    getServerPkgDir,
+    createDotDirectory,
+    stageDeployConfig,
+    COUNTERSCALE_DIR,
+    readInitialServerConfig,
+} from "./config.js";
 
 import {
     getAccountId,
     getCloudflareSecrets,
-    syncSecrets,
+    setCloudflareSecrets,
     deploy,
 } from "./cloudflare.js";
 
@@ -39,9 +43,7 @@ import { ArgumentsCamelCase } from "yargs";
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs/yargs";
 
-const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
-
 const SERVER_PKG_DIR = getServerPkgDir();
 
 let SERVER_PKG: ReturnType<typeof JSON.parse>;
@@ -84,16 +86,6 @@ function bail() {
     process.exit(0);
 }
 
-async function createDotDirectory(): Promise<boolean> {
-    try {
-        await $`test -d ${COUNTERSCALE_DIR}`;
-        return false;
-    } catch {
-        await $`mkdir -p ${COUNTERSCALE_DIR}`;
-        return true;
-    }
-}
-
 async function promptApiToken(): Promise<string> {
     const cfApiToken = await password({
         message: "Enter your Cloudflare API Token",
@@ -129,7 +121,7 @@ async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
     return deploy === true;
 }
 
-interface NewProjectAnswers {
+export interface NewProjectAnswers {
     workerName: string;
     analyticsDataset: string;
 }
@@ -167,70 +159,6 @@ const TICK_LENGTH = 500;
 async function tick(fn: () => void): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, TICK_LENGTH));
     fn();
-}
-
-/**
- * Reads the source wrangler.json from the server package directory, and does two things:
- *   1. Reads the worker name
- *   2. Creates a local copy of wrangler.json (in ~/.counterscale) where all the paths are
- *      converted to be absolute. This makes it so that the `wrangler deploy` command can be
- *      run from any directory.
- */
-async function prepareDeployConfig(
-    opts: Record<string, boolean | unknown>,
-): Promise<{
-    workerName: string;
-    analyticsDataset: string;
-}> {
-    let workerName: string = "";
-    let analyticsDataset: string = "";
-
-    // check if wrangler.json in .counterscale dir
-    const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
-
-    const distConfig = JSON.parse(
-        fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
-    );
-
-    const defaultWorkerName = distConfig.name;
-    const defaultAnalyticsDataset =
-        distConfig.analytics_engine_datasets[0].dataset;
-
-    if (opts.advanced) {
-        ({ workerName, analyticsDataset } = await promptProjectConfig(
-            defaultWorkerName,
-            defaultAnalyticsDataset,
-        ));
-    } else {
-        workerName = distConfig.name as string;
-        analyticsDataset = distConfig.analytics_engine_datasets[0].dataset;
-
-        await tick(() =>
-            info("Using worker:", chalk.rgb(...CLI_COLORS.teal)(workerName)),
-        );
-
-        await tick(() =>
-            info(
-                "Using analytics dataset: " +
-                    chalk.rgb(...CLI_COLORS.teal)(analyticsDataset),
-            ),
-        );
-    }
-    // Update wrangler.json with worker name and analytics dataset
-    const wranglerConfig = JSON.parse(
-        fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
-    );
-    wranglerConfig.name = workerName;
-    wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
-
-    const updatedConfig = makePathsAbsolute(wranglerConfig, SERVER_PKG_DIR);
-
-    fs.writeFileSync(
-        wranglerConfigPath,
-        JSON.stringify(updatedConfig, null, 2),
-    );
-
-    return { workerName, analyticsDataset };
 }
 
 /**
@@ -286,7 +214,39 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
         }
     }
 
-    await prepareDeployConfig(opts);
+    const initialDeployConfig = readInitialServerConfig();
+
+    const { defaultWorkerName, defaultAnalyticsDataset } = initialDeployConfig;
+
+    // If --advanced is true, prompt the user for worker name and analytics dataset name.
+    // Otherwise, stick to the default values read from the server package.
+    let workerName, analyticsDataset;
+    if (opts.advanced) {
+        ({ workerName, analyticsDataset } = await promptProjectConfig(
+            defaultWorkerName,
+            defaultAnalyticsDataset,
+        ));
+    } else {
+        workerName = defaultWorkerName;
+        analyticsDataset = defaultAnalyticsDataset;
+    }
+
+    if (opts.verbose) {
+        await tick(() => {
+            info(
+                "Using worker name: " +
+                    chalk.rgb(...CLI_COLORS.teal)(workerName),
+            );
+        });
+        await tick(() => {
+            info(
+                "Using analytics dataset: " +
+                    chalk.rgb(...CLI_COLORS.teal)(analyticsDataset),
+            );
+        });
+    }
+
+    await stageDeployConfig(initialDeployConfig, workerName, analyticsDataset);
 
     const secrets = await getCloudflareSecrets();
 
@@ -305,7 +265,7 @@ Your token needs these permissions:
                 s.start(`Setting Cloudflare API token ...`);
 
                 if (
-                    await syncSecrets({
+                    await setCloudflareSecrets({
                         CF_ACCOUNT_ID: accountId,
                         CF_BEARER_TOKEN: apiToken,
                     })

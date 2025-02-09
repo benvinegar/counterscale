@@ -1,7 +1,10 @@
 import path, { dirname } from "path";
-import { existsSync } from "node:fs";
-
+import fs, { existsSync } from "node:fs";
+import { homedir } from "node:os";
 import { fileURLToPath } from "url";
+import { $ } from "zx";
+
+export const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -71,3 +74,58 @@ export const makePathsAbsolute = (
 
     return result;
 };
+
+export async function createDotDirectory(): Promise<boolean> {
+    try {
+        await $`test -d ${COUNTERSCALE_DIR}`;
+        return false;
+    } catch {
+        await $`mkdir -p ${COUNTERSCALE_DIR}`;
+        return true;
+    }
+}
+
+export function getWorkerAndDatasetName(config: ReturnType<typeof JSON.parse>) {
+    return {
+        workerName: config.name as string,
+        analyticsDataset: config.analytics_engine_datasets[0].dataset,
+    };
+}
+
+/**
+ * Reads the initial server config from the @counterscale/server package
+ */
+export function readInitialServerConfig() {
+    const serverPkgDir = getServerPkgDir();
+    const distConfig = JSON.parse(
+        fs.readFileSync(path.join(serverPkgDir, "wrangler.json"), "utf8"),
+    );
+
+    return distConfig;
+}
+
+/**
+ * Writes a local copy of wrangler.json (in ~/.counterscale) where all the paths are
+ * converted to be absolute. This makes it so that the `wrangler deploy` command can be
+ * run from any directory.
+ */
+
+export async function stageDeployConfig(
+    initialDeployConfig: ReturnType<typeof JSON.parse>,
+    workerName: string,
+    analyticsDataset: string,
+): Promise<void> {
+    // check if wrangler.json in .counterscale dir
+    const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
+
+    const serverPkgDir = getServerPkgDir();
+
+    const updatedConfig = makePathsAbsolute(initialDeployConfig, serverPkgDir);
+    initialDeployConfig.name = workerName;
+    initialDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+
+    fs.writeFileSync(
+        wranglerConfigPath,
+        JSON.stringify(updatedConfig, null, 2),
+    );
+}
