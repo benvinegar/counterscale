@@ -1,19 +1,50 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { homedir } from "node:os";
 
-import inquirer from "inquirer";
-import figlet from "figlet";
+import {
+    intro,
+    outro,
+    password,
+    text,
+    log,
+    confirm,
+    spinner,
+    note,
+    isCancel,
+    cancel,
+} from "@clack/prompts";
+
 import chalk from "chalk";
-import ora from "ora";
-import { highlight } from "cli-highlight";
 
-const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
+import {
+    getServerPkgDir,
+    createDotDirectory,
+    stageDeployConfig,
+    COUNTERSCALE_DIR,
+    readInitialServerConfig,
+    getWorkerAndDatasetName,
+} from "./config.js";
+
+import {
+    getAccountId,
+    getCloudflareSecrets,
+    setCloudflareSecrets,
+    deploy,
+} from "./cloudflare.js";
+
+import {
+    getTitle,
+    getScriptSnippet,
+    getPackageSnippet,
+    CLI_COLORS,
+} from "./ui.js";
+
+import { ArgumentsCamelCase } from "yargs";
+import { hideBin } from "yargs/helpers";
+import yargs from "yargs/yargs";
+
 const COUNTERSCALE_HOMEPAGE = "https://counterscale.dev";
-
-import { getServerPkgDir } from "./utils.js";
-
 const SERVER_PKG_DIR = getServerPkgDir();
 
 let SERVER_PKG: ReturnType<typeof JSON.parse>;
@@ -26,27 +57,7 @@ try {
     process.exit(1);
 }
 
-const CLI_COLORS: Record<string, [number, number, number]> = {
-    orange: [245, 107, 61],
-    tan: [243, 227, 190],
-    teal: [0, 205, 205],
-};
-
-const highlightTheme = {
-    class: chalk.rgb(...CLI_COLORS.teal),
-    literal: chalk.rgb(...CLI_COLORS.teal),
-    keyword: chalk.rgb(...CLI_COLORS.orange),
-    built_in: chalk.rgb(...CLI_COLORS.orange),
-    name: chalk.rgb(...CLI_COLORS.orange),
-    string: chalk.rgb(...CLI_COLORS.tan),
-    default: chalk.white,
-    plain: chalk.white,
-};
-
-import { hideBin } from "yargs/helpers";
-import yargs from "yargs/yargs";
-
-printTitle();
+console.log(getTitle(SERVER_PKG.version, COUNTERSCALE_HOMEPAGE) + "\n");
 
 yargs(hideBin(process.argv))
     .command(
@@ -71,268 +82,47 @@ yargs(hideBin(process.argv))
     .demandCommand(1)
     .parse();
 
-import { $, ProcessOutput } from "zx";
-import { ArgumentsCamelCase } from "yargs";
-
-// Recursively convert all relative paths to absolute
-const makePathsAbsolute = (obj: Record<string, any>): Record<string, any> => {
-    if (!obj || typeof obj !== "object") return obj;
-
-    const result: Record<string, any> = {};
-
-    for (const [key, value] of Object.entries(obj)) {
-        if (
-            typeof value === "string" &&
-            value.includes("/") &&
-            !path.isAbsolute(value)
-        ) {
-            result[key] = path.join(SERVER_PKG_DIR, value);
-        } else if (Array.isArray(value)) {
-            result[key] = value.map((v) => makePathsAbsolute(v));
-        } else if (typeof value === "object") {
-            result[key] = makePathsAbsolute(value);
-        } else {
-            result[key] = value;
-        }
-    }
-
-    return result;
-};
-
-function printTitle(): void {
-    const counterscaleVersion = SERVER_PKG.version;
-    console.log(
-        chalk.rgb(...CLI_COLORS.orange)(
-            figlet.textSync("Counterscale", {
-                font: "Slant",
-            }),
-        ),
-    );
-
-    // output version number derived from package.json
-
-    console.log(
-        chalk.rgb(...CLI_COLORS.tan).underline(COUNTERSCALE_HOMEPAGE),
-        "•",
-        chalk.rgb(...CLI_COLORS.tan)(counterscaleVersion),
-    );
-    console.log("");
-}
-
-async function createDotDirectory(): Promise<boolean> {
-    try {
-        await $`test -d ${COUNTERSCALE_DIR}`;
-        return false;
-    } catch {
-        await $`mkdir -p ${COUNTERSCALE_DIR}`;
-        return true;
-    }
-}
-
-async function fetchCloudflareSecrets(workerName: string): Promise<string> {
-    const spinner = ora({
-        text: `Fetching Cloudflare config for worker: ${workerName}`,
-        hideCursor: false,
-    });
-    spinner.start();
-
-    try {
-        const result =
-            await $`npx wrangler secret list --config $HOME/.counterscale/wrangler.json`;
-        spinner.stop();
-        return result.stdout;
-    } catch (error) {
-        spinner.stop();
-        throw error instanceof ProcessOutput
-            ? error.stdout || error.stderr
-            : error;
-    }
-}
-
-interface SecretItem {
-    name: string;
-    type: string;
-}
-
-async function getCloudflareSecrets(
-    workerName: string,
-): Promise<Record<string, string>> {
-    let rawSecrets: string;
-    try {
-        rawSecrets = await fetchCloudflareSecrets(workerName);
-    } catch (err) {
-        // worker not created yet
-        if (typeof err === "string" && err.indexOf("[code: 10007]") !== -1) {
-            return {};
-        }
-        // all other errors
-        console.error(err);
-        process.exit(1);
-        return {};
-    }
-
-    // parse wrangler secrets json output
-    let secretsList: SecretItem[];
-    try {
-        secretsList = JSON.parse(rawSecrets);
-    } catch (err) {
-        console.error("Error: Unable to parse wrangler secrets");
-        process.exit(1);
-        return {};
-    }
-
-    const secrets: Record<string, string> = {};
-    secretsList.forEach((secret: SecretItem) => {
-        secrets[secret.name] = secret.type;
-    });
-    return secrets;
+function bail() {
+    cancel("Operation canceled.");
+    process.exit(0);
 }
 
 async function promptApiToken(): Promise<string> {
-    const { cfApiToken } = await inquirer.prompt([
-        {
-            type: "password",
-            mask: "*",
-            name: "cfApiToken",
-            message: "What's your Cloudflare API Token?",
-            default: false,
+    const cfApiToken = await password({
+        message: "Enter your Cloudflare API Token",
+        mask: "*",
+        validate: (val) => {
+            if (val.length === 0) {
+                return "Value is required";
+            } else if (val.length !== 40) {
+                return "Value must be exactly 40 characters";
+            } else if (!/^[a-zA-Z0-9_]+$/.test(val)) {
+                return "Value must only have alphanumeric characters and underscores";
+            }
         },
-    ]);
+    });
+
+    if (isCancel(cfApiToken)) {
+        bail();
+    }
+
+    if (typeof cfApiToken !== "string") {
+        throw new Error("API token is required");
+    }
+
     return cfApiToken;
 }
 
 async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
-    const { deploy } = await inquirer.prompt([
-        {
-            type: "confirm",
-            name: "deploy",
-            message: `Do you want to deploy version ${counterscaleVersion} now?`,
-            default: false,
-        },
-    ]);
-    return deploy;
+    const deploy = await confirm({
+        message: `Do you want to deploy version ${counterscaleVersion} now?`,
+        initialValue: false,
+    });
+
+    return deploy === true;
 }
 
-async function deploy(
-    opts: Record<string, boolean | unknown>,
-): Promise<string | undefined> {
-    console.log("");
-
-    let spinner: ReturnType<typeof ora> | undefined;
-    if (!opts.verbose) {
-        spinner = ora({
-            text: `Deploying Counterscale ...`,
-            hideCursor: false,
-        });
-        spinner.start();
-    }
-
-    let result: ProcessOutput | undefined;
-    try {
-        result =
-            await $`npx wrangler deploy --config $HOME/.counterscale/wrangler.json`;
-
-        if (!opts.verbose) {
-            spinner?.stopAndPersist({
-                symbol: chalk.rgb(...CLI_COLORS.teal)("✓"),
-                text: chalk.rgb(...CLI_COLORS.teal)(
-                    "Deploying Counterscale ... Done!",
-                ),
-            });
-        } else {
-            console.log(result.stdout);
-        }
-    } catch (error) {
-        spinner?.fail();
-        if (error instanceof ProcessOutput) {
-            console.log(error.stderr || error.stdout);
-        } else {
-            console.error(error);
-        }
-    }
-
-    // Extract the workers.dev domain
-    const match = result?.stdout.match(
-        /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
-    );
-    const deployUrl = match ? "https://" + match[0] : undefined;
-
-    if (!deployUrl) {
-        console.log(
-            "\nDeployed successfully but cannot determine deploy URL. Run again with --verbose.",
-        );
-        return;
-    }
-
-    return new Promise((resolve) => resolve(deployUrl));
-}
-
-function emitInstallReadme(deployUrl: string, counterscaleVersion: string) {
-    console.log("");
-    console.log("To add the tracking script to your web app:");
-    console.log(
-        highlight(
-            `
-    <script
-        id="counterscale-script"
-        data-site-id="YOUR_UNIQUE_SITE_ID__CHANGE_THIS"
-        src="${deployUrl}/tracker.js"
-        defer
-    ></script>`,
-            { language: "html", theme: highlightTheme },
-        ),
-    );
-
-    console.log("");
-    console.log("- OR -");
-    console.log(
-        highlight(
-            `
-  // $ npm install @counterscale/tracker@${counterscaleVersion}
-
-  import * as Counterscale from "@counterscale/tracker";
-
-  Counterscale.init({
-      siteId: "YOUR_UNIQUE_SITE_ID__CHANGE_THIS",
-      reporterUrl: "${deployUrl}/collect",
-  });
-    `,
-            { language: "typescript", theme: highlightTheme },
-        ),
-    );
-
-    const visitYourDashboardPrefix = "👉 Visit your dashboard: ";
-    const visitYourDashboardRaw = visitYourDashboardPrefix + deployUrl;
-    const maxCharLength = visitYourDashboardRaw.length + 1; // +1 for emoji character
-
-    // make the ========= border match the length of the string (looks a little cleaner)
-    console.log("=".repeat(maxCharLength));
-    console.log(visitYourDashboardPrefix, chalk.white.bold(deployUrl));
-
-    const availabilityNote =
-        "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.";
-
-    // Break text into chunks that fit within maxCharLength because we're fancy like that
-    const words = availabilityNote.split(" ");
-    let currentLine = "";
-    const lines = [];
-
-    for (const word of words) {
-        if ((currentLine + " " + word).length <= maxCharLength) {
-            currentLine = currentLine ? currentLine + " " + word : word;
-        } else {
-            lines.push(currentLine);
-            currentLine = word;
-        }
-    }
-    if (currentLine) lines.push(currentLine);
-
-    console.log("");
-    lines.forEach((line) => console.log(chalk.dim(line)));
-    console.log("=".repeat(maxCharLength));
-}
-
-interface NewProjectAnswers {
+export interface NewProjectAnswers {
     workerName: string;
     analyticsDataset: string;
 }
@@ -341,43 +131,29 @@ async function promptProjectConfig(
     defaultWorkerName?: string,
     defaultAnalyticsDataset?: string,
 ): Promise<NewProjectAnswers> {
-    return await inquirer.prompt<NewProjectAnswers>([
-        {
-            type: "input",
-            name: "workerName",
-            message: `What do you want to name your worker? [default: ${defaultWorkerName}]`,
-            default: defaultWorkerName,
-        },
-        {
-            type: "input",
-            name: "analyticsDataset",
-            message: `What do you want to name your analytics dataset? [default: ${defaultAnalyticsDataset}]`,
-            default: defaultAnalyticsDataset,
-        },
-    ]);
-}
+    const workerName = (await text({
+        message:
+            `What do you want to name your worker? ` +
+            chalk.dim(`[default: ${defaultWorkerName}]`),
+        initialValue: defaultWorkerName,
+    })) as string;
 
-async function getAccountId(): Promise<string | null> {
-    const spinner = ora({
-        text: "Fetching Cloudflare Account ID ...",
-        hideCursor: false,
-    });
-    spinner.start();
-
-    try {
-        const result = await $({ quiet: true })`npx wrangler whoami`;
-        spinner.stop();
-
-        const match = result.stdout.match(/([0-9a-f]{32})/);
-        return match ? match[0] : null;
-    } catch (error) {
-        spinner.stop();
-        if (error instanceof ProcessOutput) {
-            throw new Error(error.stderr || error.stdout);
-        } else {
-            throw error;
-        }
+    if (isCancel(workerName)) {
+        bail();
     }
+
+    const analyticsDataset = (await text({
+        message:
+            `What do you want to name your analytics dataset? ` +
+            chalk.dim(`[default: ${defaultAnalyticsDataset}]`),
+        initialValue: defaultAnalyticsDataset,
+    })) as string;
+
+    if (isCancel(analyticsDataset)) {
+        bail();
+    }
+
+    return { workerName, analyticsDataset };
 }
 
 const TICK_LENGTH = 500;
@@ -387,162 +163,117 @@ async function tick(fn: () => void): Promise<void> {
 }
 
 /**
- * Reads the source wrangler.json from the server package directory, and does two things:
- *   1. Reads the worker name
- *   2. Creates a local copy of wrangler.json (in ~/.counterscale) where all the paths are
- *      converted to be absolute. This makes it so that the `wrangler deploy` command can be
- *      run from any directory.
+ * Main CLI install script, takes various user input (e.g. target worker name, Cloudflare API key, etc.)
+ * and installs the CounterScale worker on Cloudflare.
+ *
+ * @param argv yargs-processed arguments
  */
-async function prepareDeployConfig(
-    opts: Record<string, boolean | unknown>,
-): Promise<{
-    workerName: string;
-    analyticsDataset: string;
-}> {
-    let workerName, analyticsDataset;
-    // check if wrangler.json in .counterscale dir
-    const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
-
-    const distConfig = JSON.parse(
-        fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
-    );
-
-    const defaultWorkerName = distConfig.name;
-    const defaultAnalyticsDataset =
-        distConfig.analytics_engine_datasets[0].dataset;
-
-    if (opts.advanced) {
-        console.log("");
-        ({ workerName, analyticsDataset } = await promptProjectConfig(
-            defaultWorkerName,
-            defaultAnalyticsDataset,
-        ));
-    } else {
-        workerName = distConfig.name;
-        analyticsDataset = distConfig.analytics_engine_datasets[0].dataset;
-    }
-
-    await tick(() =>
-        console.log(
-            chalk.rgb(...CLI_COLORS.teal)("✓ Using worker:"),
-            workerName,
-        ),
-    );
-    await tick(() =>
-        console.log(
-            chalk.rgb(...CLI_COLORS.teal)("✓ Using analytics dataset:"),
-            analyticsDataset,
-        ),
-    );
-
-    // Update wrangler.json with worker name and analytics dataset
-    const wranglerConfig = JSON.parse(
-        fs.readFileSync(path.join(SERVER_PKG_DIR, "wrangler.json"), "utf8"),
-    );
-    wranglerConfig.name = workerName;
-    wranglerConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
-
-    const updatedConfig = makePathsAbsolute(wranglerConfig);
-
-    fs.writeFileSync(
-        wranglerConfigPath,
-        JSON.stringify(updatedConfig, null, 2),
-    );
-
-    return { workerName, analyticsDataset };
-}
-
-async function syncSecrets(secrets: Record<string, string>): Promise<boolean> {
-    for (const [key, value] of Object.entries(secrets)) {
-        try {
-            await $`echo ${value} | npx wrangler secret put ${key} --config $HOME/.counterscale/wrangler.json`;
-        } catch (err) {
-            return false;
-        }
-    }
-    return true;
-}
-
 async function install(argv: ArgumentsCamelCase): Promise<void> {
+    intro("install");
     // convert argv to opts (Record)
     const opts = argv as Record<string, boolean | unknown>;
 
+    let s = spinner();
+    s.start("Fetching Cloudflare Account ID ...");
     const accountId = await getAccountId();
+
     if (!accountId) {
-        console.log("Not authenticated with Cloudflare.\n");
-        console.log(
+        s.stop("Not authenticated with Cloudflare.\n");
+        log.info(
             `Run ${chalk.red(`npx wrangler login`)} first, then try again.`,
         );
         process.exit(1);
-    }
-    console.log(
-        chalk.rgb(...CLI_COLORS.teal)(
-            "✓ Authenticated with Cloudflare using Account ID ending in:",
-        ),
-        accountId.slice(-6), // show only last 6 digits for privacy
-        "\n",
-    );
-
-    await tick(() => {
-        console.log(
-            chalk.rgb(...CLI_COLORS.teal)("✓ Using server package found in:"),
-            SERVER_PKG_DIR,
+    } else {
+        s.stop(
+            "Authenticated with Cloudflare using Account ID ending in: " +
+                chalk.rgb(...CLI_COLORS.teal)(accountId.slice(-6)),
         );
-    });
+    }
+
+    if (argv.verbose) {
+        await tick(() => {
+            log.info(
+                "Using server package found in: " +
+                    chalk.rgb(...CLI_COLORS.teal)(SERVER_PKG_DIR),
+            );
+        });
+    }
 
     if (await createDotDirectory()) {
         await tick(() => {
-            console.log(
-                chalk.rgb(...CLI_COLORS.teal)("✓ Created .counterscale in:"),
-                COUNTERSCALE_DIR,
+            log.info(
+                "Created .counterscale in: " +
+                    chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
             );
         });
     } else {
+        if (argv.verbose) {
+            await tick(() => {
+                log.info(
+                    "Using .counterscale found in: " +
+                        chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
+                );
+            });
+        }
+    }
+
+    const initialDeployConfig = readInitialServerConfig();
+
+    let { workerName, analyticsDataset } =
+        getWorkerAndDatasetName(initialDeployConfig);
+
+    // If --advanced is true, prompt the user for worker name and analytics dataset name.
+    // Otherwise, stick to the default values read from the server package.
+    if (opts.advanced) {
+        ({ workerName, analyticsDataset } = await promptProjectConfig(
+            workerName,
+            analyticsDataset,
+        ));
+    }
+
+    if (opts.verbose) {
         await tick(() => {
-            console.log(
-                chalk.rgb(...CLI_COLORS.teal)(
-                    "✓ Using .counterscale found in:",
-                ),
-                COUNTERSCALE_DIR,
+            log.info(
+                "Using worker name: " +
+                    chalk.rgb(...CLI_COLORS.teal)(workerName),
+            );
+        });
+        await tick(() => {
+            log.info(
+                "Using analytics dataset: " +
+                    chalk.rgb(...CLI_COLORS.teal)(analyticsDataset),
             );
         });
     }
 
-    const { workerName } = await prepareDeployConfig(opts);
+    await stageDeployConfig(initialDeployConfig, workerName, analyticsDataset);
 
-    console.log("");
-    const secrets = await getCloudflareSecrets(workerName);
-    if (Object.keys(secrets).length > 0) {
-        console.log(
-            chalk.rgb(...CLI_COLORS.teal)(
-                "✓ Cloudflare secrets are already set.",
-            ),
+    const secrets = await getCloudflareSecrets();
+
+    if (Object.keys(secrets).length === 0) {
+        note(
+            `Create an API token from your Cloudflare Profile page: ${chalk.bold("https://dash.cloudflare.com/profile/api-tokens")}
+
+Your token needs these permissions:
+
+- Account Analytics: Read`,
         );
-    } else {
         try {
             const apiToken = await promptApiToken();
             if (apiToken) {
-                const spinner = ora({
-                    text: `Setting Cloudflare secrets ...`,
-                    hideCursor: false,
-                });
-                spinner.start();
+                const s = spinner();
+                s.start(`Setting Cloudflare API token ...`);
 
                 if (
-                    await syncSecrets({
+                    await setCloudflareSecrets({
                         CF_ACCOUNT_ID: accountId,
                         CF_BEARER_TOKEN: apiToken,
                     })
                 ) {
-                    spinner.stopAndPersist({
-                        symbol: chalk.rgb(...CLI_COLORS.teal)("✓"),
-                        text: chalk.rgb(...CLI_COLORS.teal)(
-                            "Setting Cloudflare secrets ... Done!",
-                        ),
-                    });
+                    s.stop("Setting Cloudflare API token ... Done!");
                 } else {
-                    spinner.stop();
-                    throw new Error("Error setting Cloudflare Secrets");
+                    s.stop("Error setting Cloudflare API token", 1);
+                    throw new Error("Error setting Cloudflare API token");
                 }
             }
         } catch (err) {
@@ -551,12 +282,37 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
         }
     }
 
-    console.log("");
     if (await promptDeploy(SERVER_PKG.version)) {
-        const deployUrl = await deploy(opts);
+        s = spinner();
+        s.start(`Deploying CounterScale ...`);
+
+        const deployUrl = await deploy();
+
+        s.stop("Deploying CounterScale ... Done.");
 
         if (deployUrl) {
-            emitInstallReadme(deployUrl, SERVER_PKG.version);
+            await tick(() =>
+                note(
+                    "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
+                ),
+            );
+
+            await tick(() =>
+                outro(
+                    `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
+                ),
+            );
+
+            await tick(() =>
+                console.log(
+                    "\nTo start capturing data, add the tracking script to your website: ",
+                ),
+            );
+            await tick(() => {
+                console.log(getScriptSnippet(deployUrl));
+                console.log("\n\n" + chalk.dim("-- OR --") + "\n");
+                console.log(getPackageSnippet(deployUrl, SERVER_PKG.version));
+            });
         }
     }
 }

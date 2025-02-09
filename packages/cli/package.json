@@ -23,6 +23,7 @@
         "test:watch": "vitest"
     },
     "dependencies": {
+        "@clack/prompts": "^0.10.0",
         "@counterscale/server": "3.0.0-alpha.17",
         "@types/get-installed-path": "^4.0.3",
         "@types/node": "^22.10.2",
@@ -30,7 +31,6 @@
         "cli-highlight": "^2.1.11",
         "figlet": "^1.7.0",
         "inquirer": "^9.2.12",
-        "ora": "^8.2.0",
         "wrangler": "^3.105.0",
         "yargs": "^17.7.2",
         "zx": "^8.3.2"
