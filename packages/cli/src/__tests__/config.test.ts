@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import inquirer from "inquirer";
 import { existsSync } from "node:fs";
-import { getServerPkgDir } from "../config.js";
+import { getServerPkgDir, makePathsAbsolute } from "../config.js";
 import { join } from "node:path";
 
 // Mock external dependencies
@@ -99,38 +99,76 @@ describe("CLI Functions", () => {
             );
         });
     });
-    /*
+
     describe("makePathsAbsolute", () => {
-        it("should convert relative paths to absolute", async () => {
-            const { makePathsAbsolute } = await import("../index.js");
-
-            const testObj = {
-                path1: "relative/path",
-                path2: "/absolute/path",
-                nested: {
-                    path3: "another/relative/path",
-                },
+        it("should convert relative paths to absolute in a flat object", () => {
+            const input = {
+                path1: "relative/path/file.txt",
+                path2: "/absolute/path/file.txt",
+                nonPath: "string-without-slash"
             };
+            const baseDir = "/base/dir";
 
-            // Mock SERVER_PKG_DIR
-            vi.mock("../index", async () => {
-                const actual = await vi.importActual("../index");
-                return {
-                    ...actual,
-                    SERVER_PKG_DIR: "/test/server/pkg/dir",
-                };
+            const result = makePathsAbsolute(input, baseDir);
+
+            expect(result).toEqual({
+                path1: "/base/dir/relative/path/file.txt",
+                path2: "/absolute/path/file.txt",
+                nonPath: "string-without-slash"
             });
-
-            makePathsAbsolute(testObj);
-
-            // Check that relative paths were converted to absolute using SERVER_PKG_DIR
-            expect(testObj.path1).toBe(
-                path.join("/test/server/pkg/dir", "relative/path"),
-            );
-            expect(testObj.path2).toBe("/absolute/path"); // absolute path should remain unchanged
-            expect(testObj.nested.path3).toBe(
-                path.join("/test/server/pkg/dir", "another/relative/path"),
-            );
         });
-    });*/
+
+        it("should handle nested objects", () => {
+            const input = {
+                nested: {
+                    path: "relative/nested/file.txt",
+                    config: {
+                        location: "another/path/config.json"
+                    }
+                },
+                topLevel: "/absolute/top/level.txt"
+            };
+            const baseDir = "/root";
+
+            const result = makePathsAbsolute(input, baseDir);
+
+            expect(result).toEqual({
+                nested: {
+                    path: "/root/relative/nested/file.txt",
+                    config: {
+                        location: "/root/another/path/config.json"
+                    }
+                },
+                topLevel: "/absolute/top/level.txt"
+            });
+        });
+
+        it("should handle arrays", () => {
+            const input = {
+                paths: [
+                    "relative/path1.txt",
+                    "/absolute/path2.txt",
+                    { nestedPath: "relative/path3.txt" }
+                ]
+            };
+            const baseDir = "/base";
+
+            const result = makePathsAbsolute(input, baseDir);
+
+            expect(result).toEqual({
+                paths: [
+                    "/base/relative/path1.txt",
+                    "/absolute/path2.txt",
+                    { nestedPath: "/base/relative/path3.txt" }
+                ]
+            });
+        });
+
+        it("should handle non-object inputs", () => {
+            expect(makePathsAbsolute(null, "/base")).toBeNull();
+            expect(makePathsAbsolute(undefined, "/base")).toBeUndefined();
+            expect(makePathsAbsolute("simple/path", "/base")).toBe("simple/path");
+            expect(makePathsAbsolute(42, "/base")).toBe(42);
+        });
+    });
 });

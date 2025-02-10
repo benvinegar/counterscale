@@ -54,6 +54,20 @@ export const makePathsAbsolute = (
 ): ReturnType<typeof JSON.parse> => {
     if (!obj || typeof obj !== "object") return obj;
 
+    // Handle arrays directly
+    if (Array.isArray(obj)) {
+        return obj.map((item) => {
+            if (
+                typeof item === "string" &&
+                item.includes("/") &&
+                !path.isAbsolute(item)
+            ) {
+                return path.join(fullDir, item);
+            }
+            return makePathsAbsolute(item, fullDir);
+        });
+    }
+
     const result: ReturnType<typeof JSON.parse> = {};
 
     for (const [key, value] of Object.entries(obj)) {
@@ -64,7 +78,16 @@ export const makePathsAbsolute = (
         ) {
             result[key] = path.join(fullDir, value);
         } else if (Array.isArray(value)) {
-            result[key] = value.map((v) => makePathsAbsolute(v, fullDir));
+            result[key] = value.map((item) => {
+                if (
+                    typeof item === "string" &&
+                    item.includes("/") &&
+                    !path.isAbsolute(item)
+                ) {
+                    return path.join(fullDir, item);
+                }
+                return makePathsAbsolute(item, fullDir);
+            });
         } else if (typeof value === "object") {
             result[key] = makePathsAbsolute(value, fullDir);
         } else {
@@ -74,16 +97,6 @@ export const makePathsAbsolute = (
 
     return result;
 };
-
-export async function createDotDirectory(): Promise<boolean> {
-    try {
-        await $`test -d ${COUNTERSCALE_DIR}`;
-        return false;
-    } catch {
-        await $`mkdir -p ${COUNTERSCALE_DIR}`;
-        return true;
-    }
-}
 
 export function getWorkerAndDatasetName(config: ReturnType<typeof JSON.parse>) {
     return {

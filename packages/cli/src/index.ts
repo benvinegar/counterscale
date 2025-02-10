@@ -20,9 +20,7 @@ import chalk from "chalk";
 
 import {
     getServerPkgDir,
-    createDotDirectory,
     stageDeployConfig,
-    COUNTERSCALE_DIR,
     readInitialServerConfig,
     getWorkerAndDatasetName,
 } from "./config.js";
