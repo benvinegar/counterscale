@@ -31,7 +31,7 @@ describe("install prompts", () => {
         // @ts-expect-error <just couldnt sort this out>
         mockExit = vi
             .spyOn(process, "exit")
-            .mockImplementation((...args: unknown[]) => {
+            .mockImplementation((..._args: unknown[]) => {
                 throw new Error("process.exit should not be called");
             });
     });
