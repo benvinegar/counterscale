@@ -27,12 +27,15 @@ import {
 import { CloudflareClient } from "./cloudflare.js";
 import { getScriptSnippet, getPackageSnippet, CLI_COLORS } from "./ui.js";
 
-function bail() {
+export function bail() {
     cancel("Operation canceled.");
+    if (process.env.NODE_ENV === "test") {
+        throw new Error("Operation canceled");
+    }
     process.exit(0);
 }
 
-async function promptApiToken(): Promise<string> {
+export async function promptApiToken(): Promise<string> {
     const cfApiToken = await password({
         message: "Enter your Cloudflare API Token",
         mask: "*",
@@ -58,7 +61,9 @@ async function promptApiToken(): Promise<string> {
     return cfApiToken;
 }
 
-async function promptDeploy(counterscaleVersion: string): Promise<boolean> {
+export async function promptDeploy(
+    counterscaleVersion: string,
+): Promise<boolean> {
     const deploy = await confirm({
         message: `Do you want to deploy version ${counterscaleVersion} now?`,
         initialValue: false,
@@ -72,7 +77,7 @@ export interface NewProjectAnswers {
     analyticsDataset: string;
 }
 
-async function promptProjectConfig(
+export async function promptProjectConfig(
     defaultWorkerName?: string,
     defaultAnalyticsDataset?: string,
 ): Promise<NewProjectAnswers> {
