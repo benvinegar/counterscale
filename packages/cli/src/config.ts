@@ -111,21 +111,16 @@ export function readInitialServerConfig() {
  */
 
 export async function stageDeployConfig(
+    targetPath: string,
     initialDeployConfig: ReturnType<typeof JSON.parse>,
     workerName: string,
     analyticsDataset: string,
 ): Promise<void> {
-    // check if wrangler.json in .counterscale dir
-    const wranglerConfigPath = path.join(COUNTERSCALE_DIR, "wrangler.json");
-
     const serverPkgDir = getServerPkgDir();
 
     const updatedConfig = makePathsAbsolute(initialDeployConfig, serverPkgDir);
     initialDeployConfig.name = workerName;
     initialDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
 
-    fs.writeFileSync(
-        wranglerConfigPath,
-        JSON.stringify(updatedConfig, null, 2),
-    );
+    fs.writeFileSync(targetPath, JSON.stringify(updatedConfig, null, 2));
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
 
 import {
     intro,
@@ -26,12 +27,7 @@ import {
     getWorkerAndDatasetName,
 } from "./config.js";
 
-import {
-    getAccountId,
-    getCloudflareSecrets,
-    setCloudflareSecrets,
-    deploy,
-} from "./cloudflare.js";
+import { CloudflareClient } from "./cloudflare.js";
 
 import {
     getTitle,
@@ -173,9 +169,29 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
     // convert argv to opts (Record)
     const opts = argv as Record<string, boolean | unknown>;
 
+    // Create a temporary directory for our config
+    const tmpStagingDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), "counterscale-"),
+    );
+    const tmpStagingConfigPath = path.join(tmpStagingDir, "wrangler.json");
+
+    // Ensure we clean up the temporary directory when we're done
+    const cleanup = () => {
+        try {
+            fs.rmSync(tmpStagingDir, { recursive: true, force: true });
+        } catch (err) {
+            // Ignore cleanup errors
+        }
+    };
+    process.on("exit", cleanup);
+    process.on("SIGINT", cleanup);
+    process.on("SIGTERM", cleanup);
+
+    const cloudflare = new CloudflareClient(tmpStagingConfigPath);
+
     let s = spinner();
     s.start("Fetching Cloudflare Account ID ...");
-    const accountId = await getAccountId();
+    const accountId = await cloudflare.getAccountId();
 
     if (!accountId) {
         s.stop("Not authenticated with Cloudflare.\n");
@@ -199,22 +215,13 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
         });
     }
 
-    if (await createDotDirectory()) {
+    if (argv.verbose) {
         await tick(() => {
             log.info(
-                "Created .counterscale in: " +
-                    chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
+                "Using staging config in: " +
+                    chalk.rgb(...CLI_COLORS.teal)(tmpStagingConfigPath),
             );
         });
-    } else {
-        if (argv.verbose) {
-            await tick(() => {
-                log.info(
-                    "Using .counterscale found in: " +
-                        chalk.rgb(...CLI_COLORS.teal)(COUNTERSCALE_DIR),
-                );
-            });
-        }
     }
 
     const initialDeployConfig = readInitialServerConfig();
@@ -246,9 +253,14 @@ async function install(argv: ArgumentsCamelCase): Promise<void> {
         });
     }
 
-    await stageDeployConfig(initialDeployConfig, workerName, analyticsDataset);
+    await stageDeployConfig(
+        tmpStagingConfigPath,
+        initialDeployConfig,
+        workerName,
+        analyticsDataset,
+    );
 
-    const secrets = await getCloudflareSecrets();
+    const secrets = await cloudflare.getCloudflareSecrets();
 
     if (Object.keys(secrets).length === 0) {
         note(
@@ -265,7 +277,7 @@ Your token needs these permissions:
                 s.start(`Setting Cloudflare API token ...`);
 
                 if (
-                    await setCloudflareSecrets({
+                    await cloudflare.setCloudflareSecrets({
                         CF_ACCOUNT_ID: accountId,
                         CF_BEARER_TOKEN: apiToken,
                     })
@@ -286,7 +298,7 @@ Your token needs these permissions:
         s = spinner();
         s.start(`Deploying CounterScale ...`);
 
-        const deployUrl = await deploy();
+        const deployUrl = await cloudflare.deploy();
 
         s.stop("Deploying CounterScale ... Done.");
 
