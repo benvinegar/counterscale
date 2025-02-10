@@ -2,7 +2,6 @@ import path, { dirname } from "path";
 import fs, { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { fileURLToPath } from "url";
-import { $ } from "zx";
 
 export const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
 
