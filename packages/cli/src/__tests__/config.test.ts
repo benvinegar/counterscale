@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import inquirer from "inquirer";
 import { existsSync } from "node:fs";
-import { getServerPkgDir, makePathsAbsolute } from "../config.js";
+import {
+    getServerPkgDir,
+    makePathsAbsolute,
+    getWorkerAndDatasetName,
+    readInitialServerConfig,
+    stageDeployConfig,
+} from "../config.js";
 import { join } from "node:path";
 
 // Mock external dependencies
@@ -105,7 +111,7 @@ describe("CLI Functions", () => {
             const input = {
                 path1: "relative/path/file.txt",
                 path2: "/absolute/path/file.txt",
-                nonPath: "string-without-slash"
+                nonPath: "string-without-slash",
             };
             const baseDir = "/base/dir";
 
@@ -114,7 +120,7 @@ describe("CLI Functions", () => {
             expect(result).toEqual({
                 path1: "/base/dir/relative/path/file.txt",
                 path2: "/absolute/path/file.txt",
-                nonPath: "string-without-slash"
+                nonPath: "string-without-slash",
             });
         });
 
@@ -123,10 +129,10 @@ describe("CLI Functions", () => {
                 nested: {
                     path: "relative/nested/file.txt",
                     config: {
-                        location: "another/path/config.json"
-                    }
+                        location: "another/path/config.json",
+                    },
                 },
-                topLevel: "/absolute/top/level.txt"
+                topLevel: "/absolute/top/level.txt",
             };
             const baseDir = "/root";
 
@@ -136,10 +142,10 @@ describe("CLI Functions", () => {
                 nested: {
                     path: "/root/relative/nested/file.txt",
                     config: {
-                        location: "/root/another/path/config.json"
-                    }
+                        location: "/root/another/path/config.json",
+                    },
                 },
-                topLevel: "/absolute/top/level.txt"
+                topLevel: "/absolute/top/level.txt",
             });
         });
 
@@ -148,8 +154,8 @@ describe("CLI Functions", () => {
                 paths: [
                     "relative/path1.txt",
                     "/absolute/path2.txt",
-                    { nestedPath: "relative/path3.txt" }
-                ]
+                    { nestedPath: "relative/path3.txt" },
+                ],
             };
             const baseDir = "/base";
 
@@ -159,16 +165,104 @@ describe("CLI Functions", () => {
                 paths: [
                     "/base/relative/path1.txt",
                     "/absolute/path2.txt",
-                    { nestedPath: "/base/relative/path3.txt" }
-                ]
+                    { nestedPath: "/base/relative/path3.txt" },
+                ],
             });
         });
 
         it("should handle non-object inputs", () => {
             expect(makePathsAbsolute(null, "/base")).toBeNull();
             expect(makePathsAbsolute(undefined, "/base")).toBeUndefined();
-            expect(makePathsAbsolute("simple/path", "/base")).toBe("simple/path");
+            expect(makePathsAbsolute("simple/path", "/base")).toBe(
+                "simple/path",
+            );
             expect(makePathsAbsolute(42, "/base")).toBe(42);
+        });
+    });
+
+    describe("getWorkerAndDatasetName", () => {
+        it("should extract worker name and dataset from config", () => {
+            const config = {
+                name: "test-worker",
+                analytics_engine_datasets: [{ dataset: "test-dataset" }],
+            };
+
+            const result = getWorkerAndDatasetName(config);
+
+            expect(result).toEqual({
+                workerName: "test-worker",
+                analyticsDataset: "test-dataset",
+            });
+        });
+    });
+
+    describe("readInitialServerConfig", () => {
+        it("should read and parse wrangler.json from server package", async () => {
+            const mockConfig = {
+                name: "counterscale",
+                analytics_engine_datasets: [{ dataset: "default-dataset" }],
+            };
+
+            // Mock existsSync to make getServerPkgDir work
+            const { existsSync } = await import("node:fs");
+            vi.mocked(existsSync).mockReturnValue(true);
+
+            // Mock readFileSync
+            const { readFileSync } = await import("node:fs");
+            vi.mocked(readFileSync).mockReturnValue(JSON.stringify(mockConfig));
+
+            const result = readInitialServerConfig();
+
+            expect(result).toEqual(mockConfig);
+            expect(readFileSync).toHaveBeenCalledWith(
+                expect.stringMatching(/wrangler\.json$/),
+                "utf8",
+            );
+        });
+    });
+
+    describe("stageDeployConfig", () => {
+        it("should write updated config with absolute paths", async () => {
+            // Mock existsSync to make getServerPkgDir work
+            const { existsSync, writeFileSync } = await import("node:fs");
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(writeFileSync);
+
+            const initialConfig = {
+                name: "old-name",
+                analytics_engine_datasets: [{ dataset: "old-dataset" }],
+                build: {
+                    command: "npm run build",
+                    cwd: "relative/path",
+                },
+            };
+
+            await stageDeployConfig(
+                "/target/wrangler.json",
+                initialConfig,
+                "new-worker",
+                "new-dataset",
+            );
+
+            // Verify writeFileSync was called with the correct arguments
+            expect(writeFileSync).toHaveBeenCalledWith(
+                "/target/wrangler.json",
+                expect.any(String),
+            );
+
+            // Parse the written config to verify its contents
+            const writtenConfig = JSON.parse(
+                vi.mocked(writeFileSync).mock.calls[0][1] as string,
+            );
+
+            // Verify worker name and dataset were updated
+            expect(writtenConfig.name).toBe("new-worker");
+            expect(writtenConfig.analytics_engine_datasets[0].dataset).toBe(
+                "new-dataset",
+            );
+
+            // Verify paths were made absolute
+            expect(writtenConfig.build.cwd).toMatch(/^\//); // Should start with /
         });
     });
 });

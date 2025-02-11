@@ -1,5 +1,5 @@
 import path, { dirname } from "path";
-import fs, { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { fileURLToPath } from "url";
 
@@ -110,7 +110,7 @@ export function getWorkerAndDatasetName(config: ReturnType<typeof JSON.parse>) {
 export function readInitialServerConfig() {
     const serverPkgDir = getServerPkgDir();
     const distConfig = JSON.parse(
-        fs.readFileSync(path.join(serverPkgDir, "wrangler.json"), "utf8"),
+        readFileSync(path.join(serverPkgDir, "wrangler.json"), "utf8"),
     );
 
     return distConfig;
@@ -121,7 +121,6 @@ export function readInitialServerConfig() {
  * converted to be absolute. This makes it so that the `wrangler deploy` command can be
  * run from any directory.
  */
-
 export async function stageDeployConfig(
     targetPath: string,
     initialDeployConfig: ReturnType<typeof JSON.parse>,
@@ -130,9 +129,12 @@ export async function stageDeployConfig(
 ): Promise<void> {
     const serverPkgDir = getServerPkgDir();
 
-    const updatedConfig = makePathsAbsolute(initialDeployConfig, serverPkgDir);
-    initialDeployConfig.name = workerName;
-    initialDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+    const outDeployConfig = makePathsAbsolute(
+        initialDeployConfig,
+        serverPkgDir,
+    );
+    outDeployConfig.name = workerName;
+    outDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
 
-    fs.writeFileSync(targetPath, JSON.stringify(updatedConfig, null, 2));
+    writeFileSync(targetPath, JSON.stringify(outDeployConfig, null, 2));
 }
