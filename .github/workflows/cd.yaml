@@ -13,6 +13,7 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version-file: "package.json"
+            - uses: pnpm/action-setup@v4
             - run: pnpm install
             - run: pnpm turbo build
             - uses: cloudflare/wrangler-action@v3
