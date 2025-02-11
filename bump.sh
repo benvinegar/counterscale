@@ -11,6 +11,9 @@ if [ -z "$VERSION" ]; then
     exit 1
 fi
 
+echo "Building ..."
+pnpm turbo build
+
 for d in packages/*; do
     echo "Bumping $d to version $VERSION"
     npm pkg set -w $d version=$VERSION
