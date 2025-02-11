@@ -11,11 +11,9 @@ export class CloudflareClient {
     private configPath: string;
 
     constructor(configPath?: string) {
-        this.configPath = configPath || path.join(
-            homedir(),
-            ".counterscale",
-            "wrangler.json"
-        );
+        this.configPath =
+            configPath ||
+            path.join(homedir(), ".counterscale", "wrangler.json");
     }
 
     async getAccountId(): Promise<string | null> {
@@ -49,7 +47,10 @@ export class CloudflareClient {
             rawSecrets = await this.fetchCloudflareSecrets();
         } catch (err) {
             // worker not created yet
-            if (typeof err === "string" && err.indexOf("[code: 10007]") !== -1) {
+            if (
+                typeof err === "string" &&
+                err.indexOf("[code: 10007]") !== -1
+            ) {
                 return {};
             }
             throw err;
@@ -63,7 +64,9 @@ export class CloudflareClient {
         return secrets;
     }
 
-    async setCloudflareSecrets(secrets: Record<string, string>): Promise<boolean> {
+    async setCloudflareSecrets(
+        secrets: Record<string, string>,
+    ): Promise<boolean> {
         for (const [key, value] of Object.entries(secrets)) {
             try {
                 await $`echo ${value} | npx wrangler secret put ${key} --config ${this.configPath}`;
@@ -75,8 +78,7 @@ export class CloudflareClient {
     }
 
     async deploy(): Promise<string> {
-        const result =
-            await $`npx wrangler deploy --config ${this.configPath}`;
+        const result = await $`npx wrangler deploy --config ${this.configPath}`;
         const match = result.stdout.match(
             /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
         );
