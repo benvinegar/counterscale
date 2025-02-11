@@ -4,6 +4,20 @@ Counterscale development is 100% volunteer-driven. If you use and like this soft
 
 ## Development
 
+### Dependencies
+
+Install dependencies:
+
+```bash
+pnpm install
+```
+
+Install Playwright browsers:
+
+```bash
+cd packages/tracker && pnpm playwright install
+```
+
 ### Config
 
 To get started, in the `packages/server` folder, copy `.dev.vars.example` to `.dev.vars`.
@@ -12,12 +26,23 @@ Open `.dev.vars` and enter the same values for `CF_BEARER_TOKEN` and `CF_ACCOUNT
 
 ### Running the Server
 
-Counterscale is built on Remix and Cloudflare Workers. In development, you have two options:
+Counterscale is built on Vite/React Router (v7+) and Cloudflare Workers.
 
--1. `npx turbo dev` → This runs the Vite development server in Node.js. This server will automatically rebuild files when you change them, but it does not best reflect Cloudflare's serverless platform.
--2. `npx turbo preview` → This runs Cloudflare's Miniflare server with a build of the Remix files. This closer matches the deployment environment, but does not (yet) automatically rebuild your app.
+In development, you have two options:
 
-### Development Philosophy
+1. `pnpm turbo dev` → This runs the Vite development server in Node.js. This server will automatically rebuild files when you change them, but it does not best reflect Cloudflare's serverless platform.
+
+2. `pnpm turbo preview` → This runs Cloudflare's Miniflare server with a build of the Remix files. This closer matches the deployment environment, but does not (yet) automatically rebuild your app.
+
+## Publishing
+
+When publishing a new version, use this little utility script:
+
+```
+./bump.sh <new_version>
+```
+
+## Development Philosophy
 
 The primary goal of Counterscale is to be super easy to self-host and maintain. It should be "set up once and forget".
 
@@ -30,9 +55,3 @@ To achieve that:
 - We prioritize backwards compatibility
     - New `metricsDataset` columns can be added, but old columns cannot be removed or renamed (they can however, be "forgotten").
     - That also means it's okay if a feature only works during a period where the data is active.
-
-## Publishing
-
-```
-pnpm publish -r # --dry-run
-```
