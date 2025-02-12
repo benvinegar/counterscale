@@ -31,7 +31,7 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0
       '@counterscale/server':
-        specifier: 3.0.0-alpha.17
+        specifier: 3.0.0-alpha.18
         version: link:../server
       '@types/get-installed-path':
         specifier: ^4.0.3
@@ -7244,7 +7244,7 @@ snapshots:
       is-glob: 4.0.3
       stable-hash: 0.0.4
     optionalDependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.23.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 

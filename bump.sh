@@ -23,6 +23,8 @@ echo ""
 echo "Bumping @counterscale/server subdep in packages/cli to version $VERSION"
 npm pkg set -w packages/cli dependencies.@counterscale/server=$VERSION
 
+echo "Running pnpm install to update lockfile"
+pnpm install
 
 echo ""
 echo "Next steps ..."
