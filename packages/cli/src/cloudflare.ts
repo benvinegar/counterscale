@@ -78,10 +78,20 @@ export class CloudflareClient {
     }
 
     async deploy(): Promise<string> {
-        const result = await $`npx wrangler deploy --config ${this.configPath}`;
-        const match = result.stdout.match(
-            /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
-        );
-        return match ? "https://" + match[0] : "<unknown>";
+        try {
+            const result = await $({
+                quiet: true,
+            })`npx wrangler deploy --config ${this.configPath}`;
+
+            const match = result.stdout.match(
+                /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
+            );
+            return match ? "https://" + match[0] : "<unknown>";
+        } catch (error) {
+            if (error instanceof ProcessOutput) {
+                throw new Error(error.stderr || error.stdout);
+            }
+            throw error;
+        }
     }
 }

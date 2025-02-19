@@ -24,7 +24,7 @@ try {
 
 console.log(getTitle(SERVER_PKG.version, COUNTERSCALE_HOMEPAGE) + "\n");
 
-yargs(hideBin(process.argv))
+const parser = yargs(hideBin(process.argv))
     .command(
         "install",
         "Configure and deploy to Cloudflare Workers",
@@ -45,4 +45,12 @@ yargs(hideBin(process.argv))
         },
     })
     .demandCommand(1)
-    .parse();
+    .fail(false);
+
+try {
+    await parser.parse();
+} catch (err) {
+    console.log("\n");
+    console.error(err);
+    process.exit(1);
+}

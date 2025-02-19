@@ -253,39 +253,49 @@ Your token needs these permissions:
         }
     }
 
-    if (await promptDeploy(serverPkgJson.version)) {
-        s = spinner();
-        s.start(`Deploying CounterScale ...`);
+    const promise = new Promise<void>(async (resolve, reject) => {
+        if (await promptDeploy(serverPkgJson.version)) {
+            let deployUrl;
+            let s = spinner();
+            s.start(`Deploying CounterScale ...`);
 
-        const deployUrl = await cloudflare.deploy();
+            try {
+                deployUrl = await cloudflare.deploy();
+            } catch (err) {
+                s.stop("Deploying CounterScale ... Failed!", 1);
+                return reject(err);
+            }
 
-        s.stop("Deploying CounterScale ... Done.");
+            s.stop("Deploying CounterScale ... Done.");
 
-        if (deployUrl) {
-            await tick(() =>
-                note(
-                    "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
-                ),
-            );
-
-            await tick(() =>
-                outro(
-                    `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
-                ),
-            );
-
-            await tick(() =>
-                console.log(
-                    "\nTo start capturing data, add the tracking script to your website: ",
-                ),
-            );
-            await tick(() => {
-                console.log(getScriptSnippet(deployUrl));
-                console.log("\n\n" + chalk.dim("-- OR --") + "\n");
-                console.log(
-                    getPackageSnippet(deployUrl, serverPkgJson.version),
+            if (deployUrl) {
+                await tick(() =>
+                    note(
+                        "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
+                    ),
                 );
-            });
+
+                await tick(() =>
+                    outro(
+                        `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
+                    ),
+                );
+
+                await tick(() =>
+                    console.log(
+                        "\nTo start capturing data, add the tracking script to your website: ",
+                    ),
+                );
+                await tick(() => {
+                    console.log(getScriptSnippet(deployUrl));
+                    console.log("\n\n" + chalk.dim("-- OR --") + "\n");
+                    console.log(
+                        getPackageSnippet(deployUrl, serverPkgJson.version),
+                    );
+                });
+            }
         }
-    }
+        resolve();
+    });
+    return promise;
 }
