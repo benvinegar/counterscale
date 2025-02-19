@@ -44,8 +44,6 @@ export async function promptApiToken(): Promise<string> {
                 return "Value is required";
             } else if (val.length !== 40) {
                 return "Value must be exactly 40 characters";
-            } else if (!/^[a-zA-Z0-9_]+$/.test(val)) {
-                return "Value must only have alphanumeric characters and underscores";
             }
         },
     });

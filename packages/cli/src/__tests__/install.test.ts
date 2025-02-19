@@ -107,26 +107,6 @@ describe("install prompts", () => {
             await promptApiToken();
             expect(mockPrompts.password).toHaveBeenCalled();
         });
-
-        it("should validate token characters", async () => {
-            const mockPrompts = await import("@clack/prompts");
-            (
-                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockImplementationOnce(({ validate }: PasswordOptions) => {
-                if (!validate) {
-                    throw new Error("validate function missing");
-                }
-
-                expect(validate("a".repeat(39) + "!")).toBe(
-                    "Value must only have alphanumeric characters and underscores",
-                );
-                expect(validate("a".repeat(39) + "_")).toBeUndefined();
-                return "mock-token";
-            });
-
-            await promptApiToken();
-            expect(mockPrompts.password).toHaveBeenCalled();
-        });
     });
 
     describe("promptDeploy", () => {
