@@ -148,7 +148,7 @@ export async function install(
 
     const cloudflare = new CloudflareClient(tmpStagingConfigPath);
 
-    let s = spinner();
+    const s = spinner();
     s.start("Fetching Cloudflare Account ID ...");
     const accountId = await cloudflare.getAccountId();
 
@@ -253,58 +253,52 @@ Your token needs these permissions:
         }
     }
 
-    const promise = new Promise<void>(async (resolve, reject) => {
-        if (await promptDeploy(serverPkgJson.version)) {
-            let deployUrl;
+    if (await promptDeploy(serverPkgJson.version)) {
+        let deployUrl;
 
-            let s = spinner();
-            s.start(`Deploying Counterscale ...`);
+        const s = spinner();
+        s.start(`Deploying Counterscale ...`);
 
-            try {
-                if (opts.verbose) {
-                    s.stop(`Deploying Counterscale ...`);
-                }
-
-                deployUrl = await cloudflare.deploy(
-                    opts.verbose ? true : false,
-                );
-
-                if (!opts.verbose) {
-                    s.stop("Deploying Counterscale ... Done.");
-                }
-            } catch (err) {
-                s.stop("Deploying Counterscale ... Failed!", 1);
-                return reject(err);
+        try {
+            if (opts.verbose) {
+                s.stop(`Deploying Counterscale ...`);
             }
 
-            if (deployUrl) {
-                await tick(() =>
-                    note(
-                        "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
-                    ),
-                );
+            deployUrl = await cloudflare.deploy(opts.verbose ? true : false);
 
-                await tick(() =>
-                    outro(
-                        `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
-                    ),
-                );
-
-                await tick(() =>
-                    console.log(
-                        "\nTo start capturing data, add the tracking script to your website: ",
-                    ),
-                );
-                await tick(() => {
-                    console.log(getScriptSnippet(deployUrl));
-                    console.log("\n\n" + chalk.dim("-- OR --") + "\n");
-                    console.log(
-                        getPackageSnippet(deployUrl, serverPkgJson.version),
-                    );
-                });
+            if (!opts.verbose) {
+                s.stop("Deploying Counterscale ... Done.");
             }
+        } catch (err) {
+            s.stop("Deploying Counterscale ... Failed!", 1);
+            throw err;
         }
-        resolve();
-    });
-    return promise;
+
+        if (deployUrl) {
+            await tick(() =>
+                note(
+                    "NOTE: If this is your first time deploying to this subdomain, you may have to wait a few minutes before the site is live.",
+                ),
+            );
+
+            await tick(() =>
+                outro(
+                    `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
+                ),
+            );
+
+            await tick(() =>
+                console.log(
+                    "\nTo start capturing data, add the tracking script to your website: ",
+                ),
+            );
+            await tick(() => {
+                console.log(getScriptSnippet(deployUrl));
+                console.log("\n\n" + chalk.dim("-- OR --") + "\n");
+                console.log(
+                    getPackageSnippet(deployUrl, serverPkgJson.version),
+                );
+            });
+        }
+    }
 }
