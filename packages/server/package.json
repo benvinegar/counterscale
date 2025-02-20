@@ -1,6 +1,6 @@
 {
     "name": "@counterscale/server",
-    "version": "3.0.0-alpha.19",
+    "version": "3.0.0-beta.0",
     "description": "Counterscale Server",
     "homepage": "https://counterscale.dev",
     "license": "MIT",
