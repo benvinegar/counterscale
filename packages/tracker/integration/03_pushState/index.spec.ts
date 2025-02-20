@@ -1,4 +1,4 @@
-import { test, expect, Request } from "@playwright/test";
+import { test, expect, type Request } from "@playwright/test";
 
 test("tracks pushState and popState events as pageviews", async ({ page }) => {
     // Listen for all console events and handle errors
