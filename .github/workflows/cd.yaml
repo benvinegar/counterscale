@@ -3,7 +3,7 @@ on:
     workflow_run:
         workflows: [ci]
         types: [completed]
-        branches: [main, v2]
+        branches: [main, v3]
 
 jobs:
     deploy:
@@ -13,10 +13,11 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version-file: "package.json"
-            - run: npm install
-            - run: npx turbo build
+            - uses: pnpm/action-setup@v4
+            - run: pnpm install
+            - run: pnpm turbo build
             - uses: cloudflare/wrangler-action@v3
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-                  command: pages deploy ./build/client
+                  command: deploy ./build/client
                   workingDirectory: "packages/server"

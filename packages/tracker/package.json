@@ -1,8 +1,11 @@
 {
     "name": "@counterscale/tracker",
+    "version": "3.0.0-alpha.19",
+    "descriptrion": "Counterscale tracking library for recording pageviews",
+    "homepage": "https://counterscale.dev",
+    "license": "MIT",
     "sideEffects": false,
     "type": "module",
-    "version": "2.5.1",
     "engines": {
         "node": ">=20.0.0"
     },

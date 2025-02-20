@@ -1,9 +1,9 @@
 name: ci
 on:
     push:
-        branches: [main, v2]
+        branches: [main, v3]
     pull_request:
-        branches: [main, v2]
+        branches: [main, v3]
 jobs:
     test:
         runs-on: ubuntu-latest
@@ -12,9 +12,10 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version-file: "package.json"
-            - run: npm install
-            - run: npx playwright install --with-deps
-            - run: npx turbo build lint typecheck test-ci --concurrency=1
+            - uses: pnpm/action-setup@v4
+            - run: pnpm install
+            - run: cd packages/tracker && pnpm playwright install --with-deps
+            - run: pnpm turbo build lint typecheck test-ci --concurrency=1
             - name: Upload coverage reports to Codecov
               uses: codecov/codecov-action@v3
               env:
