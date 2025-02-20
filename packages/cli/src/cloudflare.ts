@@ -77,13 +77,21 @@ export class CloudflareClient {
         return true;
     }
 
-    async deploy(): Promise<string> {
+    async deploy(verbose: boolean): Promise<string> {
         try {
-            const result = await $({
+            const p = $({
                 quiet: true,
             })`npx wrangler deploy --config ${this.configPath}`;
 
-            const match = result.stdout.match(
+            let output = "";
+            for await (const text of p) {
+                output += text;
+                if (verbose) {
+                    console.log(text);
+                }
+            }
+
+            const match = output.match(
                 /([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)/i,
             );
             return match ? "https://" + match[0] : "<unknown>";

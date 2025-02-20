@@ -178,27 +178,23 @@ describe("CloudflareClient", () => {
     describe("deploy", () => {
         it("should extract worker URL from deploy output", async () => {
             vi.mocked($).mockImplementation(() => {
-                return {
-                    stdout: "Worker deployed to test-worker.test-account.workers.dev",
-                    stderr: "",
-                    exitCode: 0,
+                return async function* () {
+                    yield "Worker deployed to test-worker.test-account.workers.dev";
                 };
             });
 
-            const result = await client.deploy();
+            const result = await client.deploy(false);
             expect(result).toBe("https://test-worker.test-account.workers.dev");
         });
 
         it("should return <unknown> if URL not found in output", async () => {
             vi.mocked($).mockImplementation(() => {
-                return {
-                    stdout: "Deployment successful but no URL found",
-                    stderr: "",
-                    exitCode: 0,
+                return async function* () {
+                    yield "Deployment successful but no URL found";
                 };
             });
 
-            const result = await client.deploy();
+            const result = await client.deploy(false);
             expect(result).toBe("<unknown>");
         });
 
@@ -207,7 +203,9 @@ describe("CloudflareClient", () => {
                 throw new Error("Deployment failed");
             });
 
-            await expect(client.deploy()).rejects.toThrow("Deployment failed");
+            await expect(client.deploy(false)).rejects.toThrow(
+                "Deployment failed",
+            );
         });
     });
 });

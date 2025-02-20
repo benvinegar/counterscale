@@ -256,17 +256,26 @@ Your token needs these permissions:
     const promise = new Promise<void>(async (resolve, reject) => {
         if (await promptDeploy(serverPkgJson.version)) {
             let deployUrl;
+
             let s = spinner();
-            s.start(`Deploying CounterScale ...`);
+            s.start(`Deploying Counterscale ...`);
 
             try {
-                deployUrl = await cloudflare.deploy();
+                if (opts.verbose) {
+                    s.stop(`Deploying Counterscale ...`);
+                }
+
+                deployUrl = await cloudflare.deploy(
+                    opts.verbose ? true : false,
+                );
+
+                if (!opts.verbose) {
+                    s.stop("Deploying Counterscale ... Done.");
+                }
             } catch (err) {
-                s.stop("Deploying CounterScale ... Failed!", 1);
+                s.stop("Deploying Counterscale ... Failed!", 1);
                 return reject(err);
             }
-
-            s.stop("Deploying CounterScale ... Done.");
 
             if (deployUrl) {
                 await tick(() =>
