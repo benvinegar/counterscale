@@ -10,9 +10,21 @@ Counterscale is a simple web analytics tracker and dashboard that you self-host 
 
 It's designed to be easy to deploy and maintain, and should cost you near-zero to operate – even at high levels of traffic (Cloudflare's [free tier](https://developers.cloudflare.com/workers/platform/pricing/#workers) could hypothetically support up to 100k hits/day).
 
-**_NOTE: Counterscale is currently in very early development and shouldn't be used in any actual production setting. We welcome people trying it and giving feedback/contributing, but heads up this project is still super early._**
+## License
+
+Counterscale is free, open source software made available under the MIT license. See: [LICENSE](LICENSE).
+
+## Limitations
+
+Counterscale is powered primarily by Cloudflare Workers and [Workers Analytics Engine](https://developers.cloudflare.com/analytics/analytics-engine/). As of February 2025, Workers Analytics Engine has _maximum 90 days retention_, which means Counterscale can only show the last 90 days of recorded data.
 
 ## Installation
+
+### Requirements
+
+* macOS or Linux environment
+* Node v20 or above
+* An active [Cloudflare](https://cloudflare.com) account (either free or paid)
 
 ### Cloudflare Preparation
 
