@@ -52,7 +52,7 @@ npx @counterscale/cli@latest install
 
 Follow the prompts. You will be asked for the Cloudflare API token you created earlier.
 
-Once the script has finished, the server application should be deployed. Visit `https://{subdomain-emitted-during-deploy}.pages.dev` to verify.
+Once the script has finished, the server application should be deployed. Visit `https://{subdomain-emitted-during-deploy}.workers.dev` to verify.
 
 NOTE: _If this is your first time deploying Counterscale, it may take take a few minutes before the Worker subdomain becomes live._
 
@@ -65,7 +65,7 @@ You can load the tracking code using one of two methods:
 When Counterscale is deployed, it makes `tracker.js` available at the URL you deployed to:
 
 ```
-https://{subdomain-emitted-during-deploy}.pages.dev/tracker.js
+https://{subdomain-emitted-during-deploy}.workers.dev/tracker.js
 ```
 
 To start reporting website traffic from your web property, copy/paste the following snippet into your website HTML:
@@ -74,7 +74,7 @@ To start reporting website traffic from your web property, copy/paste the follow
 <script
     id="counterscale-script"
     data-site-id="your-unique-site-id"
-    src="https://{subdomain-emitted-during-deploy}.pages.dev/tracker.js"
+    src="https://{subdomain-emitted-during-deploy}.workers.dev/tracker.js"
     defer
 ></script>
 ```
@@ -94,7 +94,7 @@ import * as Counterscale from "@counterscale/tracker";
 
 Counterscale.init({
     siteId: "your-unique-site-id",
-    reporterUrl: "https://{subdomain-emitted-during-deploy}.pages.dev/collect",
+    reporterUrl: "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
 });
 ```
 
@@ -113,7 +113,7 @@ import * as Counterscale from "@counterscale/tracker";
 
 Counterscale.init({
     siteId: "your-unique-site-id",
-    reporterUrl: "https://{subdomain-emitted-during-deploy}.pages.dev/collect",
+    reporterUrl: "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
     autoTrackPageviews: false, // <- don't forget this
 });
 
