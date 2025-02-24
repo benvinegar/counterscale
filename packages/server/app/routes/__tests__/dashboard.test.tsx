@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { LoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import {
     vi,
     test,

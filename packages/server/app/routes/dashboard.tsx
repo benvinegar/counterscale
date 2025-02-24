@@ -7,9 +7,9 @@ import {
 } from "~/components/ui/select";
 
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { redirect } from "react-router";
 import {
     isRouteErrorResponse,
+    redirect,
     useLoaderData,
     useNavigation,
     useRouteError,
