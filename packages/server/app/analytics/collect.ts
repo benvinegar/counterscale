@@ -92,6 +92,11 @@ function extractParamsFromQueryString(requestUrl: string): {
 export function collectRequestHandler(request: Request, env: Env) {
     const params = extractParamsFromQueryString(request.url);
 
+    const siteId = params.sid;
+    if (!siteId || siteId === "") {
+        return new Response("Missing siteId", { status: 400 });
+    }
+
     const userAgent = request.headers.get("user-agent") || undefined;
     const parsedUserAgent = new UAParser(userAgent);
 
@@ -108,7 +113,7 @@ export function collectRequestHandler(request: Request, env: Env) {
     );
 
     const data: DataPoint = {
-        siteId: params.sid,
+        siteId,
         host: params.h,
         path: params.p,
         referrer: params.r,
