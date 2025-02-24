@@ -17,7 +17,7 @@ try {
     SERVER_PKG = JSON.parse(
         fs.readFileSync(path.join(SERVER_PKG_DIR, "package.json"), "utf8"),
     );
-} catch (err) {
+} catch (_err) {
     console.error("Error: Unable to parse server package.json");
     process.exit(1);
 }

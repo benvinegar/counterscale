@@ -138,7 +138,7 @@ export async function install(
     const cleanup = () => {
         try {
             fs.rmSync(tmpStagingDir, { recursive: true, force: true });
-        } catch (err) {
+        } catch (_err) {
             // Ignore cleanup errors
         }
     };

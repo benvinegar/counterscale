@@ -70,7 +70,7 @@ export class CloudflareClient {
         for (const [key, value] of Object.entries(secrets)) {
             try {
                 await $`echo ${value} | npx wrangler secret put ${key} --config ${this.configPath}`;
-            } catch (err) {
+            } catch (_err) {
                 return false;
             }
         }
