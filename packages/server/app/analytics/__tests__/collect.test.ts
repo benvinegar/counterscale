@@ -36,6 +36,59 @@ function generateRequestParams(headers: Record<string, string>) {
 }
 
 describe("collectRequestHandler", () => {
+    test("returns 400 when siteId is missing", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as AnalyticsEngineDataset,
+        } as Env;
+
+        const request = generateRequestParams({
+            "user-agent":
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+        });
+        request.url =
+            "https://example.com/user/42?" +
+            new URLSearchParams({
+                h: "example.com",
+                p: "/post/123",
+                r: "https://google.com",
+                nv: "1",
+                ns: "1",
+            }).toString();
+
+        const response = collectRequestHandler(request as any, env);
+        expect(response.status).toBe(400);
+        expect(env.WEB_COUNTER_AE.writeDataPoint).not.toHaveBeenCalled();
+    });
+
+    test("returns 400 when siteId is empty string", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as AnalyticsEngineDataset,
+        } as Env;
+
+        const request = generateRequestParams({
+            "user-agent":
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+        });
+        request.url =
+            "https://example.com/user/42?" +
+            new URLSearchParams({
+                sid: "",
+                h: "example.com",
+                p: "/post/123",
+                r: "https://google.com",
+                nv: "1",
+                ns: "1",
+            }).toString();
+
+        const response = collectRequestHandler(request as any, env);
+        expect(response.status).toBe(400);
+        expect(env.WEB_COUNTER_AE.writeDataPoint).not.toHaveBeenCalled();
+    });
+
     beforeEach(() => {
         // default time is just middle of the day
         vi.setSystemTime(new Date("2024-01-18T09:33:02").getTime());
