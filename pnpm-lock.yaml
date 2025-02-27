@@ -263,6 +263,15 @@ importers:
 
   packages/tracker:
     devDependencies:
+      '@eslint/compat':
+        specifier: ^1.2.7
+        version: 1.2.7(eslint@8.57.1)
+      '@eslint/eslintrc':
+        specifier: ^3.3.0
+        version: 3.3.0
+      '@eslint/js':
+        specifier: ^9.21.0
+        version: 9.21.0
       '@playwright/test':
         specifier: ^1.49.1
         version: 1.50.1
@@ -287,6 +296,12 @@ importers:
       eslint-plugin-import:
         specifier: ^2.29.1
         version: 2.31.0(@typescript-eslint/parser@8.23.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
+      globals:
+        specifier: ^16.0.0
+        version: 16.0.0
+      install:
+        specifier: ^0.13.0
+        version: 0.13.0
       typescript:
         specifier: ^5.7.2
         version: 5.7.3
@@ -3091,6 +3106,10 @@ packages:
   inquirer@9.3.7:
     resolution: {integrity: sha512-LJKFHCSeIRq9hanN14IlOtPSTe3lNES7TYDTE2xxdAy1LS5rYphajK1qtwvj3YmQXvvk0U2Vbmcni8P9EIQW9w==}
     engines: {node: '>=18'}
+
+  install@0.13.0:
+    resolution: {integrity: sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==}
+    engines: {node: '>= 0.10'}
 
   internal-slot@1.1.0:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
@@ -8000,6 +8019,8 @@ snapshots:
       strip-ansi: 6.0.1
       wrap-ansi: 6.2.0
       yoctocolors-cjs: 2.1.2
+
+  install@0.13.0: {}
 
   internal-slot@1.1.0:
     dependencies:
