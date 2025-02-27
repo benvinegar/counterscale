@@ -58,6 +58,15 @@ importers:
         specifier: ^8.3.2
         version: 8.3.2
     devDependencies:
+      '@eslint/compat':
+        specifier: ^1.2.7
+        version: 1.2.7(eslint@8.57.1)
+      '@eslint/eslintrc':
+        specifier: ^3.3.0
+        version: 3.3.0
+      '@eslint/js':
+        specifier: ^9.21.0
+        version: 9.21.0
       '@types/figlet':
         specifier: ^1.5.8
         version: 1.7.0
@@ -76,6 +85,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^1.1.0
         version: 1.6.1(vitest@1.6.1(@types/node@22.13.1)(jsdom@23.2.0))
+      globals:
+        specifier: ^16.0.0
+        version: 16.0.0
       rollup-plugin-node-externals:
         specifier: ^8.0.0
         version: 8.0.0(rollup@4.34.8)
@@ -7442,7 +7454,7 @@ snapshots:
       is-glob: 4.0.3
       stable-hash: 0.0.4
     optionalDependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.23.0(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.7.0)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
