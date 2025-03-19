@@ -7,7 +7,13 @@ const __dirname = path.dirname(__filename);
 
 export default createConfig({
     baseDirectory: __dirname,
-    ignores: ["public/tracker.js", "build/*", "node_modules", "dist/*"],
+    ignores: [
+        "public/tracker.js",
+        "build/*",
+        "node_modules",
+        "dist/*",
+        "coverage",
+    ],
     includeReact: false,
     includeTypeScript: true,
     additionalGlobals: {

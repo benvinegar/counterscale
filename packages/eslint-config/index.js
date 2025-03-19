@@ -57,8 +57,6 @@ export function createConfig({
         );
     }
 
-    console.log(configs);
-
     return configs;
 }
 
