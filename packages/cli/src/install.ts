@@ -16,7 +16,7 @@ import {
 } from "@clack/prompts";
 
 import chalk from "chalk";
-import { ArgumentsCamelCase } from "yargs";
+import type { ArgumentsCamelCase } from "yargs";
 
 import {
     stageDeployConfig,

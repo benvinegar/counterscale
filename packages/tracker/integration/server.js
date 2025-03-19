@@ -1,9 +1,14 @@
-var http = require("http");
-var fs = require("fs");
-var path = require("path");
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load tracker script
-var tracker = fs.readFileSync(
+const tracker = fs.readFileSync(
     path.join(__dirname, "../dist/loader/tracker.js"), // NOTE: needs to be built first
 );
 
@@ -33,7 +38,7 @@ http.createServer(function (req, res) {
         let file;
         try {
             file = fs.readFileSync(filePath);
-        } catch (e) {
+        } catch {
             res.writeHead(404, { "Content-Type": "text/html" });
             res.end("Not found");
             return;

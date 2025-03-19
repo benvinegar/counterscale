@@ -1,85 +1,27 @@
-import globals from "globals";
-import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import _import from "eslint-plugin-import";
-import tsParser from "@typescript-eslint/parser";
+import { createConfig } from "@counterscale/eslint-config";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
+
+export default createConfig({
     baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all,
+    ignores: [
+        "public/tracker.js",
+        "build/*",
+        "node_modules",
+        "dist/*",
+        "coverage",
+    ],
+    includeReact: false,
+    includeTypeScript: true,
+    tsconfigRootDir: "./",
+    project: "./tsconfig.json",
+    additionalGlobals: {
+        counterscale: true,
+        // Add browser globals since this is a browser-based package
+        window: true,
+        document: true,
+    },
 });
-
-export default [
-    {
-        ignores: ["public/tracker.js", "build/*", "node_modules", "dist/*"],
-    },
-    ...compat.extends("eslint:recommended"),
-    {
-        languageOptions: {
-            globals: {
-                ...globals.browser,
-                ...globals.commonjs,
-                ...globals.node,
-                counterscale: true,
-            },
-
-            ecmaVersion: "latest",
-            sourceType: "module",
-        },
-    },
-    ...fixupConfigRules(
-        compat.extends(
-            "plugin:@typescript-eslint/recommended",
-            "plugin:import/recommended",
-            "plugin:import/typescript",
-        ),
-    ).map((config) => ({
-        ...config,
-        files: ["**/*.{ts,tsx}"],
-    })),
-    {
-        files: ["**/*.{ts,tsx}"],
-
-        plugins: {
-            "@typescript-eslint": fixupPluginRules(typescriptEslint),
-            import: fixupPluginRules(_import),
-        },
-
-        languageOptions: {
-            parser: tsParser,
-        },
-
-        settings: {
-            "import/internal-regex": "^~/",
-
-            "import/resolver": {
-                node: {
-                    extensions: [".ts", ".tsx"],
-                },
-
-                typescript: {
-                    alwaysTryTypes: true,
-                },
-            },
-        },
-
-        rules: {
-            "@typescript-eslint/no-explicit-any": 1,
-            "no-unused-vars": 0,
-
-            "@typescript-eslint/no-unused-vars": [
-                "error",
-                {
-                    argsIgnorePattern: "^_",
-                },
-            ],
-        },
-    },
-];
