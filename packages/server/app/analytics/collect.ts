@@ -100,8 +100,6 @@ export function collectRequestHandler(request: Request, env: Env) {
     const userAgent = request.headers.get("user-agent") || undefined;
     const parsedUserAgent = new UAParser(userAgent);
 
-    parsedUserAgent.getBrowser().name;
-
     const ifModifiedSince = request.headers.get("if-modified-since");
     const { newVisitor } = checkVisitorSession(ifModifiedSince);
     const nextLastModifiedDate = getNextLastModifiedDate(

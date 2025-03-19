@@ -57,7 +57,7 @@ export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
 export function getUserTimezone(): string {
     try {
         return Intl.DateTimeFormat().resolvedOptions().timeZone;
-    } catch (e) {
+    } catch {
         // Fallback to UTC if browser doesn't support Intl API
         return "UTC";
     }

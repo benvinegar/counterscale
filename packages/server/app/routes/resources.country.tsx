@@ -15,7 +15,7 @@ function convertCountryCodesToNames(
             //   use try/catch to be defensive and not explode if an invalid
             //   country code gets insrted into Analytics Engine
             countryName = regionNames.of(countByBrowserRow[0])!; // "United States"
-        } catch (err) {
+        } catch {
             countryName = "(unknown)";
         }
         const count = countByBrowserRow[1];
