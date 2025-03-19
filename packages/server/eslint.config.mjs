@@ -13,6 +13,7 @@ export default createConfig({
         "node_modules",
         "dist/*",
         ".react-router",
+        "coverage",
     ],
     includeReact: true,
     includeTypeScript: true,

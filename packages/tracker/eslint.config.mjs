@@ -16,6 +16,8 @@ export default createConfig({
     ],
     includeReact: false,
     includeTypeScript: true,
+    tsconfigRootDir: "./",
+    project: "./tsconfig.json",
     additionalGlobals: {
         counterscale: true,
         // Add browser globals since this is a browser-based package

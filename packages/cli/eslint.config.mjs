@@ -11,4 +11,5 @@ export default createConfig({
     includeReact: false,
     includeTypeScript: true,
     tsconfigRootDir: "./",
+    project: "./tsconfig.json",
 });

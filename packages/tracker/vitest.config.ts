@@ -17,5 +17,5 @@ export default defineConfig({
         },
         environment: "jsdom",
     },
-    plugins: [tsconfigPaths()],
+    plugins: [tsconfigPaths() as any],
 });

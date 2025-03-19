@@ -17,10 +17,8 @@ const __dirname = path.dirname(__filename);
  */
 export default function createTypeScriptConfig({
     baseDirectory,
-    tsconfigRootDir = "./",
     project = undefined,
 } = {}) {
-    console.log(path.join(baseDirectory, project));
     return [
         tseslint.config(tseslint.configs.recommended),
         importPlugin.flatConfigs.recommended,
