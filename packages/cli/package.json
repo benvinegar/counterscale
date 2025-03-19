@@ -18,7 +18,7 @@
     },
     "scripts": {
         "build": "tsc --build",
-        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+        "lint": "eslint .",
         "test": "vitest run",
         "test-ci": "vitest run --coverage",
         "test:watch": "vitest"
@@ -36,12 +36,16 @@
         "zx": "^8.3.2"
     },
     "devDependencies": {
+        "@eslint/compat": "^1.2.7",
+        "@eslint/eslintrc": "^3.3.0",
+        "@eslint/js": "^9.21.0",
         "@types/figlet": "^1.5.8",
         "@types/inquirer": "^9.0.7",
         "@types/shelljs": "^0.8.15",
         "@types/yargs": "^17.0.33",
         "@vitejs/plugin-react": "^4.2.1",
         "@vitest/coverage-v8": "^1.1.0",
+        "globals": "^16.0.0",
         "rollup-plugin-node-externals": "^8.0.0",
         "typescript": "^5.3.3",
         "vite": "^5.0.10",

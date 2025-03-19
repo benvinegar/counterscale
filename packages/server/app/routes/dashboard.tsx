@@ -61,7 +61,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     let interval;
     try {
         interval = url.searchParams.get("interval") || "7d";
-    } catch (err) {
+    } catch {
         interval = "7d";
     }
 

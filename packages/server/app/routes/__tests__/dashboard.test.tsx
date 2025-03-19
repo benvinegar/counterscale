@@ -18,13 +18,14 @@ import { render, screen, waitFor } from "@testing-library/react";
 import Dashboard, { loader } from "../dashboard";
 import { AnalyticsEngineAPI } from "~/analytics/query";
 import { createFetchResponse, getDefaultContext } from "./testutils";
+import ResizeObserverPolyfill from "resize-observer-polyfill";
 
 describe("Dashboard route", () => {
     let fetch: Mock;
 
     beforeAll(() => {
         // polyfill needed for recharts (used by TimeSeriesChart)
-        global.ResizeObserver = require("resize-observer-polyfill");
+        global.ResizeObserver = ResizeObserverPolyfill;
     });
 
     beforeEach(() => {

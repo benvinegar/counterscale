@@ -11,7 +11,7 @@
     },
     "scripts": {
         "build": "vite build -c vite.loader.config.ts && vite build -c vite.module.config.ts",
-        "lint": "eslint --ignore-path ../../.gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+        "lint": "eslint .",
         "test": "vitest run && playwright test",
         "test-ci": "vitest run --coverage && playwright test",
         "start": "node ./integration/server.cjs",
@@ -19,6 +19,9 @@
         "publish": "npm publish"
     },
     "devDependencies": {
+        "@eslint/compat": "^1.2.7",
+        "@eslint/eslintrc": "^3.3.0",
+        "@eslint/js": "^9.21.0",
         "@playwright/test": "^1.49.1",
         "@types/node": "^22.10.2",
         "@typescript-eslint/eslint-plugin": "^8.18.2",
@@ -27,6 +30,8 @@
         "eslint": "^8.56.0",
         "eslint-import-resolver-typescript": "^3.6.1",
         "eslint-plugin-import": "^2.29.1",
+        "globals": "^16.0.0",
+        "install": "^0.13.0",
         "typescript": "^5.7.2",
         "vite": "^6.0.4",
         "vite-plugin-dts": "^4.4.0",
