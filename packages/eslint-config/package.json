@@ -1,0 +1,29 @@
+{
+    "name": "@counterscale/eslint-config",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "main": "index.js",
+    "exports": {
+        ".": "./index.js",
+        "./base": "./base.js",
+        "./typescript": "./typescript.js",
+        "./react": "./react.js"
+    },
+    "dependencies": {
+        "@eslint/compat": "^1.2.7",
+        "@eslint/eslintrc": "^3.3.0",
+        "@eslint/js": "^9.21.0",
+        "@typescript-eslint/eslint-plugin": "^8.26.1",
+        "@typescript-eslint/parser": "^8.26.1",
+        "eslint-import-resolver-typescript": "^3.6.1",
+        "eslint-plugin-import": "^2.29.1",
+        "eslint-plugin-jsx-a11y": "^6.8.0",
+        "eslint-plugin-react": "^7.34.1",
+        "eslint-plugin-react-hooks": "^4.6.0",
+        "globals": "^13.24.0"
+    },
+    "peerDependencies": {
+        "eslint": "^8.57.0"
+    }
+}
