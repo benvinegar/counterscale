@@ -102,12 +102,6 @@ importers:
             "@eslint/js":
                 specifier: ^9.21.0
                 version: 9.21.0
-            "@typescript-eslint/eslint-plugin":
-                specifier: ^8.26.1
-                version: 8.26.1(@typescript-eslint/parser@8.26.1(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3))(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3)
-            "@typescript-eslint/parser":
-                specifier: ^8.26.1
-                version: 8.26.1(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3)
             eslint:
                 specifier: ^9.16.0
                 version: 9.21.0(jiti@1.21.7)
@@ -129,6 +123,9 @@ importers:
             globals:
                 specifier: ^13.24.0
                 version: 13.24.0
+            typescript-eslint:
+                specifier: ^8.26.1
+                version: 8.26.1(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3)
 
     packages/server:
         dependencies:
@@ -7349,6 +7346,16 @@ packages:
             }
         engines: { node: ">= 0.4" }
 
+    typescript-eslint@8.26.1:
+        resolution:
+            {
+                integrity: sha512-t/oIs9mYyrwZGRpDv3g+3K6nZ5uhKEMt2oNmAPwaY4/ye0+EH4nXIPYNtkYFS6QHm+1DFg34DbglYBz5P9Xysg==,
+            }
+        engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
+        peerDependencies:
+            eslint: ^8.57.0 || ^9.0.0
+            typescript: ">=4.8.4 <5.9.0"
+
     typescript@5.7.2:
         resolution:
             {
@@ -12383,6 +12390,16 @@ snapshots:
             is-typed-array: 1.1.15
             possible-typed-array-names: 1.0.0
             reflect.getprototypeof: 1.0.10
+
+    typescript-eslint@8.26.1(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3):
+        dependencies:
+            "@typescript-eslint/eslint-plugin": 8.26.1(@typescript-eslint/parser@8.26.1(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3))(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3)
+            "@typescript-eslint/parser": 8.26.1(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3)
+            "@typescript-eslint/utils": 8.26.1(eslint@9.21.0(jiti@1.21.7))(typescript@5.7.3)
+            eslint: 9.21.0(jiti@1.21.7)
+            typescript: 5.7.3
+        transitivePeerDependencies:
+            - supports-color
 
     typescript@5.7.2: {}
 
