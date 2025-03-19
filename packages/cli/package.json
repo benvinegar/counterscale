@@ -36,10 +36,6 @@
         "zx": "^8.3.2"
     },
     "devDependencies": {
-        "@counterscale/eslint-config": "*",
-        "@eslint/compat": "^1.2.7",
-        "@eslint/eslintrc": "^3.3.0",
-        "@eslint/js": "^9.21.0",
         "@types/figlet": "^1.5.8",
         "@types/inquirer": "^9.0.7",
         "@types/shelljs": "^0.8.15",
