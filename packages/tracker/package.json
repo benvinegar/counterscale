@@ -22,8 +22,6 @@
         "@counterscale/eslint-config": "*",
         "@playwright/test": "^1.49.1",
         "@types/node": "^22.10.2",
-        "@typescript-eslint/eslint-plugin": "^8.18.2",
-        "@typescript-eslint/parser": "^8.18.2",
         "@vitest/coverage-v8": "2.1",
         "globals": "^16.0.0",
         "install": "^0.13.0",
@@ -45,8 +43,5 @@
             "types": "./dist/module/index.d.ts",
             "default": "./dist/module/index.js"
         }
-    },
-    "dependencies": {
-        "typescript-eslint": "^8.26.1"
     }
 }
