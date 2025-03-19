@@ -1,8 +1,7 @@
-import { fixupPluginRules } from "@eslint/compat";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 
 import tseslint from "typescript-eslint";
 import importPlugin from "eslint-plugin-import";
-import tsParser from "@typescript-eslint/parser";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,51 +16,31 @@ const __dirname = path.dirname(__filename);
  * @returns {Array} ESLint configuration array
  */
 export default function createTypeScriptConfig({
+    baseDirectory,
     tsconfigRootDir = "./",
     project = undefined,
 } = {}) {
-    const parserOptions = {
-        tsconfigRootDir,
-    };
-
-    if (project) {
-        parserOptions.project = project;
-    }
-
+    console.log(path.join(baseDirectory, project));
     return [
         tseslint.config(tseslint.configs.recommended),
         importPlugin.flatConfigs.recommended,
         {
             files: ["**/*.{ts,tsx}"],
 
-            plugins: {
-                "typescript-eslint": fixupPluginRules(tseslint),
-                "eslint-plugin-import": fixupPluginRules(importPlugin),
-            },
-
-            languageOptions: {
-                parser: tsParser,
-                parserOptions,
-            },
-
             settings: {
                 "import/internal-regex": "^~/",
 
                 "import/resolver": {
-                    node: {
-                        extensions: [".ts", ".tsx"],
-                    },
-
                     typescript: {
                         alwaysTryTypes: true,
+                        project: path.join(baseDirectory, project),
                     },
                 },
             },
 
             rules: {
-                "@typescript-eslint/no-explicit-any": 1,
                 "no-unused-vars": 0,
-
+                "@typescript-eslint/no-explicit-any": 1,
                 "@typescript-eslint/no-unused-vars": [
                     "error",
                     {

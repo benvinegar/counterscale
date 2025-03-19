@@ -51,11 +51,13 @@ export function createConfig({
     if (includeTypeScript) {
         configs = configs.concat(
             ...createTypeScriptConfig({
+                baseDirectory,
                 tsconfigRootDir,
                 project,
             }),
         );
     }
+    console.log(configs);
 
     return configs;
 }
