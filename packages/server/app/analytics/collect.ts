@@ -1,7 +1,4 @@
-import type {
-    RequestInit,
-    AnalyticsEngineDataset,
-} from "@cloudflare/workers-types";
+import type { AnalyticsEngineDataset } from "@cloudflare/workers-types";
 import { UAParser } from "ua-parser-js";
 import { maskBrowserVersion } from "~/lib/utils";
 
@@ -89,7 +86,11 @@ function extractParamsFromQueryString(requestUrl: string): {
     return params;
 }
 
-export function collectRequestHandler(request: Request, env: Env) {
+export function collectRequestHandler(
+    request: Request,
+    env: Env,
+    extra: Record<string, string> = {}, // extra request properties (i.e. Cloudflare properties)
+) {
     const params = extractParamsFromQueryString(request.url);
 
     const siteId = params.sid;
@@ -127,7 +128,7 @@ export function collectRequestHandler(request: Request, env: Env) {
 
     // NOTE: location is derived from Cloudflare-specific request properties
     // see: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
-    const country = (request as RequestInit).cf?.country;
+    const country = extra?.country;
     if (typeof country === "string") {
         data.country = country;
     }

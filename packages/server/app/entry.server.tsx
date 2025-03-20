@@ -21,6 +21,7 @@ export default async function handleRequest(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     loadContext: AppLoadContext,
 ) {
+    console.log(loadContext);
     const body = await renderToReadableStream(
         <ServerRouter context={reactRouterContext} url={request.url} />,
         {

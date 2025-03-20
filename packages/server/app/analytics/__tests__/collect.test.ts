@@ -104,7 +104,9 @@ describe("collectRequestHandler", () => {
         // @ts-expect-error - we're mocking the request object
         const request = httpMocks.createRequest(defaultRequestParams);
 
-        collectRequestHandler(request as any, env);
+        collectRequestHandler(request as any, env, {
+            country: "US",
+        });
 
         const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
         expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();

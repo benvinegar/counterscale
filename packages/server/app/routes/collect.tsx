@@ -6,5 +6,9 @@ import { collectRequestHandler } from "~/analytics/collect";
 //       On Cloudflare Pages, the entry point is found in functions/collect.ts
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-    return collectRequestHandler(request, context.cloudflare.env);
+    return collectRequestHandler(
+        request,
+        context.cloudflare.env,
+        context.cloudflare.cf,
+    );
 }
