@@ -52,6 +52,8 @@ export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
 
+    // if host is empty, we're probably loading a file:/// URI
+    // -- exit early if this is not an Electron app
     if (location.host === "" && navigator.userAgent.indexOf("Electron") < 0) {
         return;
     }
