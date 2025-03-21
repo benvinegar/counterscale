@@ -3,3 +3,4 @@ build
 coverage
 public/build
 package-lock.json
+pnpm-lock.yaml
