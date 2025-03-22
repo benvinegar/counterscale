@@ -16,7 +16,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const filters = getFiltersFromSearchParams(url.searchParams);
 
     return {
-        countsByProperty: await analyticsEngine.getCountByDevice(
+        countsByProperty: await analyticsEngine.getCountByDeviceType(
             site,
             interval,
             tz,
