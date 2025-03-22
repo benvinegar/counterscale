@@ -52,6 +52,9 @@ export const DeviceCard = ({
                 onFilterChange({ ...filters, deviceModel })
             }
             timezone={timezone}
+            labelFormatter={(label) =>
+                label.charAt(0).toUpperCase() + label.slice(1)
+            }
         />
     );
 };

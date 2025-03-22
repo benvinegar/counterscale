@@ -14,6 +14,7 @@ interface PaginatedTableCardProps {
     loaderUrl: string;
     onClick?: (key: string) => void;
     timezone?: string;
+    labelFormatter?: (label: string) => string;
 }
 
 const PaginatedTableCard = ({
@@ -25,6 +26,7 @@ const PaginatedTableCard = ({
     loaderUrl,
     onClick,
     timezone,
+    labelFormatter,
 }: PaginatedTableCardProps) => {
     const countsByProperty = dataFetcher.data?.countsByProperty || [];
     const [page, setPage] = useState(1);
@@ -59,6 +61,7 @@ const PaginatedTableCard = ({
                         countByProperty={countsByProperty}
                         columnHeaders={columnHeaders}
                         onClick={onClick}
+                        labelFormatter={labelFormatter}
                     />
                     <PaginationButtons
                         page={page}

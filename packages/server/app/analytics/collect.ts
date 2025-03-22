@@ -88,7 +88,7 @@ function extractParamsFromQueryString(requestUrl: string): {
 
 function getDeviceTypeFromDevice(device: IDevice): string {
     // see: https://github.com/faisalman/ua-parser-js/issues/182
-    return device.type === undefined ? "Desktop" : device.type;
+    return device.type === undefined ? "desktop" : device.type;
 }
 
 export function collectRequestHandler(

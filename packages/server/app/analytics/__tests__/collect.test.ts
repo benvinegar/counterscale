@@ -123,7 +123,7 @@ describe("collectRequestHandler", () => {
                 "",
                 "example", // site id
                 "51.x.x.x", // browser version
-                "Desktop", // device type
+                "desktop", // device type
             ],
             doubles: [
                 1, // new visitor

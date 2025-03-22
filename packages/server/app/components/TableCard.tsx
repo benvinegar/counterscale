@@ -25,10 +25,12 @@ export default function TableCard({
     countByProperty,
     columnHeaders,
     onClick,
+    labelFormatter,
 }: {
     countByProperty: CountByProperty;
     columnHeaders: string[];
     onClick?: (key: string) => void;
+    labelFormatter?: (label: string) => string;
 }) {
     const barChartPercentages = calculateCountPercentages(countByProperty);
 
@@ -67,6 +69,11 @@ export default function TableCard({
                         ? [desc[0], desc[1] || "(unknown)"]
                         : [desc, desc || "(unknown)"];
 
+                    const formattedLabel =
+                        labelFormatter && typeof label === "string"
+                            ? labelFormatter(label)
+                            : label;
+
                     return (
                         <TableRow
                             key={item[0]}
@@ -79,10 +86,10 @@ export default function TableCard({
                                         onClick={() => onClick(key as string)}
                                         className="hover:underline select-text text-left"
                                     >
-                                        {label}
+                                        {formattedLabel}
                                     </button>
                                 ) : (
-                                    label
+                                    formattedLabel
                                 )}
                             </TableCell>
 
