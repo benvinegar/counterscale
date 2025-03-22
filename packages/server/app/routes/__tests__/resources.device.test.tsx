@@ -29,8 +29,8 @@ describe("Resources/Device route", () => {
             fetch.mockResolvedValueOnce(
                 createFetchResponse({
                     data: [
-                        { blob7: "Android", count: "5" },
-                        { blob7: "Windows", count: "1" },
+                        { blob10: "Desktop", count: "5" },
+                        { blob10: "Mobile", count: "1" },
                     ],
                 }),
             );
@@ -46,8 +46,8 @@ describe("Resources/Device route", () => {
             const json = await response;
             expect(json).toEqual({
                 countsByProperty: [
-                    ["Android", 5],
-                    ["Windows", 1],
+                    ["Desktop", 5],
+                    ["Mobile", 1],
                 ],
                 page: 1,
             });

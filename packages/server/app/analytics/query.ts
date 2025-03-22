@@ -672,7 +672,7 @@ export class AnalyticsEngineAPI {
         );
     }
 
-    async getCountByDevice(
+    async getCountByDeviceModel(
         siteId: string,
         interval: string,
         tz?: string,
@@ -682,6 +682,23 @@ export class AnalyticsEngineAPI {
         return this.getVisitorCountByColumn(
             siteId,
             "deviceModel",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
+    async getCountByDeviceType(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ): Promise<[deviceType: string, visitors: number][]> {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "deviceType",
             interval,
             tz,
             filters,
