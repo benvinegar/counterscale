@@ -64,8 +64,8 @@ export default function TableCard({
                     // the description can be either a single string (that is both the key and the label),
                     // or a tuple of type [key, label]
                     const [key, label] = Array.isArray(desc)
-                        ? [desc[0], desc[1] || "(none)"]
-                        : [desc, desc || "(none)"];
+                        ? [desc[0], desc[1] || "(unknown)"]
+                        : [desc, desc || "(unknown)"];
 
                     return (
                         <TableRow
