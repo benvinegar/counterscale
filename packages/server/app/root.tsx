@@ -46,7 +46,6 @@ export const loader = ({ context, request }: LoaderFunctionArgs) => {
     // specified during deploy via wrangler --var VERSION:value
     const version = context.cloudflare?.env?.VERSION;
 
-    console.log("here!", getVersionMeta(version));
     return {
         version: {
             ...getVersionMeta(version),
