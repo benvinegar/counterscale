@@ -183,7 +183,7 @@ describe("CloudflareClient", () => {
                 };
             });
 
-            const result = await client.deploy(false);
+            const result = await client.deploy(false, "0.0.1");
             expect(result).toBe("https://test-worker.test-account.workers.dev");
         });
 
@@ -194,7 +194,7 @@ describe("CloudflareClient", () => {
                 };
             });
 
-            const result = await client.deploy(false);
+            const result = await client.deploy(false, "0.0.1");
             expect(result).toBe("<unknown>");
         });
 
@@ -203,7 +203,7 @@ describe("CloudflareClient", () => {
                 throw new Error("Deployment failed");
             });
 
-            await expect(client.deploy(false)).rejects.toThrow(
+            await expect(client.deploy(false, "0.0.1")).rejects.toThrow(
                 "Deployment failed",
             );
         });

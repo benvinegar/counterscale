@@ -264,7 +264,10 @@ Your token needs these permissions:
                 s.stop(`Deploying Counterscale ...`);
             }
 
-            deployUrl = await cloudflare.deploy(opts.verbose ? true : false);
+            deployUrl = await cloudflare.deploy(
+                opts.verbose ? true : false,
+                serverPkgJson.version,
+            );
 
             if (!opts.verbose) {
                 s.stop("Deploying Counterscale ... Done.");

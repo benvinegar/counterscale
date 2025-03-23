@@ -77,11 +77,11 @@ export class CloudflareClient {
         return true;
     }
 
-    async deploy(verbose: boolean): Promise<string> {
+    async deploy(verbose: boolean, version: string): Promise<string> {
         try {
             const p = $({
                 quiet: true,
-            })`npx wrangler deploy --config ${this.configPath}`;
+            })`npx wrangler deploy --config ${this.configPath} --var VERSION:${version}`;
 
             let output = "";
             for await (const text of p) {
