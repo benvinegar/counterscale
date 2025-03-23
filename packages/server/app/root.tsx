@@ -57,8 +57,10 @@ export const loader = ({ context, request }: LoaderFunctionArgs) => {
 
 export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
     const data = useLoaderData<typeof loader>() ?? {
-        version: "unknown",
-        versionUrl: null,
+        version: {
+            url: "https://example.com/",
+            name: "0.0.1",
+        },
         origin: "counterscale.dev",
         url: "https://counterscale.dev/",
     };
