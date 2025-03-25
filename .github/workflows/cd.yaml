@@ -20,5 +20,5 @@ jobs:
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   workingDirectory: "packages/server"
-              env:
-                  VERSION: ${{ github.sha }}
+                  command: |
+                      wrangler deploy --var VERSION:${{ github.sha }}
