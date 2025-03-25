@@ -17,7 +17,10 @@ describe("Root", () => {
     test("renders without crashing", async () => {
         function loader() {
             return {
-                version: "ABC123",
+                version: {
+                    name: "ABC123",
+                    url: "http://example.com/commit/ABC123",
+                },
                 origin: "http://example.com",
                 url: "http://example.com/path",
             };

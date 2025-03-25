@@ -13,18 +13,54 @@ import {
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
+/**
+ * Generate GitHub information based on the version format
+ * @param version - Version string (semver or git SHA)
+ * @returns Object with GitHub URL and display version
+ */
+function getVersionMeta(version: string | null | undefined): {
+    url: string | null;
+    name: string | null;
+} {
+    if (!version) return { url: null, name: null };
+
+    // Check if it's a semver (e.g., 1.2.3) or a git SHA
+    const isSemver = /^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/.test(version);
+
+    if (isSemver) {
+        // Link to release page for semver
+        return {
+            url: `https://github.com/benvinegar/counterscale/releases/tag/v${version}`,
+            name: version,
+        };
+    } else {
+        // Link to commit for git SHA - show only first 7 characters
+        return {
+            url: `https://github.com/benvinegar/counterscale/commit/${version}`,
+            name: version.slice(0, 7),
+        };
+    }
+}
+
 export const loader = ({ context, request }: LoaderFunctionArgs) => {
-    const url = new URL(request.url);
+    // specified during deploy via wrangler --var VERSION:value
+    const version = context.cloudflare?.env?.VERSION;
+
     return {
-        version: context.cloudflare?.env?.CF_PAGES_COMMIT_SHA,
-        origin: url.origin,
+        version: {
+            ...getVersionMeta(version),
+        },
+        origin: new URL(request.url).origin,
         url: request.url,
     };
 };
 
 export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
     const data = useLoaderData<typeof loader>() ?? {
-        version: "unknown",
+        version: {
+            url: "https://example.com/",
+            name: "0.0.1",
+        },
         origin: "counterscale.dev",
         url: "https://counterscale.dev/",
     };
@@ -130,11 +166,18 @@ export default function App() {
             <footer className="py-4 flex justify-end text-s">
                 <div>
                     Version{" "}
-                    <a
-                        href={`https://github.com/benvinegar/counterscale/commit/${data.version}`}
-                    >
-                        {data.version?.slice(0, 7)}
-                    </a>
+                    {data.version ? (
+                        <a
+                            href={data.version.url as string}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                        >
+                            {data.version.name}
+                        </a>
+                    ) : (
+                        "unknown"
+                    )}
                 </div>
             </footer>
         </div>
