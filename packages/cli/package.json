@@ -1,6 +1,6 @@
 {
     "name": "@counterscale/cli",
-    "version": "3.0.0-beta.2",
+    "version": "3.0.0-beta.3",
     "descriptrion": "CLI for managing Counterscale deployments",
     "homepage": "https://counterscale.dev",
     "license": "MIT",
@@ -25,7 +25,7 @@
     },
     "dependencies": {
         "@clack/prompts": "^0.10.0",
-        "@counterscale/server": "3.0.0-beta.2",
+        "@counterscale/server": "3.0.0-beta.3",
         "@types/node": "^22.10.2",
         "chalk": "^5.3.0",
         "cli-highlight": "^2.1.11",

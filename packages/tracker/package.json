@@ -1,6 +1,6 @@
 {
     "name": "@counterscale/tracker",
-    "version": "3.0.0-beta.2",
+    "version": "3.0.0-beta.3",
     "descriptrion": "Counterscale tracking library for recording pageviews",
     "homepage": "https://counterscale.dev",
     "license": "MIT",
