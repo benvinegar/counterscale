@@ -16,7 +16,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const filters = getFiltersFromSearchParams(url.searchParams);
 
     return {
-        countsByProperty: await analyticsEngine.getCountByDevice(
+        countsByProperty: await analyticsEngine.getCountByDeviceType(
             site,
             interval,
             tz,
@@ -52,6 +52,9 @@ export const DeviceCard = ({
                 onFilterChange({ ...filters, deviceModel })
             }
             timezone={timezone}
+            labelFormatter={(label) =>
+                label.charAt(0).toUpperCase() + label.slice(1)
+            }
         />
     );
 };

@@ -1,5 +1,5 @@
 import type { AnalyticsEngineDataset } from "@cloudflare/workers-types";
-import { UAParser } from "ua-parser-js";
+import { IDevice, UAParser } from "ua-parser-js";
 import { maskBrowserVersion } from "~/lib/utils";
 
 // Cookieless visitor/session tracking
@@ -86,6 +86,11 @@ function extractParamsFromQueryString(requestUrl: string): {
     return params;
 }
 
+function getDeviceTypeFromDevice(device: IDevice): string {
+    // see: https://github.com/faisalman/ua-parser-js/issues/182
+    return device.type === undefined ? "desktop" : device.type;
+}
+
 export function collectRequestHandler(
     request: Request,
     env: Env,
@@ -99,6 +104,7 @@ export function collectRequestHandler(
     }
 
     const userAgent = request.headers.get("user-agent") || undefined;
+
     const parsedUserAgent = new UAParser(userAgent);
 
     const ifModifiedSince = request.headers.get("if-modified-since");
@@ -124,6 +130,7 @@ export function collectRequestHandler(
         browserName: parsedUserAgent.getBrowser().name,
         browserVersion: browserVersion,
         deviceModel: parsedUserAgent.getDevice().model,
+        deviceType: getDeviceTypeFromDevice(parsedUserAgent.getDevice()),
     };
 
     // NOTE: location is derived from Cloudflare-specific request properties
@@ -172,6 +179,7 @@ interface DataPoint {
     browserName?: string;
     browserVersion?: string;
     deviceModel?: string;
+    deviceType?: string;
 
     // doubles
     newVisitor: number;
@@ -198,6 +206,7 @@ export function writeDataPoint(
             data.deviceModel || "", // blob7
             data.siteId || "", // blob8
             data.browserVersion || "", // blob9
+            data.deviceType || "", // blob10
         ],
         doubles: [data.newVisitor || 0, data.newSession || 0, data.bounce],
     };
@@ -205,6 +214,7 @@ export function writeDataPoint(
     if (!analyticsEngine) {
         // no-op
         console.log("Can't save datapoint: Analytics unavailable");
+        console.dir(datapoint, { depth: null });
         return;
     }
 

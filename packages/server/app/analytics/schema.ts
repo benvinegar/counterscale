@@ -23,6 +23,7 @@ export const ColumnMappings = {
     deviceModel: "blob7",
     siteId: "blob8",
     browserVersion: "blob9",
+    deviceType: "blob10",
 
     /**
      * doubles
