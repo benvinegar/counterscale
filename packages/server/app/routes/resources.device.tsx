@@ -48,9 +48,7 @@ export const DeviceCard = ({
             dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/device"
             filters={filters}
-            onClick={(deviceModel) =>
-                onFilterChange({ ...filters, deviceModel })
-            }
+            onClick={(deviceType) => onFilterChange({ ...filters, deviceType })}
             timezone={timezone}
             labelFormatter={(label) =>
                 label.charAt(0).toUpperCase() + label.slice(1)

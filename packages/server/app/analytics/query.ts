@@ -133,7 +133,7 @@ function filtersToSql(filters: SearchFilters) {
         "browserName",
         "browserVersion",
         "country",
-        "deviceModel",
+        "deviceType",
     ];
 
     let filterStr = "";
