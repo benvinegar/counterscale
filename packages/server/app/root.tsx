@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import styles from "./globals.css?url";
 import { LoaderFunctionArgs, type LinksFunction } from "react-router";
+import { createAuthLoader } from "~/middleware/auth";
 
 import {
     Links,
@@ -42,7 +43,8 @@ function getVersionMeta(version: string | null | undefined): {
     }
 }
 
-export const loader = ({ context, request }: LoaderFunctionArgs) => {
+// Original loader function without authentication
+const originalLoader = ({ context, request, params }: LoaderFunctionArgs) => {
     // specified during deploy via wrangler --var VERSION:value
     const version = context.cloudflare?.env?.VERSION;
 
@@ -55,8 +57,15 @@ export const loader = ({ context, request }: LoaderFunctionArgs) => {
     };
 };
 
+// Wrap the original loader with authentication
+export const loader = createAuthLoader(originalLoader);
+
 export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
-    const data = useLoaderData<typeof loader>() ?? {
+    // Get loader data with fallback for when it's not available (like during redirects)
+    const loaderData = useLoaderData<typeof originalLoader>();
+
+    // Provide default values when data is not available
+    const data = loaderData || {
         version: {
             url: "https://example.com/",
             name: "0.0.1",
@@ -119,7 +128,18 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
 };
 
 export default function App() {
-    const data = useLoaderData<typeof loader>();
+    // Get loader data with fallback for when it's not available (like during redirects)
+    const loaderData = useLoaderData<typeof originalLoader>();
+
+    // Provide default values when data is not available
+    const data = loaderData || {
+        version: {
+            url: "https://example.com/",
+            name: "0.0.1",
+        },
+        origin: "counterscale.dev",
+        url: "https://counterscale.dev/",
+    };
 
     return (
         <div className="mt-0 sm:mt-4">
