@@ -1,4 +1,4 @@
-// Use Response API directly instead of json helper
+import jwt from 'jsonwebtoken';
 
 /**
  * Authentication utilities for Counterscale
@@ -17,47 +17,13 @@ export async function createToken(
     username: string,
     secret: string,
 ): Promise<string> {
-    const encoder = new TextEncoder();
-    const secretKey = await crypto.subtle.importKey(
-        "raw",
-        encoder.encode(secret),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"],
+    return jwt.sign(
+        { sub: username },
+        secret,
+        { expiresIn: TOKEN_EXPIRATION }
     );
-
-    const header = {
-        alg: "HS256",
-        typ: "JWT",
-    };
-
-    const payload = {
-        sub: username,
-        exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRATION,
-        iat: Math.floor(Date.now() / 1000),
-    };
-
-    const headerString = btoa(JSON.stringify(header));
-    const payloadString = btoa(JSON.stringify(payload));
-    const toSign = `${headerString}.${payloadString}`;
-
-    const signature = await crypto.subtle.sign(
-        "HMAC",
-        secretKey,
-        encoder.encode(toSign),
-    );
-
-    // Convert the signature to base64
-    const signatureString = btoa(
-        String.fromCharCode(...new Uint8Array(signature)),
-    );
-
-    return `${headerString}.${payloadString}.${signatureString}`;
 }
 
-/**
- * Verify a JWT token
- */
 /**
  * Custom error class for token verification failures
  */
@@ -71,51 +37,16 @@ export class TokenVerificationError extends Error {
     }
 }
 
+/**
+ * Verify a JWT token
+ */
 export async function verifyToken(
     token: string,
     secret: string,
 ): Promise<boolean> {
     try {
-        console.log("verifyToken");
-        const [headerString, payloadString, signatureString] = token.split(".");
-
-        console.log(headerString, payloadString, signatureString);
-        if (!headerString || !payloadString || !signatureString) {
-            return false;
-        }
-
-        // Decode payload to check expiration
-        const payload = JSON.parse(atob(payloadString));
-        const currentTime = Math.floor(Date.now() / 1000);
-
-        if (payload.exp && payload.exp < currentTime) {
-            console.log("Token expired");
-            return false; // Token expired
-        }
-
-        // Verify signature
-        const encoder = new TextEncoder();
-        const secretKey = await crypto.subtle.importKey(
-            "raw",
-            encoder.encode(secret),
-            { name: "HMAC", hash: "SHA-256" },
-            false,
-            ["verify"],
-        );
-
-        const toVerify = `${headerString}.${payloadString}`;
-        const signature = new Uint8Array(
-            atob(signatureString)
-                .split("")
-                .map((c) => c.charCodeAt(0)),
-        );
-
-        return await crypto.subtle.verify(
-            "HMAC",
-            secretKey,
-            signature,
-            encoder.encode(toVerify),
-        );
+        jwt.verify(token, secret);
+        return true;
     } catch (error) {
         // Instead of throwing, log the error (if not in test) and return false
         if (process.env.NODE_ENV !== "test") {
