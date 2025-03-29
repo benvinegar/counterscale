@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { redirect, useActionData, Form } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Button } from "~/components/ui/button";
@@ -86,10 +86,7 @@ export async function action({
     // Create JWT token
     const token = await createToken(username, jwtSecret);
 
-    console.log("token:", token);
     // Create a redirect response with the auth cookie
-
-    console.log("hello");
     return redirect("/dashboard", {
         headers: {
             "Set-Cookie": `counterscale_session=${token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=${24 * 60 * 60}`,
@@ -102,6 +99,13 @@ export default function Login() {
         | { error?: string }
         | undefined;
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Reset isSubmitting when actionData changes
+    useEffect(() => {
+        if (actionData) {
+            setIsSubmitting(false);
+        }
+    }, [actionData]);
 
     return (
         <div className="flex items-center justify-center min-h-[80vh]">
