@@ -8,11 +8,10 @@ import { SearchFilters } from "~/lib/types";
 interface PaginatedTableCardProps {
     siteId: string;
     interval: string;
-    dataFetcher: { 
-        data?: { countsByProperty: [string, string, string?][] };
-        submit: (params: Record<string, unknown>, options: { method: string; action: string }) => void;
-        state: string;
-    };
+    // Using 'any' here because the actual type is a React Router Fetcher component
+    // which has a complex type structure that varies between different resource routes
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dataFetcher: any;
     columnHeaders: string[];
     filters?: SearchFilters;
     loaderUrl: string;
