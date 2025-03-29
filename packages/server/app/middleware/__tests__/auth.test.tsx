@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { redirect } from "react-router";
 import {
     shouldProtectRoute,
     isAuthenticated,
@@ -111,7 +110,7 @@ describe("Authentication Middleware", () => {
                 params: {},
             };
             
-            const result = await authLoader(args);
+            const result = await authLoader(args) as Response;
             
             // Should be a redirect response
             expect(result).toBeInstanceOf(Response);

@@ -1,15 +1,18 @@
 /// <reference types="vite/client" />
 import styles from "./globals.css?url";
-import { LoaderFunctionArgs, type LinksFunction } from "react-router";
 import { createAuthLoader } from "~/middleware/auth";
+import { getTokenFromCookies } from "~/lib/auth";
 
 import {
+    Form,
     Links,
     Meta,
     Outlet,
     Scripts,
     ScrollRestoration,
     useLoaderData,
+    LoaderFunctionArgs,
+    type LinksFunction,
 } from "react-router";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
@@ -44,9 +47,12 @@ function getVersionMeta(version: string | null | undefined): {
 }
 
 // Original loader function without authentication
-const originalLoader = ({ context, request, params }: LoaderFunctionArgs) => {
+const originalLoader = ({ context, request }: LoaderFunctionArgs) => {
     // specified during deploy via wrangler --var VERSION:value
     const version = context.cloudflare?.env?.VERSION;
+
+    // Check if user is authenticated (for showing/hiding logout button)
+    const isAuthenticated = !!getTokenFromCookies(request);
 
     return {
         version: {
@@ -54,6 +60,7 @@ const originalLoader = ({ context, request, params }: LoaderFunctionArgs) => {
         },
         origin: new URL(request.url).origin,
         url: request.url,
+        isAuthenticated,
     };
 };
 
@@ -72,6 +79,7 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
         },
         origin: "counterscale.dev",
         url: "https://counterscale.dev/",
+        isAuthenticated: false,
     };
 
     return (
@@ -139,6 +147,7 @@ export default function App() {
         },
         origin: "counterscale.dev",
         url: "https://counterscale.dev/",
+        isAuthenticated: false,
     };
 
     return (
@@ -164,6 +173,20 @@ export default function App() {
                         >
                             Admin
                         </a>
+                        {data.isAuthenticated && (
+                            <Form
+                                method="post"
+                                action="/logout"
+                                className="inline"
+                            >
+                                <button
+                                    type="submit"
+                                    className="ml-2 text-red-600 hover:text-red-800 cursor-pointer border-none bg-transparent p-0"
+                                >
+                                    Logout
+                                </button>
+                            </Form>
+                        )}
                         <a
                             href="https://github.com/benvinegar/counterscale"
                             className="w-6 ml-2"

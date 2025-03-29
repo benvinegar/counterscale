@@ -90,7 +90,7 @@ export function getTokenFromCookies(request: Request): string | null {
  * Create a response with auth cookie
  */
 export function createResponseWithAuthCookie(
-    responseData: any,
+    responseData: Record<string, unknown>,
     token: string,
     status = 200,
 ): Response {

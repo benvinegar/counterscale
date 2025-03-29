@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { redirect } from "react-router";
 import * as loginModule from "../login";
 import * as logoutModule from "../logout";
 import * as authUtils from "../../lib/auth";
@@ -11,6 +10,7 @@ vi.mock("../../lib/auth", () => ({
     createToken: vi.fn(),
     createResponseWithAuthCookie: vi.fn(),
     clearAuthCookie: vi.fn(),
+    AUTH_COOKIE_NAME: "counterscale_session",
 }));
 
 describe("Authentication Routes", () => {
@@ -30,30 +30,32 @@ describe("Authentication Routes", () => {
         };
 
         it("should redirect to dashboard if already authenticated", async () => {
-            vi.mocked(authUtils.getTokenFromCookies).mockReturnValue("test_token");
+            vi.mocked(authUtils.getTokenFromCookies).mockReturnValue(
+                "test_token",
+            );
             vi.mocked(authUtils.verifyToken).mockResolvedValue(true);
-            
+
             const request = new Request("https://example.com/login");
-            const result = await loginModule.loader({ 
-                request, 
+            const result = await loginModule.loader({
+                request,
                 context: mockContext,
-                params: {} 
+                params: {},
             });
-            
+
             expect(result).toBeInstanceOf(Response);
             expect(result.headers.get("Location")).toBe("/dashboard");
         });
 
         it("should render login page if not authenticated", async () => {
             vi.mocked(authUtils.getTokenFromCookies).mockReturnValue(null);
-            
+
             const request = new Request("https://example.com/login");
-            const result = await loginModule.loader({ 
-                request, 
+            const result = await loginModule.loader({
+                request,
                 context: mockContext,
-                params: {} 
+                params: {},
             });
-            
+
             expect(result).toBeInstanceOf(Response);
             expect(result.status).toBe(200);
         });
@@ -65,47 +67,51 @@ describe("Authentication Routes", () => {
                 new Response(JSON.stringify({ success: true }), {
                     headers: {
                         "Content-Type": "application/json",
-                        "Set-Cookie": "counterscale_session=new_token; HttpOnly; Path=/; SameSite=Strict"
-                    }
-                })
+                        "Set-Cookie":
+                            "counterscale_session=new_token; HttpOnly; Path=/; SameSite=Strict",
+                    },
+                }),
             );
-            
+
             const formData = new FormData();
             formData.append("username", "foo");
             formData.append("password", "bar");
-            
+
             const request = new Request("https://example.com/login", {
                 method: "POST",
                 body: formData,
             });
-            
-            const result = await loginModule.action({ 
-                request, 
+
+            const result = await loginModule.action({
+                request,
                 context: mockContext,
-                params: {} 
+                params: {},
             });
-            
+
             expect(result).toBeInstanceOf(Response);
             expect(result.headers.get("Location")).toBe("/dashboard");
-            expect(authUtils.createToken).toHaveBeenCalledWith("foo", "test_secret");
+            expect(authUtils.createToken).toHaveBeenCalledWith(
+                "foo",
+                "test_secret",
+            );
         });
 
         it("should reject invalid credentials", async () => {
             const formData = new FormData();
             formData.append("username", "wrong");
             formData.append("password", "credentials");
-            
+
             const request = new Request("https://example.com/login", {
                 method: "POST",
                 body: formData,
             });
-            
-            const result = await loginModule.action({ 
-                request, 
+
+            const result = await loginModule.action({
+                request,
                 context: mockContext,
-                params: {} 
+                params: {},
             });
-            
+
             expect(result).toBeInstanceOf(Response);
             expect(result.status).toBe(401);
             expect(authUtils.createToken).not.toHaveBeenCalled();
@@ -113,36 +119,30 @@ describe("Authentication Routes", () => {
     });
 
     describe("Logout Route", () => {
-        it("should clear auth cookie and redirect to login", async () => {
-            vi.mocked(authUtils.clearAuthCookie).mockReturnValue(
-                new Response(JSON.stringify({ success: true }), {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Set-Cookie": "counterscale_session=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0",
-                    },
-                })
-            );
-            
+        it("should clear auth cookie and redirect to home page", async () => {
             const request = new Request("https://example.com/logout", {
                 method: "POST",
             });
-            
-            const result = await logoutModule.action({ 
+
+            const result = await logoutModule.action({
                 request,
                 context: {},
-                params: {} 
+                params: {},
             });
-            
+
             expect(result).toBeInstanceOf(Response);
-            expect(result.headers.get("Location")).toBe("/login");
-            expect(authUtils.clearAuthCookie).toHaveBeenCalled();
+            expect(result.headers.get("Location")).toBe("/");
+            expect(result.headers.get("Set-Cookie")).toContain(
+                "counterscale_session=",
+            );
+            expect(result.headers.get("Set-Cookie")).toContain("Max-Age=0");
         });
 
-        it("should redirect to login when accessed directly", async () => {
+        it("should redirect to home page when accessed directly", async () => {
             const result = await logoutModule.loader();
-            
+
             expect(result).toBeInstanceOf(Response);
-            expect(result.headers.get("Location")).toBe("/login");
+            expect(result.headers.get("Location")).toBe("/");
         });
     });
 });

@@ -1,9 +1,10 @@
+/* eslint-disable react/prop-types */
 import * as React from "react";
 
 import { cn } from "~/lib/utils";
 
-export interface InputProps
-    extends React.InputHTMLAttributes<HTMLInputElement> {}
+// Using a type alias instead of an empty interface to avoid the no-empty-object-type lint error
+export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ({ className, type, ...props }, ref) => {

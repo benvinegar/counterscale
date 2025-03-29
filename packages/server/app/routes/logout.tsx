@@ -1,27 +1,29 @@
-import { redirect } from "react-router";
 import type { ActionFunctionArgs } from "react-router";
-import { clearAuthCookie } from "~/lib/auth";
+import { AUTH_COOKIE_NAME } from "~/lib/auth";
 
 /**
- * Logout action - clears the auth cookie and redirects to login
+ * Logout action - clears the auth cookie and redirects to home page
  */
-export async function action({ request }: ActionFunctionArgs) {
-    // Clear the auth cookie
-    const response = clearAuthCookie();
-    
-    // Add a redirect header
-    response.headers.set("Location", "/login");
-    
-    return redirect("/login", {
+export async function action(_args: ActionFunctionArgs) {
+    // Create a direct Response object with both redirect and cookie-clearing headers
+    return new Response(null, {
+        status: 302, // HTTP redirect status
         headers: {
-            "Set-Cookie": "counterscale_session=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0",
+            Location: "/", // Redirect to home page
+            "Set-Cookie": `${AUTH_COOKIE_NAME}=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
         },
     });
 }
 
 /**
- * Redirect to login page if someone tries to access this route directly
+ * Redirect to home page if someone tries to access this route directly
  */
 export function loader() {
-    return redirect("/login");
+    // Create a direct Response object with redirect header
+    return new Response(null, {
+        status: 302, // HTTP redirect status
+        headers: {
+            Location: "/", // Redirect to home page
+        },
+    });
 }

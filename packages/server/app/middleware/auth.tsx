@@ -41,7 +41,7 @@ export async function isAuthenticated(
     try {
         // Verify token
         return await verifyToken(token, jwtSecret);
-    } catch (error) {
+    } catch {
         // Silently handle token verification errors
         return false;
     }
@@ -51,7 +51,7 @@ export async function isAuthenticated(
  * Authentication middleware for React Router loaders and actions
  */
 export function createAuthLoader(
-    loaderFn: (args: LoaderFunctionArgs) => Promise<Response> | Response | any,
+    loaderFn: (args: LoaderFunctionArgs) => Promise<Response> | Response | unknown,
 ) {
     return async (args: LoaderFunctionArgs) => {
         const { request, context } = args;

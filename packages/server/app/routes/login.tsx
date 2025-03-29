@@ -13,7 +13,6 @@ import {
 } from "~/components/ui/card";
 import {
     createToken,
-    createResponseWithAuthCookie,
     getTokenFromCookies,
     verifyToken,
 } from "~/lib/auth";
@@ -21,7 +20,6 @@ import {
 export async function loader({
     request,
     context,
-    params = {},
 }: LoaderFunctionArgs) {
     // Check if user is already authenticated
     const token = getTokenFromCookies(request);
@@ -32,7 +30,7 @@ export async function loader({
                 // User is already authenticated, redirect to dashboard
                 return redirect("/dashboard");
             }
-        } catch (error) {
+        } catch {
             // Token verification failed, continue to login page
         }
     }
@@ -45,7 +43,6 @@ export async function loader({
 export async function action({
     request,
     context,
-    params = {},
 }: ActionFunctionArgs) {
     const formData = await request.formData();
     const username = formData.get("username") as string;

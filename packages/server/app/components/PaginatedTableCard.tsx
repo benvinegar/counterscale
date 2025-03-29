@@ -8,7 +8,11 @@ import { SearchFilters } from "~/lib/types";
 interface PaginatedTableCardProps {
     siteId: string;
     interval: string;
-    dataFetcher: any;
+    dataFetcher: { 
+        data?: { countsByProperty: [string, string, string?][] };
+        submit: (params: Record<string, unknown>, options: { method: string; action: string }) => void;
+        state: string;
+    };
     columnHeaders: string[];
     filters?: SearchFilters;
     loaderUrl: string;
