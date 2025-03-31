@@ -1,6 +1,6 @@
 import type { Client } from "./client";
 import { instrumentHistoryBuiltIns } from "./instrument";
-import { makeRequest } from "./request";
+import { makeRequest, checkCacheStatus } from "./request";
 
 export type TrackPageviewOpts = {
     url?: string;
@@ -9,10 +9,10 @@ export type TrackPageviewOpts = {
 
 export function autoTrackPageviews(client: Client) {
     const cleanupFn = instrumentHistoryBuiltIns(() => {
-        trackPageview(client);
+        void trackPageview(client);
     });
 
-    trackPageview(client);
+    void trackPageview(client);
 
     return cleanupFn;
 }
@@ -48,7 +48,7 @@ function getReferrer(hostname: string, referrer: string) {
     return referrer.split("?")[0];
 }
 
-export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
+export async function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
 
@@ -63,12 +63,29 @@ export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
     const { hostname, path } = getHostnameAndPath(url);
     const referrer = getReferrer(hostname, opts.referrer || "");
 
-    const d = {
-        p: path,
-        h: hostname,
-        r: referrer,
-        sid: client.siteId,
-    };
+    // First check the cache status to determine if this is a new visit or bounce
+    try {
+        const cacheStatus = await checkCacheStatus(client.reporterUrl);
+        
+        const d = {
+            p: path,
+            h: hostname,
+            r: referrer,
+            sid: client.siteId,
+            v: cacheStatus.v ? "1" : "0",
+            b: cacheStatus.b ? "1" : "0",
+        };
 
-    makeRequest(client.reporterUrl, d);
+        makeRequest(client.reporterUrl, d);
+    } catch (e) {
+        // If cache check fails, fall back to the original behavior
+        const d = {
+            p: path,
+            h: hostname,
+            r: referrer,
+            sid: client.siteId,
+        };
+
+        makeRequest(client.reporterUrl, d);
+    }
 }
