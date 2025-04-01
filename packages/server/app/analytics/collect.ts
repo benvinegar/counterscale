@@ -83,25 +83,31 @@ function checkVisitorSession(ifModifiedSince: string | null): {
  *
  * @param ifModifiedSince The value of the If-Modified-Since header from the request.
  * @returns An object containing:
- *  - `isVisit`: Boolean indicating if this is considered a new visit.
- *  - `isBounce`: Boolean indicating if this visit is considered a bounce.
+ *  - `isVisit`: Number indicating if this is considered a new visit (1 for yes, 0 for no).
+ *  - `bounce`: Number indicating bounce status (1 for bounce, 0 for normal, -1 for anti-bounce).
  *  - `nextLastModifiedDate`: The Date object to be set in the Last-Modified response header.
  */
 export function handleCacheHeaders(ifModifiedSince: string | null): {
-    isVisit: boolean;
-    isBounce: boolean;
+    isVisit: number;
+    bounce: number;
     nextLastModifiedDate: Date;
 } {
-    const { newVisitor: isVisit } = checkVisitorSession(ifModifiedSince);
+    const { newVisitor } = checkVisitorSession(ifModifiedSince);
     const nextLastModifiedDate = getNextLastModifiedDate(
         ifModifiedSince ? new Date(ifModifiedSince) : null,
     );
     const bounceValue = getBounceValue(nextLastModifiedDate);
-    const isBounce = isVisit || bounceValue === 1;
+    
+    // Convert boolean to number (1 or 0)
+    const isVisit = newVisitor ? 1 : 0;
+    
+    // If it's a new visit, it's a bounce (1)
+    // Otherwise, use the calculated bounce value (-1, 0, or 1)
+    const bounce = isVisit ? 1 : bounceValue;
 
     return {
         isVisit,
-        isBounce,
+        bounce,
         nextLastModifiedDate,
     };
 }
@@ -145,25 +151,31 @@ export function collectRequestHandler(
     // Check if v and b (visit and bounce) are provided in the request parameters
     // If they are, use them; otherwise, calculate them using the If-Modified-Since header
     let isVisit = false;
-    let isBounce = false;
+    let bounceValue = 0;
     let nextLastModifiedDate: Date;
 
     if (params.v !== undefined && params.b !== undefined) {
         // Use the values provided by the client
         isVisit = params.v === "1";
-        isBounce = params.b === "1";
+        // Parse bounce value - could be -1, 0, or 1
+        bounceValue = parseInt(params.b, 10);
         
+        // Ensure it's a valid value
+        if (isNaN(bounceValue) || bounceValue < -1 || bounceValue > 1) {
+            bounceValue = isVisit ? 1 : 0; // Default: if new visit, it's a bounce
+        }
+
         // Still need to get the next last modified date for the response header
         const ifModifiedSince = request.headers.get("if-modified-since");
         nextLastModifiedDate = getNextLastModifiedDate(
-            ifModifiedSince ? new Date(ifModifiedSince) : null
+            ifModifiedSince ? new Date(ifModifiedSince) : null,
         );
     } else {
         // Calculate values using the If-Modified-Since header
         const ifModifiedSince = request.headers.get("if-modified-since");
         const cacheResult = handleCacheHeaders(ifModifiedSince);
-        isVisit = cacheResult.isVisit;
-        isBounce = cacheResult.isBounce;
+        isVisit = cacheResult.isVisit === 1;
+        bounceValue = cacheResult.bounce;
         nextLastModifiedDate = cacheResult.nextLastModifiedDate;
     }
 
@@ -178,7 +190,7 @@ export function collectRequestHandler(
         referrer: params.r,
         newVisitor: isVisit ? 1 : 0,
         newSession: 0, // dead column
-        bounce: isBounce ? 1 : 0,
+        bounce: bounceValue,
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,

@@ -72,8 +72,8 @@ export async function trackPageview(client: Client, opts: TrackPageviewOpts = {}
             h: hostname,
             r: referrer,
             sid: client.siteId,
-            v: cacheStatus.v ? "1" : "0",
-            b: cacheStatus.b ? "1" : "0",
+            v: cacheStatus.v.toString(),
+            b: cacheStatus.b.toString(),
         };
 
         makeRequest(client.reporterUrl, d);

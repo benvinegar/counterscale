@@ -6,43 +6,28 @@ import {
     beforeEach,
     afterEach,
     expect,
-    Mock,
 } from "vitest";
 import "vitest-dom/extend-expect";
 
 import { loader } from "../cache";
-import * as collectModule from "~/analytics/collect";
 
 describe("Cache route", () => {
-    let handleCacheHeadersSpy: Mock;
-    
     beforeEach(() => {
-        // Mock the handleCacheHeaders function
-        handleCacheHeadersSpy = vi.spyOn(collectModule, "handleCacheHeaders");
+        // Reset the date mock before each test
+        vi.useRealTimers();
     });
 
     afterEach(() => {
-        vi.restoreAllMocks();
+        vi.useRealTimers();
     });
 
     describe("loader", () => {
         test("returns new visit for request with no If-Modified-Since header", async () => {
-            // Setup the mock to return values for a new visit
-            const mockDate = new Date();
-            handleCacheHeadersSpy.mockReturnValueOnce({
-                isVisit: true,
-                isBounce: true,
-                nextLastModifiedDate: mockDate,
-            });
-
             // Create a request with no If-Modified-Since
             const request = new Request("http://localhost:3000/cache");
             
             // Call the loader
             const response = await loader({ request } as any);
-            
-            // Verify handleCacheHeaders was called with null
-            expect(handleCacheHeadersSpy).toHaveBeenCalledWith(null);
             
             // Check response status
             expect(response.status).toBe(200);
@@ -50,27 +35,21 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
             expect(data).toEqual({
-                v: true,
-                b: true,
+                v: 1,  // New visitor with no If-Modified-Since
+                b: 1,  // Also a bounce with no If-Modified-Since
             });
             
             // Verify headers
             expect(response.headers.get("Content-Type")).toBe("application/json");
-            expect(response.headers.get("Last-Modified")).toBe(mockDate.toUTCString());
+            expect(response.headers.get("Last-Modified")).toBeTruthy();
             expect(response.headers.get("Cache-Control")).toBe("no-cache, must-revalidate");
         });
 
-        test("handles request with If-Modified-Since header", async () => {
-            // Setup the mock to return values for a returning visit
-            const mockDate = new Date();
-            handleCacheHeadersSpy.mockReturnValueOnce({
-                isVisit: false,
-                isBounce: false,
-                nextLastModifiedDate: mockDate,
-            });
-
-            // Create a request with an If-Modified-Since header
-            const ifModifiedSince = new Date(Date.now() - 60000).toUTCString(); // 1 minute ago
+        test("if-modified-since is within 30 minutes", async () => {
+            // Create a request with a recent If-Modified-Since header (5 minutes ago)
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            const ifModifiedSince = fiveMinutesAgo.toUTCString();
+            
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
@@ -79,29 +58,25 @@ describe("Cache route", () => {
             
             // Call the loader
             const response = await loader({ request } as any);
-            
-            // Verify handleCacheHeaders was called with the correct header
-            expect(handleCacheHeadersSpy).toHaveBeenCalledWith(ifModifiedSince);
             
             // Verify the content of the response
             const data = await response.json();
-            expect(data).toEqual({
-                v: false,
-                b: false,
-            });
+            
+            // Should NOT be a new visitor
+            expect(data.v).toBe(0);
+            // Should NOT be a bounce
+            expect(data.b).toBe(0);
         });
 
-        test("updates Last-Modified header for bounce detection", async () => {
-            // Setup the mock with specific next modified date
-            const mockDate = new Date("2025-03-31T12:30:45Z");
-            handleCacheHeadersSpy.mockReturnValueOnce({
-                isVisit: false,
-                isBounce: true, // A bounce but not a new visit
-                nextLastModifiedDate: mockDate,
-            });
-
-            // Create a request with an older If-Modified-Since header
-            const ifModifiedSince = new Date("2025-03-31T12:00:00Z").toUTCString();
+        test("if-modified since is within 30 minutes but over day boundary", async () => {
+            // Set system time to 00:15:00
+            vi.setSystemTime(new Date("2024-01-18T00:15:00"));
+            
+            // If the user last visited ~25 minutes ago, that occurred during
+            // the prior day, so this should be considered a new visit
+            const twentyFiveMinutesAgo = new Date(Date.now() - 25 * 60 * 1000);
+            const ifModifiedSince = twentyFiveMinutesAgo.toUTCString();
+            
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
@@ -111,15 +86,117 @@ describe("Cache route", () => {
             // Call the loader
             const response = await loader({ request } as any);
             
-            // Verify the content shows a bounce but not a new visit
+            // Verify the content of the response
             const data = await response.json();
-            expect(data).toEqual({
-                v: false,
-                b: true,
+            
+            // Should be a new visitor because a new day began
+            expect(data.v).toBe(1);
+            // Should be a bounce
+            expect(data.b).toBe(1);
+        });
+
+        test("if-modified-since is over 30 days ago", async () => {
+            // Create a request with an If-Modified-Since header from 31 days ago
+            const thirtyOneDaysAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+            const ifModifiedSince = thirtyOneDaysAgo.toUTCString();
+            
+            const request = new Request("http://localhost:3000/cache", {
+                headers: {
+                    "If-Modified-Since": ifModifiedSince,
+                },
             });
             
-            // Verify Last-Modified header is updated to the mockDate
-            expect(response.headers.get("Last-Modified")).toBe(mockDate.toUTCString());
+            // Call the loader
+            const response = await loader({ request } as any);
+            
+            // Verify the content of the response
+            const data = await response.json();
+            
+            // Should be a new visitor because > 30 days passed
+            expect(data.v).toBe(1);
+            // Should be a bounce
+            expect(data.b).toBe(1);
+        });
+
+        test("if-modified-since was yesterday", async () => {
+            // Create a request with an If-Modified-Since header from 24 hours ago
+            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const ifModifiedSince = twentyFourHoursAgo.toUTCString();
+            
+            const request = new Request("http://localhost:3000/cache", {
+                headers: {
+                    "If-Modified-Since": ifModifiedSince,
+                },
+            });
+            
+            // Call the loader
+            const response = await loader({ request } as any);
+            
+            // Verify the content of the response
+            const data = await response.json();
+            
+            // Should be a new visitor because > 24 hours passed
+            expect(data.v).toBe(1);
+            // Should be a bounce
+            expect(data.b).toBe(1);
+        });
+
+        test("if-modified-since is one second after midnight", async () => {
+            // Set system time to midnight exactly
+            const midnight = new Date();
+            midnight.setHours(0, 0, 0, 0);
+            vi.setSystemTime(midnight);
+            
+            // Create a request with an If-Modified-Since header from 1 second after midnight
+            const midnightPlusOneSecond = new Date(midnight.getTime());
+            midnightPlusOneSecond.setSeconds(midnightPlusOneSecond.getSeconds() + 1);
+            const ifModifiedSince = midnightPlusOneSecond.toUTCString();
+            
+            const request = new Request("http://localhost:3000/cache", {
+                headers: {
+                    "If-Modified-Since": ifModifiedSince,
+                },
+            });
+            
+            // Call the loader
+            const response = await loader({ request } as any);
+            
+            // Verify the content of the response
+            const data = await response.json();
+            
+            // Should NOT be a new visitor
+            expect(data.v).toBe(0);
+            // Should be a non-bounce (or negative bounce in the original tests)
+            expect(data.b).toBe(-1);
+        });
+
+        test("if-modified-since is two seconds after midnight", async () => {
+            // Set system time to midnight plus one second
+            const midnightPlusOneSecond = new Date();
+            midnightPlusOneSecond.setHours(0, 0, 1, 0);
+            vi.setSystemTime(midnightPlusOneSecond);
+            
+            // Create a request with an If-Modified-Since header from 2 seconds after midnight
+            const midnightPlusTwoSeconds = new Date(midnightPlusOneSecond.getTime());
+            midnightPlusTwoSeconds.setSeconds(midnightPlusTwoSeconds.getSeconds() + 1);
+            const ifModifiedSince = midnightPlusTwoSeconds.toUTCString();
+            
+            const request = new Request("http://localhost:3000/cache", {
+                headers: {
+                    "If-Modified-Since": ifModifiedSince,
+                },
+            });
+            
+            // Call the loader
+            const response = await loader({ request } as any);
+            
+            // Verify the content of the response
+            const data = await response.json();
+            
+            // Should NOT be a new visitor
+            expect(data.v).toBe(0);
+            // Should NOT be a bounce
+            expect(data.b).toBe(0);
         });
     });
 });

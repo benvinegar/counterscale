@@ -10,8 +10,8 @@ type CollectRequestParams = {
 const REQUEST_TIMEOUT = 1000;
 
 type CacheResponse = {
-    v: boolean;
-    b: boolean;
+    v: number; // 1 for new visit, 0 for returning visitor
+    b: number; // 1 for bounce, 0 for normal, -1 for anti-bounce
 };
 
 function queryParamStringify(obj: { [key: string]: string }) {
@@ -34,8 +34,8 @@ export function checkCacheStatus(baseUrl: string): Promise<CacheResponse> {
     return new Promise((resolve) => {
         // Default fallback response for any error case
         const fallbackResponse: CacheResponse = {
-            v: true,
-            b: true,
+            v: 1, // Assume new visit
+            b: 1, // Assume bounce
         };
 
         const cacheUrl = baseUrl.replace("collect", "cache");
