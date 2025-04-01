@@ -4,14 +4,23 @@ import * as requestModule from "../request";
 import { Client } from "../client";
 
 describe("trackPageview", () => {
-    // Mock the makeRequest function
+    // Mock the makeRequest and checkCacheStatus functions
     const makeRequestMock = vi.fn();
+    const checkCacheStatusMock = vi.fn();
 
     beforeEach(() => {
         // Mock the makeRequest function
         vi.spyOn(requestModule, "makeRequest").mockImplementation(
             makeRequestMock,
         );
+        
+        // Mock the checkCacheStatus function to return a default response
+        vi.spyOn(requestModule, "checkCacheStatus").mockImplementation(() => {
+            return Promise.resolve({
+                v: 1, // New visit
+                b: 1, // Bounce
+            });
+        });
 
         // Reset mocks between tests
         makeRequestMock.mockReset();
@@ -46,14 +55,14 @@ describe("trackPageview", () => {
         vi.restoreAllMocks();
     });
 
-    test("should make a request when host is not empty", () => {
+    test("should make a request when host is not empty", async () => {
         const client = new Client({
             siteId: "test-site",
             reporterUrl: "https://example.com/collect",
             autoTrackPageviews: false,
         });
 
-        trackPageview(client);
+        await trackPageview(client);
 
         expect(makeRequestMock).toHaveBeenCalledTimes(1);
         expect(makeRequestMock).toHaveBeenCalledWith(
@@ -63,11 +72,13 @@ describe("trackPageview", () => {
                 h: "http://localhost",
                 r: "",
                 sid: "test-site",
+                v: "1", // New visit
+                b: "1", // Bounce
             }),
         );
     });
 
-    test("should exit early when host is empty and not in Electron", () => {
+    test("should exit early when host is empty and not in Electron", async () => {
         // Mock empty host (file:/// URI)
         Object.defineProperty(window, "location", {
             writable: true,
@@ -90,13 +101,13 @@ describe("trackPageview", () => {
             autoTrackPageviews: false,
         });
 
-        trackPageview(client);
+        await trackPageview(client);
 
         // Verify that makeRequest was not called
         expect(makeRequestMock).not.toHaveBeenCalled();
     });
 
-    test("should make a request when host is empty but in Electron", () => {
+    test("should make a request when host is empty but in Electron", async () => {
         // Mock empty host (file:/// URI)
         Object.defineProperty(window, "location", {
             writable: true,
@@ -119,7 +130,7 @@ describe("trackPageview", () => {
             autoTrackPageviews: false,
         });
 
-        trackPageview(client);
+        await trackPageview(client);
 
         // Verify that makeRequest was called
         expect(makeRequestMock).toHaveBeenCalledTimes(1);

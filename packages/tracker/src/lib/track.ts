@@ -48,7 +48,10 @@ function getReferrer(hostname: string, referrer: string) {
     return referrer.split("?")[0];
 }
 
-export async function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
+export async function trackPageview(
+    client: Client,
+    opts: TrackPageviewOpts = {},
+) {
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
 
@@ -63,29 +66,21 @@ export async function trackPageview(client: Client, opts: TrackPageviewOpts = {}
     const { hostname, path } = getHostnameAndPath(url);
     const referrer = getReferrer(hostname, opts.referrer || "");
 
-    // First check the cache status to determine if this is a new visit or bounce
+    const d = {
+        p: path,
+        h: hostname,
+        r: referrer,
+        sid: client.siteId,
+    };
+
     try {
         const cacheStatus = await checkCacheStatus(client.reporterUrl);
-        
-        const d = {
-            p: path,
-            h: hostname,
-            r: referrer,
-            sid: client.siteId,
+
+        Object.assign(d, {
             v: cacheStatus.v.toString(),
             b: cacheStatus.b.toString(),
-        };
+        });
+    } catch {}
 
-        makeRequest(client.reporterUrl, d);
-    } catch (e) {
-        // If cache check fails, fall back to the original behavior
-        const d = {
-            p: path,
-            h: hostname,
-            r: referrer,
-            sid: client.siteId,
-        };
-
-        makeRequest(client.reporterUrl, d);
-    }
+    makeRequest(client.reporterUrl, d);
 }
