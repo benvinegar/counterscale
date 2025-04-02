@@ -18,7 +18,11 @@ export class Client {
 
         // default to true
         if (opts.autoTrackPageviews === undefined || opts.autoTrackPageviews) {
-            this._cleanupAutoTrackPageviews = autoTrackPageviews(this);
+            // Use setTimeout to ensure this runs after the constructor
+            // This helps with testing and avoids issues with async trackPageview
+            setTimeout(() => {
+                this._cleanupAutoTrackPageviews = autoTrackPageviews(this);
+            }, 0);
         }
     }
 

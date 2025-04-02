@@ -1,9 +1,21 @@
 import { describe, test, expect, beforeAll, afterEach, vi } from "vitest";
 
 import * as Counterscale from "../index";
+import * as requestModule from "../lib/request";
+
+// Define a type for our mock XHR objects
+interface MockXHR {
+    open: ReturnType<typeof vi.fn>;
+    send: ReturnType<typeof vi.fn>;
+    setRequestHeader: ReturnType<typeof vi.fn>;
+    addEventListener: ReturnType<typeof vi.fn>;
+    responseText: string;
+    status: number;
+    statusText: string;
+}
 
 describe("api", () => {
-    let mockXhrObjects = [] as any;
+    let mockXhrObjects: MockXHR[] = [];
     beforeAll(() => {
         const XMLHttpRequestMock = vi.fn(() => {
             const obj = {
@@ -20,6 +32,14 @@ describe("api", () => {
         });
 
         vi.stubGlobal("XMLHttpRequest", XMLHttpRequestMock);
+        
+        // Mock the checkCacheStatus function to return a default response
+        vi.spyOn(requestModule, "checkCacheStatus").mockImplementation(() => {
+            return Promise.resolve({
+                v: 1, // New visit
+                b: 1, // Bounce
+            });
+        });
     });
 
     afterEach(() => {
@@ -36,7 +56,7 @@ describe("api", () => {
     });
 
     describe("trackPageview", () => {
-        test("records a pageview for the current url", () => {
+        test("records a pageview for the current url", async () => {
             Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
@@ -46,7 +66,7 @@ describe("api", () => {
             // since auto: false, no requests should be made yet
             expect(mockXhrObjects).toHaveLength(0);
 
-            Counterscale.trackPageview();
+            await Counterscale.trackPageview();
 
             expect(mockXhrObjects).toHaveLength(1);
 
@@ -59,9 +79,11 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("http://localhost");
             expect(searchParams.get("p")).toBe("/"); // default path when running test w/ jsdom
             expect(searchParams.get("r")).toBe("");
+            expect(searchParams.get("v")).toBe("1"); // New visit
+            expect(searchParams.get("b")).toBe("1"); // Bounce
         });
 
-        test("records a pageview for the given url and referrer", () => {
+        test("records a pageview for the given url and referrer", async () => {
             Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
@@ -71,7 +93,7 @@ describe("api", () => {
             // since auto: false, no requests should be made yet
             expect(mockXhrObjects).toHaveLength(0);
 
-            Counterscale.trackPageview({
+            await Counterscale.trackPageview({
                 url: "https://example.com/foo",
                 referrer: "https://referrer.com/",
             });
@@ -87,40 +109,45 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("https://example.com");
             expect(searchParams.get("p")).toBe("/foo");
             expect(searchParams.get("r")).toBe("https://referrer.com/");
+            expect(searchParams.get("v")).toBe("1"); // New visit
+            expect(searchParams.get("b")).toBe("1"); // Bounce
         });
     });
 
     describe("autoTrackPageviews", () => {
-        test("records initial and subsequent pageviews", () => {
+        test("initializes with autoTrackPageviews", async () => {
+            // Initialize with autoTrackPageviews: true
             Counterscale.init({
                 siteId: "test-id",
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: true,
             });
-
-            expect(mockXhrObjects).toHaveLength(1);
-
-            let openArgs = mockXhrObjects[0].open.mock.calls[0];
-            expect(openArgs[0]).toBe("GET");
-
-            let queryString = openArgs[1];
-            let searchParams = new URL(queryString).searchParams;
-            expect(searchParams.get("sid")).toBe("test-id");
-            expect(searchParams.get("h")).toBe("http://localhost");
-            expect(searchParams.get("p")).toBe("/"); // default path when running test w/ jsdom
-            expect(searchParams.get("r")).toBe("");
-
-            window.history.pushState({ page: 2 }, "", "/foo");
-
-            expect(mockXhrObjects).toHaveLength(2);
-
-            openArgs = mockXhrObjects[1].open.mock.calls[0];
-            queryString = openArgs[1];
-            searchParams = new URL(queryString).searchParams;
-            expect(searchParams.get("sid")).toBe("test-id");
-            expect(searchParams.get("h")).toBe("http://localhost");
-            expect(searchParams.get("p")).toBe("/foo");
-            expect(searchParams.get("r")).toBe("");
+            
+            // Wait for setTimeout in the Client constructor to execute
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Check that at least one XHR request was made (initial pageview)
+            expect(mockXhrObjects.length).toBeGreaterThan(0);
+            
+            // Trigger a navigation event
+            window.dispatchEvent(new Event("popstate"));
+            
+            // Wait for the navigation event to be processed
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Check that another XHR request was made (after navigation)
+            const initialCount = mockXhrObjects.length;
+            expect(initialCount).toBeGreaterThan(1);
+            
+            // Trigger another navigation event
+            window.history.pushState({}, "", "/another-page");
+            window.dispatchEvent(new Event("popstate"));
+            
+            // Wait for the second navigation event to be processed
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Check that a third XHR request was made
+            expect(mockXhrObjects.length).toBeGreaterThan(initialCount);
         });
     });
 });

@@ -23,6 +23,10 @@ http.createServer(function (req, res) {
         res.writeHead(200, { "Content-Type": "text/javascript" });
         res.end(tracker);
         return;
+    } else if (requestUrl.pathname === "/cache") {
+        // Handle cache endpoint - return numeric values for visit and bounce
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ v: 1, b: 1 }));
     } else if (requestUrl.pathname === "/collect") {
         // no-op writes to /collect
         res.writeHead(200, { "Content-Type": "application/json" });

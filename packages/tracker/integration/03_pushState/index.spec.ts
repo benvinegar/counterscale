@@ -13,7 +13,19 @@ test("tracks pushState and popState events as pageviews", async ({ page }) => {
         }
     });
 
+    // Also listen for cache requests to help with debugging
+    const cacheRequests: Request[] = [];
+    page.on("request", (request) => {
+        if (request.url().includes("/cache")) {
+            cacheRequests.push(request);
+        }
+    });
+
     await page.goto("http://localhost:3004/03_pushState/");
+
+    // Wait for the collect request to be made after the cache request
+    await page.waitForTimeout(500);
+
     expect(collectRequests).toHaveLength(1);
 
     let request = collectRequests[0];
@@ -31,6 +43,9 @@ test("tracks pushState and popState events as pageviews", async ({ page }) => {
     // assert url changed
     expect(page.url()).toBe("http://localhost:3004/03_pushState/part_2");
 
+    // Wait for the collect request to be made after the cache request
+    await page.waitForTimeout(500);
+
     expect(collectRequests).toHaveLength(2);
     request = collectRequests[1];
     expect(request).toBeTruthy();
@@ -47,6 +62,9 @@ test("tracks pushState and popState events as pageviews", async ({ page }) => {
         //       to wait on networkidle instead
         waitUntil: "networkidle",
     });
+
+    // Wait for the collect request to be made after the cache request
+    await page.waitForTimeout(500);
 
     expect(page.url()).toBe("http://localhost:3004/03_pushState/");
     expect(collectRequests).toHaveLength(3);

@@ -1,6 +1,6 @@
 import type { Client } from "./client";
 import { instrumentHistoryBuiltIns } from "./instrument";
-import { makeRequest } from "./request";
+import { makeRequest, checkCacheStatus } from "./request";
 
 export type TrackPageviewOpts = {
     url?: string;
@@ -9,10 +9,10 @@ export type TrackPageviewOpts = {
 
 export function autoTrackPageviews(client: Client) {
     const cleanupFn = instrumentHistoryBuiltIns(() => {
-        trackPageview(client);
+        void trackPageview(client);
     });
 
-    trackPageview(client);
+    void trackPageview(client);
 
     return cleanupFn;
 }
@@ -48,7 +48,10 @@ function getReferrer(hostname: string, referrer: string) {
     return referrer.split("?")[0];
 }
 
-export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
+export async function trackPageview(
+    client: Client,
+    opts: TrackPageviewOpts = {},
+) {
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
 
@@ -69,6 +72,18 @@ export function trackPageview(client: Client, opts: TrackPageviewOpts = {}) {
         r: referrer,
         sid: client.siteId,
     };
+
+    try {
+        const cacheStatus = await checkCacheStatus(client.reporterUrl);
+
+        Object.assign(d, {
+            v: cacheStatus.v.toString(),
+            b: cacheStatus.b.toString(),
+        });
+    } catch {
+        // If cache check fails, we proceed without visit/bounce data
+        // The collect endpoint will handle the missing parameters
+    }
 
     makeRequest(client.reporterUrl, d);
 }

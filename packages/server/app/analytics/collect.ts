@@ -49,6 +49,12 @@ function getBounceValue(nextLastModifiedDate: Date | null): number {
     }
 }
 
+/**
+ * Checks if the request indicates a new visitor based on the If-Modified-Since header.
+ * Mimics browser caching behavior for cookieless tracking.
+ * @param ifModifiedSince The value of the If-Modified-Since header.
+ * @returns Object containing `newVisitor` boolean.
+ */
 function checkVisitorSession(ifModifiedSince: string | null): {
     newVisitor: boolean;
 } {
@@ -69,6 +75,41 @@ function checkVisitorSession(ifModifiedSince: string | null): {
     }
 
     return { newVisitor };
+}
+
+/**
+ * Handles cache-related headers (If-Modified-Since, Last-Modified) to determine
+ * visitor status (new visit) and bounce status for cookieless tracking.
+ *
+ * @param ifModifiedSince The value of the If-Modified-Since header from the request.
+ * @returns An object containing:
+ *  - `isVisit`: Number indicating if this is considered a new visit (1 for yes, 0 for no).
+ *  - `bounce`: Number indicating bounce status (1 for bounce, 0 for normal, -1 for anti-bounce).
+ *  - `nextLastModifiedDate`: The Date object to be set in the Last-Modified response header.
+ */
+export function handleCacheHeaders(ifModifiedSince: string | null): {
+    isVisit: number;
+    bounce: number;
+    nextLastModifiedDate: Date;
+} {
+    const { newVisitor } = checkVisitorSession(ifModifiedSince);
+    const nextLastModifiedDate = getNextLastModifiedDate(
+        ifModifiedSince ? new Date(ifModifiedSince) : null,
+    );
+    const bounceValue = getBounceValue(nextLastModifiedDate);
+
+    // Convert boolean to number (1 or 0)
+    const isVisit = newVisitor ? 1 : 0;
+
+    // If it's a new visit, it's a bounce (1)
+    // Otherwise, use the calculated bounce value (-1, 0, or 1)
+    const bounce = isVisit ? 1 : bounceValue;
+
+    return {
+        isVisit,
+        bounce,
+        nextLastModifiedDate,
+    };
 }
 
 function extractParamsFromQueryString(requestUrl: string): {
@@ -107,11 +148,30 @@ export function collectRequestHandler(
 
     const parsedUserAgent = new UAParser(userAgent);
 
-    const ifModifiedSince = request.headers.get("if-modified-since");
-    const { newVisitor } = checkVisitorSession(ifModifiedSince);
-    const nextLastModifiedDate = getNextLastModifiedDate(
-        ifModifiedSince ? new Date(ifModifiedSince) : null,
-    );
+    // Check if v and b (visit and bounce) are provided in the request parameters
+    // If they are, use them; otherwise, calculate them using the If-Modified-Since header
+    let isVisit = false;
+    let bounceValue = 0;
+    let nextLastModifiedDate: Date | undefined;
+
+    if (params.v !== undefined && params.b !== undefined) {
+        isVisit = params.v === "1";
+
+        // Parse bounce value - could be -1, 0, or 1
+        bounceValue = parseInt(params.b, 10);
+        if (isNaN(bounceValue) || bounceValue < -1 || bounceValue > 1) {
+            bounceValue = isVisit ? 1 : 0; // Default: if new visit, it's a bounce
+        }
+    } else {
+        // Fallback: if the client doesn't provide v and b, this is likely an old version of the tracking script
+
+        // In which case, use the old behavior of reading/setting cache headers here
+        const ifModifiedSince = request.headers.get("if-modified-since");
+        const cacheResult = handleCacheHeaders(ifModifiedSince);
+        isVisit = cacheResult.isVisit === 1;
+        bounceValue = cacheResult.bounce;
+        nextLastModifiedDate = cacheResult.nextLastModifiedDate;
+    }
 
     const browserVersion = maskBrowserVersion(
         parsedUserAgent.getBrowser().version,
@@ -122,9 +182,9 @@ export function collectRequestHandler(
         host: params.h,
         path: params.p,
         referrer: params.r,
-        newVisitor: newVisitor ? 1 : 0,
+        newVisitor: isVisit ? 1 : 0,
         newSession: 0, // dead column
-        bounce: newVisitor ? 1 : getBounceValue(nextLastModifiedDate),
+        bounce: bounceValue,
         // user agent stuff
         userAgent: userAgent,
         browserName: parsedUserAgent.getBrowser().name,
@@ -152,16 +212,21 @@ export function collectRequestHandler(
         uintArray[i] = gifData.charCodeAt(i);
     }
 
+    const headers: HeadersInit = {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "image/gif",
+        Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Tk: "N", // not tracking
+    };
+
+    if (nextLastModifiedDate) {
+        headers["Last-Modified"] = nextLastModifiedDate.toUTCString();
+    }
+
     return new Response(arrayBuffer, {
-        headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "image/gif",
-            Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-            "Last-Modified": nextLastModifiedDate.toUTCString(),
-            Tk: "N", // not tracking
-        },
+        headers,
         status: 200,
     });
 }
