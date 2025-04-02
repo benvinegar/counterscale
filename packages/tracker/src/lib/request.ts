@@ -28,9 +28,10 @@ function queryParamStringify(obj: { [key: string]: string }) {
 /**
  * Checks the cache status by calling the /cache endpoint
  * @param baseUrl The base URL for the API
+ * @param siteId The site ID to include in the cache URL
  * @returns A promise that resolves to the cache status
  */
-export function checkCacheStatus(baseUrl: string): Promise<CacheResponse> {
+export function checkCacheStatus(baseUrl: string, siteId: string): Promise<CacheResponse> {
     return new Promise((resolve) => {
         // Default fallback response for any error case
         const fallbackResponse: CacheResponse = {
@@ -38,7 +39,9 @@ export function checkCacheStatus(baseUrl: string): Promise<CacheResponse> {
             b: 1, // Assume bounce
         };
 
-        const cacheUrl = baseUrl.replace("collect", "cache");
+        // Replace the final /collect path segment with /cache and add site ID as a query parameter
+        // This ensures we don't accidentally replace "collect" if it appears in the hostname or elsewhere
+        const cacheUrl = `${baseUrl.replace(/\/collect$/, "/cache")}?sid=${encodeURIComponent(siteId)}`;
         const xhr = new XMLHttpRequest();
 
         xhr.open("GET", cacheUrl, true);

@@ -74,7 +74,7 @@ export async function trackPageview(
     };
 
     try {
-        const cacheStatus = await checkCacheStatus(client.reporterUrl);
+        const cacheStatus = await checkCacheStatus(client.reporterUrl, client.siteId);
 
         Object.assign(d, {
             v: cacheStatus.v.toString(),
