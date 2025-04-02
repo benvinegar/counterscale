@@ -4,9 +4,8 @@ import * as requestModule from "../request";
 import { Client } from "../client";
 
 describe("trackPageview", () => {
-    // Mock the makeRequest and checkCacheStatus functions
+    // Mock the makeRequest function
     const makeRequestMock = vi.fn();
-    const checkCacheStatusMock = vi.fn();
 
     beforeEach(() => {
         // Mock the makeRequest function

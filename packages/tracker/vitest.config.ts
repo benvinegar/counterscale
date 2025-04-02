@@ -17,5 +17,6 @@ export default defineConfig({
         },
         environment: "jsdom",
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     plugins: [tsconfigPaths() as any],
 });

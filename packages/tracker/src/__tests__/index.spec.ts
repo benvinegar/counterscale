@@ -3,8 +3,19 @@ import { describe, test, expect, beforeAll, afterEach, vi } from "vitest";
 import * as Counterscale from "../index";
 import * as requestModule from "../lib/request";
 
+// Define a type for our mock XHR objects
+interface MockXHR {
+    open: ReturnType<typeof vi.fn>;
+    send: ReturnType<typeof vi.fn>;
+    setRequestHeader: ReturnType<typeof vi.fn>;
+    addEventListener: ReturnType<typeof vi.fn>;
+    responseText: string;
+    status: number;
+    statusText: string;
+}
+
 describe("api", () => {
-    let mockXhrObjects = [] as any;
+    let mockXhrObjects: MockXHR[] = [];
     beforeAll(() => {
         const XMLHttpRequestMock = vi.fn(() => {
             const obj = {

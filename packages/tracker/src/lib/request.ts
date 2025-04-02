@@ -52,7 +52,7 @@ export function checkCacheStatus(baseUrl: string): Promise<CacheResponse> {
                         xhr.responseText,
                     ) as CacheResponse;
                     resolve(response);
-                } catch (e) {
+                } catch {
                     // If parsing fails, use fallback
                     resolve(fallbackResponse);
                 }

@@ -80,7 +80,10 @@ export async function trackPageview(
             v: cacheStatus.v.toString(),
             b: cacheStatus.b.toString(),
         });
-    } catch {}
+    } catch {
+        // If cache check fails, we proceed without visit/bounce data
+        // The collect endpoint will handle the missing parameters
+    }
 
     makeRequest(client.reporterUrl, d);
 }
