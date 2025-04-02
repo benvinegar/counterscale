@@ -10,8 +10,7 @@ type CollectRequestParams = {
 const REQUEST_TIMEOUT = 1000;
 
 type CacheResponse = {
-    v: number; // 1 for new visit, 0 for returning visitor
-    b: number; // 1 for bounce, 0 for normal, -1 for anti-bounce
+    ht: number; // Number of hits in the current session (hit type)
 };
 
 function queryParamStringify(obj: { [key: string]: string }) {
@@ -31,12 +30,14 @@ function queryParamStringify(obj: { [key: string]: string }) {
  * @param siteId The site ID to include in the cache URL
  * @returns A promise that resolves to the cache status
  */
-export function checkCacheStatus(baseUrl: string, siteId: string): Promise<CacheResponse> {
+export function checkCacheStatus(
+    baseUrl: string,
+    siteId: string,
+): Promise<CacheResponse> {
     return new Promise((resolve) => {
         // Default fallback response for any error case
         const fallbackResponse: CacheResponse = {
-            v: 1, // Assume new visit
-            b: 1, // Assume bounce
+            ht: 1, // Assume first hit (new visit)
         };
 
         // Replace the final /collect path segment with /cache and add site ID as a query parameter
@@ -46,7 +47,8 @@ export function checkCacheStatus(baseUrl: string, siteId: string): Promise<Cache
 
         xhr.open("GET", cacheUrl, true);
         xhr.timeout = REQUEST_TIMEOUT;
-        xhr.setRequestHeader("Content-Type", "application/json");
+        // needs to be text/plain or triggers preflight
+        xhr.setRequestHeader("Content-Type", "text/plain");
 
         xhr.onload = function () {
             if (xhr.status === 200) {

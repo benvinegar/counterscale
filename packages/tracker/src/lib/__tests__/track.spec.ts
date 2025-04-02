@@ -16,8 +16,7 @@ describe("trackPageview", () => {
         // Mock the checkCacheStatus function to return a default response
         vi.spyOn(requestModule, "checkCacheStatus").mockImplementation(() => {
             return Promise.resolve({
-                v: 1, // New visit
-                b: 1, // Bounce
+                ht: 1, // First hit (new visit)
             });
         });
 
@@ -71,8 +70,7 @@ describe("trackPageview", () => {
                 h: "http://localhost",
                 r: "",
                 sid: "test-site",
-                v: "1", // New visit
-                b: "1", // Bounce
+                ht: "1", // First hit (new visit)
             }),
         );
     });
