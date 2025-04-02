@@ -1,12 +1,5 @@
 // @vitest-environment jsdom
-import {
-    vi,
-    test,
-    describe,
-    beforeEach,
-    afterEach,
-    expect,
-} from "vitest";
+import { vi, test, describe, beforeEach, afterEach, expect } from "vitest";
 import "vitest-dom/extend-expect";
 
 import { loader } from "../cache";
@@ -25,43 +18,45 @@ describe("Cache route", () => {
         test("returns new visit for request with no If-Modified-Since header", async () => {
             // Create a request with no If-Modified-Since
             const request = new Request("http://localhost:3000/cache");
-            
+
             // Call the loader
             const response = await loader({ request } as any);
-            
+
             // Check response status
             expect(response.status).toBe(200);
-            
+
             // Verify the content of the response
             const data = await response.json();
             expect(data).toEqual({
-                v: 1,  // New visitor with no If-Modified-Since
-                b: 1,  // Also a bounce with no If-Modified-Since
+                v: 1, // New visitor with no If-Modified-Since
+                b: 1, // Also a bounce with no If-Modified-Since
             });
-            
+
             // Verify headers
-            expect(response.headers.get("Content-Type")).toBe("application/json");
+            expect(response.headers.get("Content-Type")).toBe(
+                "application/json",
+            );
             expect(response.headers.get("Last-Modified")).toBeTruthy();
-            expect(response.headers.get("Cache-Control")).toBe("no-cache, must-revalidate");
+            expect(response.headers.get("Cache-Control")).toBe("no-cache");
         });
 
         test("if-modified-since is within 30 minutes", async () => {
             // Create a request with a recent If-Modified-Since header (5 minutes ago)
             const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
             const ifModifiedSince = fiveMinutesAgo.toUTCString();
-            
+
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
                 },
             });
-            
+
             // Call the loader
             const response = await loader({ request } as any);
-            
+
             // Verify the content of the response
             const data = await response.json();
-            
+
             // Should NOT be a new visitor
             expect(data.v).toBe(0);
             // Should NOT be a bounce
@@ -71,24 +66,24 @@ describe("Cache route", () => {
         test("if-modified since is within 30 minutes but over day boundary", async () => {
             // Set system time to 00:15:00
             vi.setSystemTime(new Date("2024-01-18T00:15:00"));
-            
+
             // If the user last visited ~25 minutes ago, that occurred during
             // the prior day, so this should be considered a new visit
             const twentyFiveMinutesAgo = new Date(Date.now() - 25 * 60 * 1000);
             const ifModifiedSince = twentyFiveMinutesAgo.toUTCString();
-            
+
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
                 },
             });
-            
+
             // Call the loader
             const response = await loader({ request } as any);
-            
+
             // Verify the content of the response
             const data = await response.json();
-            
+
             // Should be a new visitor because a new day began
             expect(data.v).toBe(1);
             // Should be a bounce
@@ -97,21 +92,23 @@ describe("Cache route", () => {
 
         test("if-modified-since is over 30 days ago", async () => {
             // Create a request with an If-Modified-Since header from 31 days ago
-            const thirtyOneDaysAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+            const thirtyOneDaysAgo = new Date(
+                Date.now() - 31 * 24 * 60 * 60 * 1000,
+            );
             const ifModifiedSince = thirtyOneDaysAgo.toUTCString();
-            
+
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
                 },
             });
-            
+
             // Call the loader
             const response = await loader({ request } as any);
-            
+
             // Verify the content of the response
             const data = await response.json();
-            
+
             // Should be a new visitor because > 30 days passed
             expect(data.v).toBe(1);
             // Should be a bounce
@@ -120,21 +117,23 @@ describe("Cache route", () => {
 
         test("if-modified-since was yesterday", async () => {
             // Create a request with an If-Modified-Since header from 24 hours ago
-            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const twentyFourHoursAgo = new Date(
+                Date.now() - 24 * 60 * 60 * 1000,
+            );
             const ifModifiedSince = twentyFourHoursAgo.toUTCString();
-            
+
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
                 },
             });
-            
+
             // Call the loader
             const response = await loader({ request } as any);
-            
+
             // Verify the content of the response
             const data = await response.json();
-            
+
             // Should be a new visitor because > 24 hours passed
             expect(data.v).toBe(1);
             // Should be a bounce
@@ -146,24 +145,26 @@ describe("Cache route", () => {
             const midnight = new Date();
             midnight.setHours(0, 0, 0, 0);
             vi.setSystemTime(midnight);
-            
+
             // Create a request with an If-Modified-Since header from 1 second after midnight
             const midnightPlusOneSecond = new Date(midnight.getTime());
-            midnightPlusOneSecond.setSeconds(midnightPlusOneSecond.getSeconds() + 1);
+            midnightPlusOneSecond.setSeconds(
+                midnightPlusOneSecond.getSeconds() + 1,
+            );
             const ifModifiedSince = midnightPlusOneSecond.toUTCString();
-            
+
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
                 },
             });
-            
+
             // Call the loader
             const response = await loader({ request } as any);
-            
+
             // Verify the content of the response
             const data = await response.json();
-            
+
             // Should NOT be a new visitor
             expect(data.v).toBe(0);
             // Should be a non-bounce (or negative bounce in the original tests)
@@ -175,24 +176,28 @@ describe("Cache route", () => {
             const midnightPlusOneSecond = new Date();
             midnightPlusOneSecond.setHours(0, 0, 1, 0);
             vi.setSystemTime(midnightPlusOneSecond);
-            
+
             // Create a request with an If-Modified-Since header from 2 seconds after midnight
-            const midnightPlusTwoSeconds = new Date(midnightPlusOneSecond.getTime());
-            midnightPlusTwoSeconds.setSeconds(midnightPlusTwoSeconds.getSeconds() + 1);
+            const midnightPlusTwoSeconds = new Date(
+                midnightPlusOneSecond.getTime(),
+            );
+            midnightPlusTwoSeconds.setSeconds(
+                midnightPlusTwoSeconds.getSeconds() + 1,
+            );
             const ifModifiedSince = midnightPlusTwoSeconds.toUTCString();
-            
+
             const request = new Request("http://localhost:3000/cache", {
                 headers: {
                     "If-Modified-Since": ifModifiedSince,
                 },
             });
-            
+
             // Call the loader
             const response = await loader({ request } as any);
-            
+
             // Verify the content of the response
             const data = await response.json();
-            
+
             // Should NOT be a new visitor
             expect(data.v).toBe(0);
             // Should NOT be a bounce

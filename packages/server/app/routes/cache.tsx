@@ -17,18 +17,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     // Use shorter parameter names for HTTP transmission
     const payload = {
-        v: isVisit,  // 1 or 0
-        b: bounce,   // -1, 0, or 1
+        v: isVisit, // 1 or 0
+        b: bounce, // -1, 0, or 1
     };
 
     // Return the JSON payload with the appropriate Last-Modified header
     return new Response(JSON.stringify(payload), {
         headers: {
+            "Access-Control-Allow-Origin": "*",
             "Content-Type": "application/json",
             "Last-Modified": nextLastModifiedDate.toUTCString(),
-            // Set restrictive cache control headers to ensure the browser
-            // always sends If-Modified-Since for this resource
-            "Cache-Control": "no-cache, must-revalidate",
+            Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+            Tk: "N", // not tracking
         },
     });
 }
