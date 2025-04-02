@@ -97,10 +97,10 @@ export function handleCacheHeaders(ifModifiedSince: string | null): {
         ifModifiedSince ? new Date(ifModifiedSince) : null,
     );
     const bounceValue = getBounceValue(nextLastModifiedDate);
-    
+
     // Convert boolean to number (1 or 0)
     const isVisit = newVisitor ? 1 : 0;
-    
+
     // If it's a new visit, it's a bounce (1)
     // Otherwise, use the calculated bounce value (-1, 0, or 1)
     const bounce = isVisit ? 1 : bounceValue;
@@ -152,26 +152,20 @@ export function collectRequestHandler(
     // If they are, use them; otherwise, calculate them using the If-Modified-Since header
     let isVisit = false;
     let bounceValue = 0;
-    let nextLastModifiedDate: Date;
+    let nextLastModifiedDate: Date | undefined;
 
     if (params.v !== undefined && params.b !== undefined) {
-        // Use the values provided by the client
         isVisit = params.v === "1";
+
         // Parse bounce value - could be -1, 0, or 1
         bounceValue = parseInt(params.b, 10);
-        
-        // Ensure it's a valid value
         if (isNaN(bounceValue) || bounceValue < -1 || bounceValue > 1) {
             bounceValue = isVisit ? 1 : 0; // Default: if new visit, it's a bounce
         }
-
-        // Still need to get the next last modified date for the response header
-        const ifModifiedSince = request.headers.get("if-modified-since");
-        nextLastModifiedDate = getNextLastModifiedDate(
-            ifModifiedSince ? new Date(ifModifiedSince) : null,
-        );
     } else {
-        // Calculate values using the If-Modified-Since header
+        // Fallback: if the client doesn't provide v and b, this is likely an old version of the tracking script
+
+        // In which case, use the old behavior of reading/setting cache headers here
         const ifModifiedSince = request.headers.get("if-modified-since");
         const cacheResult = handleCacheHeaders(ifModifiedSince);
         isVisit = cacheResult.isVisit === 1;
@@ -218,16 +212,21 @@ export function collectRequestHandler(
         uintArray[i] = gifData.charCodeAt(i);
     }
 
+    const headers: HeadersInit = {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "image/gif",
+        Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Tk: "N", // not tracking
+    };
+
+    if (nextLastModifiedDate) {
+        headers["Last-Modified"] = nextLastModifiedDate.toUTCString();
+    }
+
     return new Response(arrayBuffer, {
-        headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "image/gif",
-            Expires: "Mon, 01 Jan 1990 00:00:00 GMT",
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-            "Last-Modified": nextLastModifiedDate.toUTCString(),
-            Tk: "N", // not tracking
-        },
+        headers,
         status: 200,
     });
 }
