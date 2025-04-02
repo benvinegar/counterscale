@@ -74,10 +74,13 @@ export async function trackPageview(
     };
 
     try {
-        const cacheStatus = await checkCacheStatus(client.reporterUrl, client.siteId);
+        const cacheStatus = await checkCacheStatus(
+            client.reporterUrl,
+            client.siteId,
+        );
 
         Object.assign(d, {
-            ht: cacheStatus.ht.toString(),
+            hits: cacheStatus.hits.toString(),
         });
     } catch {
         // If cache check fails, we proceed without hit count data

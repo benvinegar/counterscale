@@ -28,7 +28,7 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
             expect(data).toEqual({
-                ht: 1, // First hit (new visit) with no If-Modified-Since
+                hits: 1, // First hit (new visit) with no If-Modified-Since
             });
 
             // Verify headers
@@ -57,7 +57,7 @@ describe("Cache route", () => {
             const data = await response.json();
 
             // Should return a hit count > 0 for returning visitors
-            expect(data.ht).toBeGreaterThan(0);
+            expect(data.hits).toBeGreaterThan(0);
             // The hit count should be the seconds value of the next date
             // We don't test for a specific value since it's implementation-dependent
         });
@@ -84,7 +84,7 @@ describe("Cache route", () => {
             const data = await response.json();
 
             // Should be the first hit (new visitor) because a new day began
-            expect(data.ht).toBe(1);
+            expect(data.hits).toBe(1);
         });
 
         test("if-modified-since is over 30 days ago", async () => {
@@ -107,7 +107,7 @@ describe("Cache route", () => {
             const data = await response.json();
 
             // Should be the first hit (new visitor) because > 30 days passed
-            expect(data.ht).toBe(1);
+            expect(data.hits).toBe(1);
         });
 
         test("if-modified-since was yesterday", async () => {
@@ -130,7 +130,7 @@ describe("Cache route", () => {
             const data = await response.json();
 
             // Should be the first hit (new visitor) because > 24 hours passed
-            expect(data.ht).toBe(1);
+            expect(data.hits).toBe(1);
         });
 
         test("if-modified-since is one second after midnight", async () => {
@@ -159,7 +159,7 @@ describe("Cache route", () => {
             const data = await response.json();
 
             // Should return a hit count > 0 for returning visitors
-            expect(data.ht).toBe(2);
+            expect(data.hits).toBe(2);
             // The hit count should be the seconds value of the next date
             // We don't test for a specific value since it's implementation-dependent
         });
@@ -192,7 +192,7 @@ describe("Cache route", () => {
             const data = await response.json();
 
             // Should be the third hit (returning visitor)
-            expect(data.ht).toBe(3);
+            expect(data.hits).toBe(3);
         });
     });
 });

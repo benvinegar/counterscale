@@ -32,11 +32,11 @@ describe("api", () => {
         });
 
         vi.stubGlobal("XMLHttpRequest", XMLHttpRequestMock);
-        
+
         // Mock the checkCacheStatus function to return a default response
         vi.spyOn(requestModule, "checkCacheStatus").mockImplementation(() => {
             return Promise.resolve({
-                ht: 1, // First hit (new visit)
+                hits: 1, // First hit (new visit)
             });
         });
     });
@@ -78,7 +78,7 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("http://localhost");
             expect(searchParams.get("p")).toBe("/"); // default path when running test w/ jsdom
             expect(searchParams.get("r")).toBe("");
-            expect(searchParams.get("ht")).toBe("1"); // First hit (new visit)
+            expect(searchParams.get("hits")).toBe("1"); // First hit (new visit)
         });
 
         test("records a pageview for the given url and referrer", async () => {
@@ -107,7 +107,7 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("https://example.com");
             expect(searchParams.get("p")).toBe("/foo");
             expect(searchParams.get("r")).toBe("https://referrer.com/");
-            expect(searchParams.get("ht")).toBe("1"); // First hit (new visit)
+            expect(searchParams.get("hits")).toBe("1"); // First hit (new visit)
         });
     });
 
@@ -119,30 +119,30 @@ describe("api", () => {
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: true,
             });
-            
+
             // Wait for setTimeout in the Client constructor to execute
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
             // Check that at least one XHR request was made (initial pageview)
             expect(mockXhrObjects.length).toBeGreaterThan(0);
-            
+
             // Trigger a navigation event
             window.dispatchEvent(new Event("popstate"));
-            
+
             // Wait for the navigation event to be processed
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
             // Check that another XHR request was made (after navigation)
             const initialCount = mockXhrObjects.length;
             expect(initialCount).toBeGreaterThan(1);
-            
+
             // Trigger another navigation event
             window.history.pushState({}, "", "/another-page");
             window.dispatchEvent(new Event("popstate"));
-            
+
             // Wait for the second navigation event to be processed
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
             // Check that a third XHR request was made
             expect(mockXhrObjects.length).toBeGreaterThan(initialCount);
         });

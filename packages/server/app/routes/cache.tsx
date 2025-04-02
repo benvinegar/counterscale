@@ -12,12 +12,11 @@ import { handleCacheHeaders } from "~/analytics/collect";
 export async function loader({ request }: LoaderFunctionArgs) {
     const ifModifiedSince = request.headers.get("if-modified-since");
 
-    const { ht: hitCount, nextLastModifiedDate } =
-        handleCacheHeaders(ifModifiedSince);
+    const { hits, nextLastModifiedDate } = handleCacheHeaders(ifModifiedSince);
 
     // Return the hit count to the client
     const payload = {
-        ht: hitCount, // Number of hits in the current session (hit type)
+        hits, // Number of hits in the current session
     };
 
     // Return the JSON payload with the appropriate Last-Modified header
