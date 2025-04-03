@@ -3,8 +3,7 @@ type CollectRequestParams = {
     h: string; // host
     r: string; // referrer
     sid: string; // siteId
-    v?: string; // whether this is a new visit (1 or 0)
-    b?: string; // whether this is a bounce (1 or 0)
+    hits?: string; // hit count (1=first visit, 2=anti-bounce, 3=regular)
 };
 
 const REQUEST_TIMEOUT = 1000;

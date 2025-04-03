@@ -23,42 +23,25 @@ function getNextLastModifiedDate(current: Date | null): Date {
     let next = current ? current : midnight;
     next = midnight.getTime() - next.getTime() > 0 ? midnight : next;
 
-    // Get the current seconds value
+    // Next seconds value is the current seconds value + 1, capped at 3
     const currentSeconds = next.getSeconds();
-    
-    // We only care about 3 states:
-    // 0 seconds: First visit (will become 1 after increment)
-    // 1 second: Anti-bounce (will become 2 after increment)
-    // 2 seconds: Regular pageview (will become 3 after increment)
-    // Any value > 2 should remain at 2 (will become 3 after increment)
-    const cappedSeconds = currentSeconds > 2 ? 2 : currentSeconds;
-    
-    // Reset seconds to the capped value
-    next.setSeconds(cappedSeconds);
-    
-    // increment counter (max value will be 3)
-    next.setSeconds(next.getSeconds() + 1);
+    next.setSeconds(Math.min(3, currentSeconds + 1));
+
     return next;
 }
 
-function getBounceValue(nextLastModifiedDate: Date | null): number {
-    if (!nextLastModifiedDate) {
-        return 0;
-    }
-
-    const midnight = getMidnightDate();
-
-    // NOTE: minus one because this is the response last modified date
-    const visits =
-        (nextLastModifiedDate.getTime() - midnight.getTime()) / 1000 - 1;
-
-    switch (visits) {
-        case 0:
-            return 1;
-        case 1:
-            return -1;
-        default:
-            return 0;
+/**
+ * Calculate bounce value based on hit count
+ * @param hits The number of hits (1-3)
+ * @returns Bounce value: 1 (bounce), -1 (anti-bounce), or 0 (normal)
+ */
+function getBounceValue(hits: number): number {
+    if (hits === 1) {
+        return 1; // First hit = bounce
+    } else if (hits === 2) {
+        return -1; // Second hit = anti-bounce
+    } else {
+        return 0; // Third+ hit = normal
     }
 }
 
@@ -115,7 +98,7 @@ export function handleCacheHeaders(ifModifiedSince: string | null): {
     // 2 - anti bounce
     // 3 - regular page view (3+ hits)
     let hits = newVisitor ? 1 : nextLastModifiedDate.getSeconds();
-    
+
     // Cap the hit count at 3 to avoid exposing exact hit counts publicly
     if (hits > 3) {
         hits = 3;
@@ -170,63 +153,27 @@ export function collectRequestHandler(
     let nextLastModifiedDate: Date | undefined;
     let hits = 0;
 
+    // Get hit count from params or cache headers
     if (params.hits !== undefined) {
-        // Parse hits count
+        // From params
         hits = parseInt(params.hits, 10);
-        if (isNaN(hits) || hits < 0) {
-            hits = 0; // Default to 0 if invalid
-        }
-        
-        // Cap the hit count at 3 to avoid exposing exact hit counts publicly
-        // 1 - first visit
-        // 2 - anti bounce
-        // 3 - regular page view (3+ hits)
-        if (hits > 3) {
-            hits = 3;
-        }
+        if (isNaN(hits) || hits <= 0) hits = 1;
+        if (hits > 3) hits = 3;
 
-        // Derive visit and bounce values from hits
-        isVisit = hits === 1; // First hit means it's a new visit
-
-        // Determine bounce value based on hits:
-        // - 1 hit: it's a bounce (1)
-        // - 2 hits: it's an anti-bounce (-1)
-        // - 3+ hits: it's a normal visit (0)
-        if (hits === 1) {
-            bounceValue = 1; // Bounce
-        } else if (hits === 2) {
-            bounceValue = -1; // Anti-bounce
-        } else {
-            bounceValue = 0; // Normal (3+ hits)
-        }
-    } else if (params.v !== undefined && params.b !== undefined) {
-        // Legacy support for v and b parameters (for backward compatibility)
-        isVisit = params.v === "1";
-
-        // Parse bounce value - could be -1, 0, or 1
-        bounceValue = parseInt(params.b, 10);
-        if (isNaN(bounceValue) || bounceValue < -1 || bounceValue > 1) {
-            bounceValue = isVisit ? 1 : 0; // Default: if new visit, it's a bounce
-        }
+        // Don't set nextLastModifiedDate when hits is provided
+        nextLastModifiedDate = undefined;
     } else {
-        // Fallback: if the client doesn't provide hits or v/b, use cache headers
+        // From cache headers
         const ifModifiedSince = request.headers.get("if-modified-since");
         const cacheResult = handleCacheHeaders(ifModifiedSince);
         hits = cacheResult.hits;
-
-        // Derive visit and bounce values from hits
-        isVisit = hits === 1; // First hit means it's a new visit
-
-        if (hits === 1) {
-            bounceValue = 1; // Bounce
-        } else if (hits === 2) {
-            bounceValue = -1; // Anti-bounce
-        } else {
-            bounceValue = 0; // Normal (3+ hits)
-        }
-
         nextLastModifiedDate = cacheResult.nextLastModifiedDate;
     }
+
+    isVisit = hits === 1; // if first hit, it is a visit
+
+    // Get bounce value based on hit count
+    bounceValue = getBounceValue(hits);
 
     const browserVersion = maskBrowserVersion(
         parsedUserAgent.getBrowser().version,
