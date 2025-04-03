@@ -74,14 +74,16 @@ export async function trackPageview(
     };
 
     try {
-        const cacheStatus = await checkCacheStatus(client.reporterUrl, client.siteId);
+        const cacheStatus = await checkCacheStatus(
+            client.reporterUrl,
+            client.siteId,
+        );
 
         Object.assign(d, {
-            v: cacheStatus.v.toString(),
-            b: cacheStatus.b.toString(),
+            hits: cacheStatus.hits.toString(),
         });
     } catch {
-        // If cache check fails, we proceed without visit/bounce data
+        // If cache check fails, we proceed without hit count data
         // The collect endpoint will handle the missing parameters
     }
 

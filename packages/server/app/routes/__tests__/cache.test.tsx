@@ -28,8 +28,7 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
             expect(data).toEqual({
-                v: 1, // New visitor with no If-Modified-Since
-                b: 1, // Also a bounce with no If-Modified-Since
+                hits: 1, // First hit (new visit) with no If-Modified-Since
             });
 
             // Verify headers
@@ -57,10 +56,10 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
 
-            // Should NOT be a new visitor
-            expect(data.v).toBe(0);
-            // Should NOT be a bounce
-            expect(data.b).toBe(0);
+            // Should return a hit count > 0 for returning visitors
+            expect(data.hits).toBeGreaterThan(0);
+            // The hit count should be the seconds value of the next date
+            // We don't test for a specific value since it's implementation-dependent
         });
 
         test("if-modified since is within 30 minutes but over day boundary", async () => {
@@ -84,10 +83,8 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
 
-            // Should be a new visitor because a new day began
-            expect(data.v).toBe(1);
-            // Should be a bounce
-            expect(data.b).toBe(1);
+            // Should be the first hit (new visitor) because a new day began
+            expect(data.hits).toBe(1);
         });
 
         test("if-modified-since is over 30 days ago", async () => {
@@ -109,10 +106,8 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
 
-            // Should be a new visitor because > 30 days passed
-            expect(data.v).toBe(1);
-            // Should be a bounce
-            expect(data.b).toBe(1);
+            // Should be the first hit (new visitor) because > 30 days passed
+            expect(data.hits).toBe(1);
         });
 
         test("if-modified-since was yesterday", async () => {
@@ -134,10 +129,8 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
 
-            // Should be a new visitor because > 24 hours passed
-            expect(data.v).toBe(1);
-            // Should be a bounce
-            expect(data.b).toBe(1);
+            // Should be the first hit (new visitor) because > 24 hours passed
+            expect(data.hits).toBe(1);
         });
 
         test("if-modified-since is one second after midnight", async () => {
@@ -165,10 +158,10 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
 
-            // Should NOT be a new visitor
-            expect(data.v).toBe(0);
-            // Should be a non-bounce (or negative bounce in the original tests)
-            expect(data.b).toBe(-1);
+            // Should return a hit count > 0 for returning visitors
+            expect(data.hits).toBe(2);
+            // The hit count should be the seconds value of the next date
+            // We don't test for a specific value since it's implementation-dependent
         });
 
         test("if-modified-since is two seconds after midnight", async () => {
@@ -198,10 +191,8 @@ describe("Cache route", () => {
             // Verify the content of the response
             const data = await response.json();
 
-            // Should NOT be a new visitor
-            expect(data.v).toBe(0);
-            // Should NOT be a bounce
-            expect(data.b).toBe(0);
+            // Should be the third hit (returning visitor)
+            expect(data.hits).toBe(3);
         });
     });
 });

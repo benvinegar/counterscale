@@ -4,21 +4,19 @@ import { handleCacheHeaders } from "~/analytics/collect";
 /**
  * Loader function for the /cache route.
  *
- * This route evaluates the If-Modified-Since header to determine if the request
- * corresponds to a new visit or a bounce, based on the cookieless tracking logic.
+ * This route evaluates the If-Modified-Since header to determine the number of hits
+ * within the current session, based on the cookieless tracking logic.
  * It returns this information as JSON and sets the Last-Modified header for the
  * next request.
  */
 export async function loader({ request }: LoaderFunctionArgs) {
     const ifModifiedSince = request.headers.get("if-modified-since");
 
-    const { isVisit, bounce, nextLastModifiedDate } =
-        handleCacheHeaders(ifModifiedSince);
+    const { hits, nextLastModifiedDate } = handleCacheHeaders(ifModifiedSince);
 
-    // Use shorter parameter names for HTTP transmission
+    // Return the hit count to the client
     const payload = {
-        v: isVisit, // 1 or 0
-        b: bounce, // -1, 0, or 1
+        hits, // Number of hits in the current session
     };
 
     // Return the JSON payload with the appropriate Last-Modified header

@@ -23,29 +23,25 @@ function getNextLastModifiedDate(current: Date | null): Date {
     let next = current ? current : midnight;
     next = midnight.getTime() - next.getTime() > 0 ? midnight : next;
 
-    // increment counter
-    next.setSeconds(next.getSeconds() + 1);
+    // Next seconds value is the current seconds value + 1, capped at 3
+    const currentSeconds = next.getSeconds();
+    next.setSeconds(Math.min(3, currentSeconds + 1));
+
     return next;
 }
 
-function getBounceValue(nextLastModifiedDate: Date | null): number {
-    if (!nextLastModifiedDate) {
-        return 0;
-    }
-
-    const midnight = getMidnightDate();
-
-    // NOTE: minus one because this is the response last modified date
-    const visits =
-        (nextLastModifiedDate.getTime() - midnight.getTime()) / 1000 - 1;
-
-    switch (visits) {
-        case 0:
-            return 1;
-        case 1:
-            return -1;
-        default:
-            return 0;
+/**
+ * Calculate bounce value based on hit count
+ * @param hits The number of hits (1-3)
+ * @returns Bounce value: 1 (bounce), -1 (anti-bounce), or 0 (normal)
+ */
+function getBounceValue(hits: number): number {
+    if (hits === 1) {
+        return 1; // First hit = bounce
+    } else if (hits === 2) {
+        return -1; // Second hit = anti-bounce
+    } else {
+        return 0; // Third+ hit = normal
     }
 }
 
@@ -79,35 +75,37 @@ function checkVisitorSession(ifModifiedSince: string | null): {
 
 /**
  * Handles cache-related headers (If-Modified-Since, Last-Modified) to determine
- * visitor status (new visit) and bounce status for cookieless tracking.
+ * visitor status based on hit count for cookieless tracking.
  *
  * @param ifModifiedSince The value of the If-Modified-Since header from the request.
  * @returns An object containing:
- *  - `isVisit`: Number indicating if this is considered a new visit (1 for yes, 0 for no).
- *  - `bounce`: Number indicating bounce status (1 for bounce, 0 for normal, -1 for anti-bounce).
+ *  - `hits`: Number indicating the count of hits within the current session.
  *  - `nextLastModifiedDate`: The Date object to be set in the Last-Modified response header.
  */
 export function handleCacheHeaders(ifModifiedSince: string | null): {
-    isVisit: number;
-    bounce: number;
+    hits: number;
     nextLastModifiedDate: Date;
 } {
     const { newVisitor } = checkVisitorSession(ifModifiedSince);
     const nextLastModifiedDate = getNextLastModifiedDate(
         ifModifiedSince ? new Date(ifModifiedSince) : null,
     );
-    const bounceValue = getBounceValue(nextLastModifiedDate);
 
-    // Convert boolean to number (1 or 0)
-    const isVisit = newVisitor ? 1 : 0;
+    // Calculate hits from the seconds component of the date
+    // If it's a new day or first visit, hits will be 1
+    // Otherwise, it's based on the seconds value, but capped at 3
+    // 1 - first visit
+    // 2 - anti bounce
+    // 3 - regular page view (3+ hits)
+    let hits = newVisitor ? 1 : nextLastModifiedDate.getSeconds();
 
-    // If it's a new visit, it's a bounce (1)
-    // Otherwise, use the calculated bounce value (-1, 0, or 1)
-    const bounce = isVisit ? 1 : bounceValue;
+    // Cap the hit count at 3 to avoid exposing exact hit counts publicly
+    if (hits > 3) {
+        hits = 3;
+    }
 
     return {
-        isVisit,
-        bounce,
+        hits,
         nextLastModifiedDate,
     };
 }
@@ -148,30 +146,34 @@ export function collectRequestHandler(
 
     const parsedUserAgent = new UAParser(userAgent);
 
-    // Check if v and b (visit and bounce) are provided in the request parameters
-    // If they are, use them; otherwise, calculate them using the If-Modified-Since header
+    // Check if hits parameter is provided in the request
+    // If it is, use it to derive visit and bounce values; otherwise, calculate them using the If-Modified-Since header
     let isVisit = false;
     let bounceValue = 0;
     let nextLastModifiedDate: Date | undefined;
+    let hits = 0;
 
-    if (params.v !== undefined && params.b !== undefined) {
-        isVisit = params.v === "1";
+    // Get hit count from params or cache headers
+    if (params.hits !== undefined) {
+        // From params
+        hits = parseInt(params.hits, 10);
+        if (isNaN(hits) || hits <= 0) hits = 1;
+        if (hits > 3) hits = 3;
 
-        // Parse bounce value - could be -1, 0, or 1
-        bounceValue = parseInt(params.b, 10);
-        if (isNaN(bounceValue) || bounceValue < -1 || bounceValue > 1) {
-            bounceValue = isVisit ? 1 : 0; // Default: if new visit, it's a bounce
-        }
+        // Don't set nextLastModifiedDate when hits is provided
+        nextLastModifiedDate = undefined;
     } else {
-        // Fallback: if the client doesn't provide v and b, this is likely an old version of the tracking script
-
-        // In which case, use the old behavior of reading/setting cache headers here
+        // From cache headers
         const ifModifiedSince = request.headers.get("if-modified-since");
         const cacheResult = handleCacheHeaders(ifModifiedSince);
-        isVisit = cacheResult.isVisit === 1;
-        bounceValue = cacheResult.bounce;
+        hits = cacheResult.hits;
         nextLastModifiedDate = cacheResult.nextLastModifiedDate;
     }
+
+    isVisit = hits === 1; // if first hit, it is a visit
+
+    // Get bounce value based on hit count
+    bounceValue = getBounceValue(hits);
 
     const browserVersion = maskBrowserVersion(
         parsedUserAgent.getBrowser().version,
