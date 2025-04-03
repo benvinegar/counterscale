@@ -70,7 +70,7 @@ describe("trackPageview", () => {
                 h: "http://localhost",
                 r: "",
                 sid: "test-site",
-                hits: "1", // First hit (new visit)
+                ht: "1", // First hit (new visit)
             }),
         );
     });

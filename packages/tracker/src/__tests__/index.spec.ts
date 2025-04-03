@@ -78,7 +78,7 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("http://localhost");
             expect(searchParams.get("p")).toBe("/"); // default path when running test w/ jsdom
             expect(searchParams.get("r")).toBe("");
-            expect(searchParams.get("hits")).toBe("1"); // First hit (new visit)
+            expect(searchParams.get("ht")).toBe("1"); // First hit (new visit)
         });
 
         test("records a pageview for the given url and referrer", async () => {
@@ -107,7 +107,7 @@ describe("api", () => {
             expect(searchParams.get("h")).toBe("https://example.com");
             expect(searchParams.get("p")).toBe("/foo");
             expect(searchParams.get("r")).toBe("https://referrer.com/");
-            expect(searchParams.get("hits")).toBe("1"); // First hit (new visit)
+            expect(searchParams.get("ht")).toBe("1"); // First hit (new visit)
         });
     });
 
