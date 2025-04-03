@@ -16,7 +16,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     // Return the hit count to the client
     const payload = {
-        hits, // Number of hits in the current session
+        ht: hits, // Number of hits in the current session (hit type)
     };
 
     // Return the JSON payload with the appropriate Last-Modified header

@@ -146,7 +146,7 @@ export function collectRequestHandler(
 
     const parsedUserAgent = new UAParser(userAgent);
 
-    // Check if hits parameter is provided in the request
+    // Check if hit type parameter is provided in the request
     // If it is, use it to derive visit and bounce values; otherwise, calculate them using the If-Modified-Since header
     let isVisit = false;
     let bounceValue = 0;
@@ -154,13 +154,13 @@ export function collectRequestHandler(
     let hits = 0;
 
     // Get hit count from params or cache headers
-    if (params.hits !== undefined) {
+    if (params.ht !== undefined) {
         // From params
-        hits = parseInt(params.hits, 10);
+        hits = parseInt(params.ht, 10);
         if (isNaN(hits) || hits <= 0) hits = 1;
         if (hits > 3) hits = 3;
 
-        // Don't set nextLastModifiedDate when hits is provided
+        // Don't set nextLastModifiedDate when ht is provided
         nextLastModifiedDate = undefined;
     } else {
         // From cache headers

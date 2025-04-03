@@ -80,7 +80,7 @@ export async function trackPageview(
         );
 
         Object.assign(d, {
-            hits: cacheStatus.hits.toString(),
+            ht: cacheStatus.ht.toString(),
         });
     } catch {
         // If cache check fails, we proceed without hit count data

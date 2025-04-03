@@ -9,7 +9,7 @@ type CollectRequestParams = {
 const REQUEST_TIMEOUT = 1000;
 
 type CacheResponse = {
-    hits: number; // Number of hits in the current session
+    ht: number; // Number of hits in the current session (hit type)
 };
 
 function queryParamStringify(obj: { [key: string]: string }) {
@@ -36,7 +36,7 @@ export function checkCacheStatus(
     return new Promise((resolve) => {
         // Default fallback response for any error case
         const fallbackResponse: CacheResponse = {
-            hits: 1, // Assume first hit (new visit)
+            ht: 1, // Assume first hit (new visit)
         };
 
         // Replace the final /collect path segment with /cache and add site ID as a query parameter

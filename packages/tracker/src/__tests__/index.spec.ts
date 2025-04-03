@@ -36,7 +36,7 @@ describe("api", () => {
         // Mock the checkCacheStatus function to return a default response
         vi.spyOn(requestModule, "checkCacheStatus").mockImplementation(() => {
             return Promise.resolve({
-                hits: 1, // First hit (new visit)
+                ht: 1, // First hit (new visit)
             });
         });
     });

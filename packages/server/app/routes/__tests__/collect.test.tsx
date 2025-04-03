@@ -22,14 +22,14 @@ describe("collect endpoint", () => {
         process.env.TZ = originalTZ;
     });
 
-    test("accepts hits parameter and doesn't return Last-Modified header", async () => {
-        // Create a request with hits parameter
-        const requestWithHits = new Request(
-            "https://example.com/collect?sid=test-site&p=/test&h=example.com&r=&hits=1",
+    test("accepts ht parameter and doesn't return Last-Modified header", async () => {
+        // Create a request with ht parameter
+        const requestWithHt = new Request(
+            "https://example.com/collect?sid=test-site&p=/test&h=example.com&r=&ht=1",
             { headers: new Headers() },
         );
 
-        const response = await collectRequestHandler(requestWithHits, mockEnv);
+        const response = await collectRequestHandler(requestWithHt, mockEnv);
 
         // Verify standard headers
         expect(response.status).toBe(200);
@@ -37,26 +37,26 @@ describe("collect endpoint", () => {
         expect(response.headers.get("Cache-Control")).toBe("no-cache");
         expect(response.headers.get("Pragma")).toBe("no-cache");
 
-        // The key assertion: Last-Modified header should NOT be present when hits is provided
+        // The key assertion: Last-Modified header should NOT be present when ht is provided
         expect(response.headers.get("Last-Modified")).toBeNull();
     });
 
-    test("handles invalid hits parameter", async () => {
-        // Create a request with invalid hits parameter
-        const requestWithInvalidHits = new Request(
-            "https://example.com/collect?sid=test-site&p=/test&h=example.com&r=&hits=invalid",
+    test("handles invalid ht parameter", async () => {
+        // Create a request with invalid ht parameter
+        const requestWithInvalidHt = new Request(
+            "https://example.com/collect?sid=test-site&p=/test&h=example.com&r=&ht=invalid",
             { headers: new Headers() },
         );
 
         const response = await collectRequestHandler(
-            requestWithInvalidHits,
+            requestWithInvalidHt,
             mockEnv,
         );
 
         expect(response.status).toBe(200);
 
-        // Even with invalid hits, we should NOT set Last-Modified
-        // because we're still using the hits parameter path
+        // Even with invalid ht, we should NOT set Last-Modified
+        // because we're still using the ht parameter path
         expect(response.headers.get("Last-Modified")).toBeNull();
     });
 
