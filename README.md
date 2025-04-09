@@ -98,6 +98,22 @@ Counterscale.init({
 });
 ```
 
+## Upgrading
+
+For most releases, upgrading is as simple as re-running the CLI installer:
+
+```bash
+npx @counterscale/cli@latest install
+
+# OR
+# npx @counterscale/cli@VERSION install
+```
+
+You won't have to enter a new API key, and your data will carry forrward.
+
+
+Counterscale uses [semantic versioning](https://semver.org/). If upgrading to a major version (e.g. 2.x, 3.x, 4.x), there may be extra steps. Please consult the [release notes](/benvinegar/countersca/releases).
+
 ## Troubleshooting
 
 If the website is not immediately available (e.g. "Secure Connection Failed"), it could be because Cloudflare has not yet activated your subdomain (yoursubdomain.workers.dev). This process can take a minute; you can check in on the progress by visiting the newly created worker in your Cloudflare dashboard (Workers & Pages → counterscale).
