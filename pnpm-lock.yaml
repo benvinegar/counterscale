@@ -31,7 +31,7 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0
       '@counterscale/server':
-        specifier: 3.0.0-rc.1
+        specifier: 3.0.0
         version: link:../server
       '@types/node':
         specifier: ^22.10.2
