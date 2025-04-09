@@ -15,8 +15,7 @@
         "test": "vitest run && playwright test",
         "test-ci": "vitest run --coverage && playwright test",
         "start": "node ./integration/server.js",
-        "typecheck": "tsc",
-        "publish": "npm publish"
+        "typecheck": "tsc"
     },
     "devDependencies": {
         "@counterscale/eslint-config": "*",
