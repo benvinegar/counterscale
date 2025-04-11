@@ -112,7 +112,7 @@ npx @counterscale/cli@latest install
 You won't have to enter a new API key, and your data will carry forrward.
 
 
-Counterscale uses [semantic versioning](https://semver.org/). If upgrading to a major version (e.g. 2.x, 3.x, 4.x), there may be extra steps. Please consult the [release notes](/benvinegar/countersca/releases).
+Counterscale uses [semantic versioning](https://semver.org/). If upgrading to a major version (e.g. 2.x, 3.x, 4.x), there may be extra steps. Please consult the [release notes](https://github.com/benvinegar/counterscale/releases).
 
 ## Troubleshooting
 
