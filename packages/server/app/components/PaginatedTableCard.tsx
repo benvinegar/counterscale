@@ -1,77 +1,97 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFetcher } from "react-router";
 import TableCard from "~/components/TableCard";
 
-import { Card } from "./ui/card";
+import type { SearchFilters } from "~/lib/types";
 import PaginationButtons from "./PaginationButtons";
-import { SearchFilters } from "~/lib/types";
+import { Card } from "./ui/card";
 
 interface PaginatedTableCardProps {
-    siteId: string;
-    interval: string;
-    dataFetcher: any;
-    columnHeaders: string[];
-    filters?: SearchFilters;
-    loaderUrl: string;
-    onClick?: (key: string) => void;
-    timezone?: string;
-    labelFormatter?: (label: string) => string;
+	siteId: string;
+	interval: string;
+	columnHeaders: string[];
+	filters?: SearchFilters;
+	loaderUrl: string;
+	onClick?: (key: string) => void;
+	timezone?: string;
+	labelFormatter?: (label: string) => string;
 }
 
 const PaginatedTableCard = ({
-    siteId,
-    interval,
-    dataFetcher,
-    columnHeaders,
-    filters,
-    loaderUrl,
-    onClick,
-    timezone,
-    labelFormatter,
+	siteId,
+	interval,
+	columnHeaders,
+	filters,
+	loaderUrl,
+	onClick,
+	timezone,
+	labelFormatter,
 }: PaginatedTableCardProps) => {
-    const countsByProperty = dataFetcher.data?.countsByProperty || [];
-    const [page, setPage] = useState(1);
+	const fetcher = useFetcher();
+	const [page, setPage] = useState(1);
+	const lastParamsRef = useRef<string>("");
 
-    useEffect(() => {
-        const params = {
-            site: siteId,
-            interval,
-            timezone,
-            ...filters,
-            page,
-        };
+	const countsByProperty = fetcher.data?.countsByProperty || [];
 
-        dataFetcher.submit(params, {
-            method: "get",
-            action: loaderUrl,
-        });
-        // NOTE: dataFetcher is intentionally omitted from the useEffect dependency array
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loaderUrl, siteId, interval, filters, timezone, page]); //
+	// Create a stable function to load data
+	const loadData = useCallback(() => {
+		const url = new URL(loaderUrl, window.location.origin);
+		url.searchParams.set("site", siteId);
+		url.searchParams.set("interval", interval);
+		url.searchParams.set("page", page.toString());
 
-    function handlePagination(page: number) {
-        setPage(page);
-    }
+		if (timezone) {
+			url.searchParams.set("timezone", timezone);
+		}
 
-    const hasMore = countsByProperty.length === 10;
-    return (
-        <Card className={dataFetcher.state === "loading" ? "opacity-60" : ""}>
-            {countsByProperty ? (
-                <div className="grid grid-rows-[auto,40px] h-full">
-                    <TableCard
-                        countByProperty={countsByProperty}
-                        columnHeaders={columnHeaders}
-                        onClick={onClick}
-                        labelFormatter={labelFormatter}
-                    />
-                    <PaginationButtons
-                        page={page}
-                        hasMore={hasMore}
-                        handlePagination={handlePagination}
-                    />
-                </div>
-            ) : null}
-        </Card>
-    );
+		// Add filter parameters
+		if (filters) {
+			for (const [key, value] of Object.entries(filters)) {
+				if (value) {
+					url.searchParams.set(key, value);
+				}
+			}
+		}
+
+		const fullUrl = url.pathname + url.search;
+
+		// Only load if parameters have actually changed
+		if (lastParamsRef.current !== fullUrl) {
+			lastParamsRef.current = fullUrl;
+			fetcher.load(fullUrl);
+		}
+	}, [fetcher.load, loaderUrl, siteId, interval, filters, timezone, page]);
+
+	// Load data when parameters change
+	useEffect(() => {
+		loadData();
+	}, [loadData]);
+
+	function handlePagination(newPage: number) {
+		setPage(newPage);
+	}
+
+	const hasMore = countsByProperty.length === 10;
+
+	return (
+		<Card className={fetcher.state === "loading" ? "opacity-60" : ""}>
+			{countsByProperty ? (
+				<div className="grid grid-rows-[auto,40px] h-full">
+					<TableCard
+						countByProperty={countsByProperty}
+						columnHeaders={columnHeaders}
+						onClick={onClick}
+						labelFormatter={labelFormatter}
+					/>
+					<PaginationButtons
+						page={page}
+						hasMore={hasMore}
+						handlePagination={handlePagination}
+					/>
+				</div>
+			) : null}
+		</Card>
+	);
 };
 
 export default PaginatedTableCard;
