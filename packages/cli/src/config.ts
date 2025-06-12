@@ -1,6 +1,6 @@
-import path, { dirname } from "path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
+import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 
 export const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
@@ -136,17 +136,10 @@ export async function stageDeployConfig(
     );
     outDeployConfig.name = workerName;
     outDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
-    
+
     if (accountId) {
         outDeployConfig.account_id = accountId;
     }
-
-    // Add observability configuration to enable logs
-    outDeployConfig.observability = {
-        logs: {
-            enabled: true
-        }
-    };
 
     writeFileSync(targetPath, JSON.stringify(outDeployConfig, null, 2));
 }
