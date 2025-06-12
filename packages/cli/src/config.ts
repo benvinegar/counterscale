@@ -126,6 +126,7 @@ export async function stageDeployConfig(
     initialDeployConfig: ReturnType<typeof JSON.parse>,
     workerName: string,
     analyticsDataset: string,
+    accountId?: string,
 ): Promise<void> {
     const serverPkgDir = getServerPkgDir();
 
@@ -135,6 +136,17 @@ export async function stageDeployConfig(
     );
     outDeployConfig.name = workerName;
     outDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+    
+    if (accountId) {
+        outDeployConfig.account_id = accountId;
+    }
+
+    // Add observability configuration to enable logs
+    outDeployConfig.observability = {
+        logs: {
+            enabled: true
+        }
+    };
 
     writeFileSync(targetPath, JSON.stringify(outDeployConfig, null, 2));
 }

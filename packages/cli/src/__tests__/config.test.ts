@@ -264,5 +264,84 @@ describe("CLI Functions", () => {
             // Verify paths were made absolute
             expect(writtenConfig.build.cwd).toMatch(/^\//); // Should start with /
         });
+
+        it("should include account_id when provided", async () => {
+            const { existsSync, writeFileSync } = await import("node:fs");
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(writeFileSync);
+
+            const initialConfig = {
+                name: "old-name",
+                analytics_engine_datasets: [{ dataset: "old-dataset" }],
+            };
+
+            const accountId = "1234567890abcdef1234567890abcdef";
+
+            await stageDeployConfig(
+                "/target/wrangler.json",
+                initialConfig,
+                "new-worker",
+                "new-dataset",
+                accountId,
+            );
+
+            const writtenConfig = JSON.parse(
+                vi.mocked(writeFileSync).mock.calls[0][1] as string,
+            );
+
+            expect(writtenConfig.account_id).toBe(accountId);
+        });
+
+        it("should not include account_id when not provided", async () => {
+            const { existsSync, writeFileSync } = await import("node:fs");
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(writeFileSync);
+
+            const initialConfig = {
+                name: "old-name",
+                analytics_engine_datasets: [{ dataset: "old-dataset" }],
+            };
+
+            await stageDeployConfig(
+                "/target/wrangler.json",
+                initialConfig,
+                "new-worker",
+                "new-dataset",
+            );
+
+            const writtenConfig = JSON.parse(
+                vi.mocked(writeFileSync).mock.calls[0][1] as string,
+            );
+
+            expect(writtenConfig.account_id).toBeUndefined();
+        });
+
+        it("should include observability configuration to enable logs", async () => {
+            const { existsSync, writeFileSync } = await import("node:fs");
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(writeFileSync);
+
+            const initialConfig = {
+                name: "old-name",
+                analytics_engine_datasets: [{ dataset: "old-dataset" }],
+            };
+
+            await stageDeployConfig(
+                "/target/wrangler.json",
+                initialConfig,
+                "new-worker",
+                "new-dataset",
+            );
+
+            const writtenConfig = JSON.parse(
+                vi.mocked(writeFileSync).mock.calls[0][1] as string,
+            );
+
+            expect(writtenConfig.observability).toEqual({
+                logs: {
+                    enabled: true
+                }
+            });
+        });
     });
 });

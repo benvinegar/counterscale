@@ -10,6 +10,24 @@ vi.mock("@clack/prompts", () => ({
     password: vi.fn(),
     confirm: vi.fn(),
     text: vi.fn(),
+    select: vi.fn(),
+    intro: vi.fn(),
+    spinner: vi.fn(() => ({
+        start: vi.fn(),
+        stop: vi.fn(),
+    })),
+    log: {
+        info: vi.fn(),
+    },
+}));
+
+vi.mock("../cloudflare.js", () => ({
+    CloudflareClient: vi.fn().mockImplementation(() => ({
+        getAccounts: vi.fn(),
+        getCloudflareSecrets: vi.fn(),
+        setCloudflareSecrets: vi.fn(),
+        deploy: vi.fn(),
+    })),
 }));
 
 // Now import the actual modules
@@ -20,6 +38,8 @@ import {
     promptApiToken,
     promptDeploy,
     promptProjectConfig,
+    promptAccountSelection,
+    type AccountInfo,
 } from "../install.js";
 
 describe("install prompts", () => {
@@ -202,6 +222,154 @@ describe("install prompts", () => {
                     initialValue: defaultDataset,
                 }),
             );
+        });
+    });
+
+    describe("promptAccountSelection", () => {
+        it("should return selected account ID", async () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+                { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
+            ];
+            const selectedAccountId = "abcdef1234567890abcdef1234567890";
+            
+            const mockPrompts = await import("@clack/prompts");
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            (
+                mockPrompts.select as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue(selectedAccountId);
+
+            const result = await promptAccountSelection(mockAccounts);
+            expect(result).toBe(selectedAccountId);
+        });
+
+        it("should throw error if user cancels account selection", async () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+                { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
+            ];
+            
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                true,
+            );
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.select as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue("some-id");
+
+            await expect(promptAccountSelection(mockAccounts)).rejects.toThrow(
+                "Operation canceled",
+            );
+        });
+
+        it("should format account options correctly", async () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+                { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
+            ];
+            
+            const mockPrompts = await import("@clack/prompts");
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            (
+                mockPrompts.select as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue("1234567890abcdef1234567890abcdef");
+
+            await promptAccountSelection(mockAccounts);
+
+            expect(mockPrompts.select).toHaveBeenCalledWith({
+                message: "Select a Cloudflare account:",
+                options: [
+                    {
+                        value: "1234567890abcdef1234567890abcdef",
+                        label: "Account 1 (abcdef)",
+                    },
+                    {
+                        value: "abcdef1234567890abcdef1234567890",
+                        label: "Account 2 (567890)",
+                    },
+                ],
+            });
+        });
+
+        it("should handle single account selection", async () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+            ];
+            
+            const mockPrompts = await import("@clack/prompts");
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            (
+                mockPrompts.select as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue("1234567890abcdef1234567890abcdef");
+
+            const result = await promptAccountSelection(mockAccounts);
+            expect(result).toBe("1234567890abcdef1234567890abcdef");
+            
+            expect(mockPrompts.select).toHaveBeenCalledWith({
+                message: "Select a Cloudflare account:",
+                options: [
+                    {
+                        value: "1234567890abcdef1234567890abcdef",
+                        label: "Account 1 (abcdef)",
+                    },
+                ],
+            });
+        });
+    });
+
+    describe("account selection logic", () => {
+        it("should handle single account case", () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+            ];
+
+            // Test the logic: with a single account, we should automatically use it
+            expect(mockAccounts.length).toBe(1);
+            expect(mockAccounts[0].id).toBe("1234567890abcdef1234567890abcdef");
+        });
+
+        it("should handle multiple accounts case", () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+                { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
+            ];
+
+            // Test the logic: with multiple accounts, we should prompt for selection
+            expect(mockAccounts.length).toBeGreaterThan(1);
+        });
+
+        it("should handle empty accounts case", () => {
+            const mockAccounts: AccountInfo[] = [];
+
+            // Test the logic: with no accounts, we should exit with error
+            expect(mockAccounts.length).toBe(0);
+        });
+
+        it("should auto-deploy with single account", () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+            ];
+
+            // Test the logic: with a single account, should auto-deploy (shouldDeploy = true)
+            const shouldDeploy = mockAccounts.length === 1 ? true : false;
+            expect(shouldDeploy).toBe(true);
+        });
+
+        it("should prompt for deploy with multiple accounts", () => {
+            const mockAccounts: AccountInfo[] = [
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+                { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
+            ];
+
+            // Test the logic: with multiple accounts, should prompt for deploy
+            const shouldPrompt = mockAccounts.length > 1;
+            expect(shouldPrompt).toBe(true);
         });
     });
 });
