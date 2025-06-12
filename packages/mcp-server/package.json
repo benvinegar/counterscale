@@ -1,0 +1,29 @@
+{
+    "name": "@counterscale/mcp-server",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "deploy": "wrangler deploy",
+        "dev": "wrangler dev",
+        "lint": "eslint src --ext .ts,.tsx",
+        "lint:fix": "eslint src --ext .ts,.tsx --fix",
+        "start": "wrangler dev",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "cf-typegen": "wrangler types",
+        "type-check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.12.1",
+        "agents": "^0.0.95",
+        "zod": "^3.25.61"
+    },
+    "devDependencies": {
+        "@counterscale/eslint-config": "workspace:*",
+        "@types/node": "^22.10.2",
+        "eslint": "^9.16.0",
+        "typescript": "^5.8.3",
+        "vitest": "2.1",
+        "wrangler": "^4.20.0"
+    }
+}
