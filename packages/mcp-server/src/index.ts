@@ -1,4 +1,6 @@
-import { CounterscaleAnalyticsMCP } from "./agent/counterscale-agent.js";
+import { CounterscaleAnalyticsMCP } from "./agent/counterscale-agent";
+
+export { CounterscaleAnalyticsMCP };
 
 export default {
     fetch(request: Request, env: Env, ctx: ExecutionContext) {
