@@ -1,4 +1,4 @@
-# Counterscale Analytics MCP Server
+# Counterscale Analytics MCP Server (Alpha)
 
 A Model Context Protocol (MCP) server that provides programmatic access to Counterscale analytics data through HTTP requests to your deployed Counterscale worker.
 

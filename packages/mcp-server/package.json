@@ -11,7 +11,7 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "cf-typegen": "wrangler types",
-        "type-check": "tsc --noEmit"
+        "typecheck": "tsc --noEmit"
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.12.1",
