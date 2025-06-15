@@ -175,6 +175,119 @@ describe("CloudflareClient", () => {
         });
     });
 
+    describe("getAccounts", () => {
+        it("should parse multiple accounts from table format", async () => {
+            const mockOutput = `
+Getting User settings...
+ℹ️  The API Token is read from the CLOUDFLARE_API_TOKEN in your environment.
+👋 You are logged in with an API Token. Unable to retrieve email for this user. Are you missing the User->User Details->Read permission?
+┌─────────────┬──────────────────────────────────┐
+│ Account Name│ Account ID                       │
+├─────────────┼──────────────────────────────────┤
+│ Account 1   │ 1234567890abcdef1234567890abcdef │
+│ Account 2   │ abcdef1234567890abcdef1234567890 │
+└─────────────┴──────────────────────────────────┘
+`;
+
+            vi.mocked($).mockImplementation(() => {
+                return () => ({
+                    stdout: mockOutput,
+                    stderr: "",
+                    exitCode: 0,
+                });
+            });
+
+            const result = await client.getAccounts();
+            expect(result).toEqual([
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+                { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
+            ]);
+        });
+
+        it("should parse single account from table format", async () => {
+            const mockOutput = `
+Getting User settings...
+ℹ️  The API Token is read from the CLOUDFLARE_API_TOKEN in your environment.
+👋 You are logged in with an API Token. Unable to retrieve email for this user. Are you missing the User->User Details->Read permission?
+┌─────────────┬──────────────────────────────────┐
+│ Account Name│ Account ID                       │
+├─────────────┼──────────────────────────────────┤
+│ Account 1   │ 1234567890abcdef1234567890abcdef │
+└─────────────┴──────────────────────────────────┘
+`;
+
+            vi.mocked($).mockImplementation(() => {
+                return () => ({
+                    stdout: mockOutput,
+                    stderr: "",
+                    exitCode: 0,
+                });
+            });
+
+            const result = await client.getAccounts();
+            expect(result).toEqual([
+                { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
+            ]);
+        });
+
+        it("should fall back to getAccountId when table parsing fails", async () => {
+            const mockOutput = "Invalid output format";
+            const mockAccountId = "1234567890abcdef1234567890abcdef";
+
+            vi.mocked($).mockImplementation(() => {
+                return () => ({
+                    stdout: mockOutput,
+                    stderr: "",
+                    exitCode: 0,
+                });
+            });
+
+            // Mock getAccountId to return a fallback account
+            vi.spyOn(client, "getAccountId").mockResolvedValue(mockAccountId);
+
+            const result = await client.getAccounts();
+            expect(result).toEqual([
+                { id: mockAccountId, name: `Account ${mockAccountId.slice(-6)}` },
+            ]);
+        });
+
+        it("should return empty array when no accounts found", async () => {
+            const mockOutput = "No accounts found";
+
+            vi.mocked($).mockImplementation(() => {
+                return () => ({
+                    stdout: mockOutput,
+                    stderr: "",
+                    exitCode: 0,
+                });
+            });
+
+            // Mock getAccountId to return null
+            vi.spyOn(client, "getAccountId").mockResolvedValue(null);
+
+            const result = await client.getAccounts();
+            expect(result).toEqual([]);
+        });
+
+        it("should handle command errors", async () => {
+            vi.mocked($).mockImplementation(() => {
+                return () => {
+                    throw new ProcessOutput(
+                        1, // exit code
+                        null, // signal
+                        "Command failed", // stdout
+                        "", // stderr
+                        "Command failed", // combined?
+                        "",
+                        0, // duration
+                    );
+                };
+            });
+
+            await expect(client.getAccounts()).rejects.toThrow("Command failed");
+        });
+    });
+
     describe("deploy", () => {
         it("should extract worker URL from deploy output", async () => {
             vi.mocked($).mockImplementation(() => {

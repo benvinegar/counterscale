@@ -1,6 +1,6 @@
-import path, { dirname } from "path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
+import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 
 export const COUNTERSCALE_DIR = path.join(homedir(), ".counterscale");
@@ -126,6 +126,7 @@ export async function stageDeployConfig(
     initialDeployConfig: ReturnType<typeof JSON.parse>,
     workerName: string,
     analyticsDataset: string,
+    accountId?: string,
 ): Promise<void> {
     const serverPkgDir = getServerPkgDir();
 
@@ -135,6 +136,10 @@ export async function stageDeployConfig(
     );
     outDeployConfig.name = workerName;
     outDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+
+    if (accountId) {
+        outDeployConfig.account_id = accountId;
+    }
 
     writeFileSync(targetPath, JSON.stringify(outDeployConfig, null, 2));
 }
