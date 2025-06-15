@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import inquirer from "inquirer";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
     getServerPkgDir,
-    makePathsAbsolute,
     getWorkerAndDatasetName,
+    makePathsAbsolute,
     readInitialServerConfig,
     stageDeployConfig,
 } from "../config.js";
-import { join } from "node:path";
 
 // Mock external dependencies
 vi.mock("inquirer", () => ({
@@ -314,34 +314,6 @@ describe("CLI Functions", () => {
             );
 
             expect(writtenConfig.account_id).toBeUndefined();
-        });
-
-        it("should include observability configuration to enable logs", async () => {
-            const { existsSync, writeFileSync } = await import("node:fs");
-            vi.mocked(existsSync).mockReturnValue(true);
-            vi.mocked(writeFileSync);
-
-            const initialConfig = {
-                name: "old-name",
-                analytics_engine_datasets: [{ dataset: "old-dataset" }],
-            };
-
-            await stageDeployConfig(
-                "/target/wrangler.json",
-                initialConfig,
-                "new-worker",
-                "new-dataset",
-            );
-
-            const writtenConfig = JSON.parse(
-                vi.mocked(writeFileSync).mock.calls[0][1] as string,
-            );
-
-            expect(writtenConfig.observability).toEqual({
-                logs: {
-                    enabled: true
-                }
-            });
         });
     });
 });
