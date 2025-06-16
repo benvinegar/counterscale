@@ -1,7 +1,7 @@
 {
     "name": "@counterscale/mcp-server",
-    "version": "0.0.1",
-    "private": true,
+    "version": "3.0.0-alpha.1",
+    "private": false,
     "scripts": {
         "deploy": "wrangler deploy",
         "dev": "wrangler dev",
