@@ -6,18 +6,12 @@
         },
         "lib": ["DOM", "DOM.Iterable", "ES2022"],
         "sourceMap": true,
-        "isolatedModules": true,
         "esModuleInterop": true,
         "jsx": "react-jsx",
         "module": "ESNext",
         "moduleResolution": "Bundler",
         "resolveJsonModule": true,
         "target": "ES2022",
-        "strict": true,
-        "allowJs": true,
-        "forceConsistentCasingInFileNames": true,
-        "baseUrl": ".",
-        "noEmit": true,
-        "skipLibCheck": true
+        "baseUrl": "."
     }
 }
