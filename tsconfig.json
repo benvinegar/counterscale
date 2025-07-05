@@ -1,1 +1,10 @@
-{}
+{
+    "compilerOptions": {
+        "strict": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "allowJs": true,
+        "noEmit": true
+    }
+}
