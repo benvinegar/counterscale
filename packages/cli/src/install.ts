@@ -13,6 +13,7 @@ import {
     isCancel,
     cancel,
     outro,
+    select,
 } from "@clack/prompts";
 
 import chalk from "chalk";
@@ -73,6 +74,29 @@ export async function promptDeploy(
 export interface NewProjectAnswers {
     workerName: string;
     analyticsDataset: string;
+}
+
+export interface AccountInfo {
+    id: string;
+    name: string;
+}
+
+export async function promptAccountSelection(
+    accounts: AccountInfo[],
+): Promise<string> {
+    const selectedAccount = await select({
+        message: "Select a Cloudflare account:",
+        options: accounts.map((account) => ({
+            value: account.id,
+            label: `${account.name} (${account.id.slice(-6)})`,
+        })),
+    });
+
+    if (isCancel(selectedAccount)) {
+        bail();
+    }
+
+    return selectedAccount as string;
 }
 
 export async function promptProjectConfig(
@@ -149,18 +173,32 @@ export async function install(
     const cloudflare = new CloudflareClient(tmpStagingConfigPath);
 
     const s = spinner();
-    s.start("Fetching Cloudflare Account ID ...");
-    const accountId = await cloudflare.getAccountId();
+    s.start("Fetching Cloudflare accounts ...");
+    const accounts = await cloudflare.getAccounts();
 
-    if (!accountId) {
+    if (accounts.length === 0) {
         s.stop("Not authenticated with Cloudflare.\n");
         log.info(
             `Run ${chalk.red(`npx wrangler login`)} first, then try again.`,
         );
         process.exit(1);
-    } else {
+    }
+
+    let accountId: string;
+    
+    if (accounts.length === 1) {
+        accountId = accounts[0].id;
         s.stop(
             "Authenticated with Cloudflare using Account ID ending in: " +
+                chalk.rgb(...CLI_COLORS.teal)(accountId.slice(-6)),
+        );
+    } else {
+        s.stop(
+            `Found ${accounts.length} Cloudflare accounts.`,
+        );
+        accountId = await promptAccountSelection(accounts);
+        log.info(
+            "Selected account: " +
                 chalk.rgb(...CLI_COLORS.teal)(accountId.slice(-6)),
         );
     }
@@ -217,6 +255,7 @@ export async function install(
         initialDeployConfig,
         workerName,
         analyticsDataset,
+        accountId,
     );
 
     const secrets = await cloudflare.getCloudflareSecrets();
@@ -253,7 +292,10 @@ Your token needs these permissions:
         }
     }
 
-    if (await promptDeploy(serverPkgJson.version)) {
+    // Auto-deploy when there's only one account, otherwise prompt
+    const shouldDeploy = accounts.length === 1 ? true : await promptDeploy(serverPkgJson.version);
+    
+    if (shouldDeploy) {
         let deployUrl;
 
         const s = spinner();

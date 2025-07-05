@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import inquirer from "inquirer";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
     getServerPkgDir,
-    makePathsAbsolute,
     getWorkerAndDatasetName,
+    makePathsAbsolute,
     readInitialServerConfig,
     stageDeployConfig,
 } from "../config.js";
-import { join } from "node:path";
 
 // Mock external dependencies
 vi.mock("inquirer", () => ({
@@ -263,6 +263,57 @@ describe("CLI Functions", () => {
 
             // Verify paths were made absolute
             expect(writtenConfig.build.cwd).toMatch(/^\//); // Should start with /
+        });
+
+        it("should include account_id when provided", async () => {
+            const { existsSync, writeFileSync } = await import("node:fs");
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(writeFileSync);
+
+            const initialConfig = {
+                name: "old-name",
+                analytics_engine_datasets: [{ dataset: "old-dataset" }],
+            };
+
+            const accountId = "1234567890abcdef1234567890abcdef";
+
+            await stageDeployConfig(
+                "/target/wrangler.json",
+                initialConfig,
+                "new-worker",
+                "new-dataset",
+                accountId,
+            );
+
+            const writtenConfig = JSON.parse(
+                vi.mocked(writeFileSync).mock.calls[0][1] as string,
+            );
+
+            expect(writtenConfig.account_id).toBe(accountId);
+        });
+
+        it("should not include account_id when not provided", async () => {
+            const { existsSync, writeFileSync } = await import("node:fs");
+            vi.mocked(existsSync).mockReturnValue(true);
+            vi.mocked(writeFileSync);
+
+            const initialConfig = {
+                name: "old-name",
+                analytics_engine_datasets: [{ dataset: "old-dataset" }],
+            };
+
+            await stageDeployConfig(
+                "/target/wrangler.json",
+                initialConfig,
+                "new-worker",
+                "new-dataset",
+            );
+
+            const writtenConfig = JSON.parse(
+                vi.mocked(writeFileSync).mock.calls[0][1] as string,
+            );
+
+            expect(writtenConfig.account_id).toBeUndefined();
         });
     });
 });
