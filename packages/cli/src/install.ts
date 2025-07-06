@@ -185,7 +185,7 @@ export async function install(
     }
 
     let accountId: string;
-    
+
     if (accounts.length === 1) {
         accountId = accounts[0].id;
         s.stop(
@@ -193,9 +193,7 @@ export async function install(
                 chalk.rgb(...CLI_COLORS.teal)(accountId.slice(-6)),
         );
     } else {
-        s.stop(
-            `Found ${accounts.length} Cloudflare accounts.`,
-        );
+        s.stop(`Found ${accounts.length} Cloudflare accounts.`);
         accountId = await promptAccountSelection(accounts);
         log.info(
             "Selected account: " +
@@ -292,10 +290,7 @@ Your token needs these permissions:
         }
     }
 
-    // Auto-deploy when there's only one account, otherwise prompt
-    const shouldDeploy = accounts.length === 1 ? true : await promptDeploy(serverPkgJson.version);
-    
-    if (shouldDeploy) {
+    if (await promptDeploy(serverPkgJson.version)) {
         let deployUrl;
 
         const s = spinner();
