@@ -121,12 +121,17 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
 export default function App() {
     const data = useLoaderData<typeof loader>();
 
+    // Check if current domain is a subdomain of counterscale.dev
+    const currentOrigin = new URL(data.url).hostname;
+    const isCounterscaleSubdomain = currentOrigin.endsWith(".counterscale.dev");
+    const homeUrl = isCounterscaleSubdomain ? "https://counterscale.dev" : "/";
+
     return (
         <div className="mt-0 sm:mt-4">
             <header className="border-b-2 mb-8 py-2">
                 <nav className="flex justify-between items-center">
                     <div className="flex items-center">
-                        <a href="/" className="text-lg font-bold">
+                        <a href={homeUrl} className="text-lg font-bold">
                             Counterscale
                         </a>
                         <img
