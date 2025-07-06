@@ -1,6 +1,7 @@
 import { $, ProcessOutput } from "zx";
 import path from "path";
 import { homedir } from "node:os";
+import fetch from "node-fetch";
 
 interface SecretItem {
     name: string;
@@ -21,8 +22,54 @@ export class CloudflareClient {
             path.join(homedir(), ".counterscale", "wrangler.json");
     }
 
-    async getAccountId(): Promise<string | null> {
+    /**
+     * Verifies if the provided Cloudflare API token is valid
+     * @param token Cloudflare API token to verify
+     * @throws {Error} If token is invalid or lacks necessary permissions
+     */
+    async verifyToken(token: string): Promise<void> {
         try {
+            const response = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok || !data.success) {
+                throw new Error(data.errors?.[0]?.message || 'Invalid Cloudflare API token');
+            }
+            
+            // Check if token has necessary permissions
+            const requiredPermissions = ['account:read', 'workers:write', 'workers_scripts:edit'];
+            const missingPermissions = requiredPermissions.filter(
+                perm => !data.result.status.includes(perm)
+            );
+            
+            if (missingPermissions.length > 0) {
+                throw new Error(`Missing required permissions: ${missingPermissions.join(', ')}`);
+            }
+            
+            return data.result;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Failed to verify Cloudflare token: ${error.message}`);
+            }
+            throw new Error('Failed to verify Cloudflare token');
+        }
+    }
+
+    async getAccountId(token?: string): Promise<string | null> {
+        try {
+            if (token) {
+                await this.verifyToken(token);
+            } else {
+                // Fallback to environment variable if no token provided
+                await this.verifyToken(process.env.CLOUDFLARE_API_TOKEN || '');
+            }
             const result = await $({ quiet: true })`npx wrangler whoami`;
             const match = result.stdout.match(/([0-9a-f]{32})/);
             return match ? match[0] : null;

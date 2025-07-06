@@ -36,28 +36,48 @@ export function bail() {
     process.exit(0);
 }
 
-export async function promptApiToken(): Promise<string> {
-    const cfApiToken = await password({
-        message: "Enter your Cloudflare API Token",
-        mask: "*",
-        validate: (val) => {
-            if (val.length === 0) {
-                return "Value is required";
-            } else if (val.length !== 40) {
-                return "Value must be exactly 40 characters";
+export async function promptApiToken(cloudflareClient: CloudflareClient): Promise<string> {
+    let tokenValid = false;
+    let cfApiToken: string | symbol = '';
+    
+    while (!tokenValid) {
+        cfApiToken = await password({
+            message: "Enter your Cloudflare API Token",
+            mask: "*",
+            validate: (val: string) => {
+                if (val.length === 0) {
+                    return "Value is required";
+                } else if (val.length !== 40) {
+                    return "Value must be exactly 40 characters";
+                }
+            },
+        });
+
+        if (isCancel(cfApiToken)) {
+            bail();
+        }
+
+        if (typeof cfApiToken !== "string") {
+            throw new Error("API token is required");
+        }
+
+        try {
+            await cloudflareClient.verifyToken(cfApiToken);
+            tokenValid = true;
+        } catch (error) {
+            log.error(chalk.red(`❌ ${error instanceof Error ? error.message : 'Invalid token'}`));
+            const tryAgain = await confirm({
+                message: 'Would you like to try a different token?',
+                initialValue: true,
+            });
+            
+            if (tryAgain === false) {
+                bail();
             }
-        },
-    });
-
-    if (isCancel(cfApiToken)) {
-        bail();
+        }
     }
 
-    if (typeof cfApiToken !== "string") {
-        throw new Error("API token is required");
-    }
-
-    return cfApiToken;
+    return cfApiToken as string;
 }
 
 export async function promptDeploy(
@@ -267,7 +287,7 @@ Your token needs these permissions:
 - Account Analytics: Read`,
         );
         try {
-            const apiToken = await promptApiToken();
+            const apiToken = await promptApiToken(cloudflare);
             if (apiToken) {
                 const s = spinner();
                 s.start(`Setting Cloudflare API token ...`);
