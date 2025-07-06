@@ -18,10 +18,16 @@ describe("Index route", () => {
 
         render(<RemixStub />);
 
+        expect(screen.getByText("Welcome to Counterscale")).toBeInTheDocument();
+
         expect(
-            screen.getByText(
-                "Scalable web analytics you run yourself on Cloudflare",
-            ),
+            screen.getByText("Continue to access your analytics dashboard."),
         ).toBeInTheDocument();
+
+        expect(screen.getByText("Go to Dashboard")).toBeInTheDocument();
+
+        expect(
+            screen.getByRole("link", { name: "Go to Dashboard" }),
+        ).toHaveAttribute("href", "/dashboard");
     });
 });
