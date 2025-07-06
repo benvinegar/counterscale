@@ -26,7 +26,6 @@
     "dependencies": {
         "@clack/prompts": "^0.10.0",
         "@counterscale/server": "3.1.0",
-        "@types/node": "^22.10.2",
         "chalk": "^5.3.0",
         "cli-highlight": "^2.1.11",
         "figlet": "^1.7.0",
@@ -38,15 +37,18 @@
     "devDependencies": {
         "@types/figlet": "^1.5.8",
         "@types/inquirer": "^9.0.7",
+        "@types/node": "^24.0.10",
+        "@types/node-fetch": "^2.6.12",
         "@types/shelljs": "^0.8.15",
         "@types/yargs": "^17.0.33",
         "@vitejs/plugin-react": "^4.2.1",
         "@vitest/coverage-v8": "^1.1.0",
         "globals": "^16.0.0",
+        "node-fetch": "^3.3.2",
         "rollup-plugin-node-externals": "^8.0.0",
         "typescript": "^5.3.3",
         "vite": "^5.0.10",
-        "vitest": "^1.1.0"
+        "vitest": "^1.6.1"
     },
     "overrides": {
         "minimatch": "5.1.2",
