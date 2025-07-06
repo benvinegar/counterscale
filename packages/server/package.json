@@ -76,10 +76,8 @@
         "vite": "^5.3.1",
         "vite-tsconfig-paths": "^4.3.2",
         "vitest": "2.1",
-        "vitest-dom": "^0.1.1"
-    },
-    "peerDependencies": {
-        "wrangler": "^3.61.0"
+        "vitest-dom": "^0.1.1",
+        "wrangler": "^4.23.0"
     },
     "postcss": {
         "plugins": {

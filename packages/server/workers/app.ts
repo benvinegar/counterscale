@@ -23,6 +23,7 @@ export default {
                             waitUntil: ctx.waitUntil.bind(ctx),
                             passThroughOnException:
                                 ctx.passThroughOnException.bind(ctx),
+                            props: ctx.props,
                         },
                         cf: request.cf as never,
                         // @ts-expect-error TODO: figure out how to get this type to work

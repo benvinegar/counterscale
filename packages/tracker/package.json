@@ -25,7 +25,7 @@
         "globals": "^16.0.0",
         "install": "^0.13.0",
         "typescript": "^5.7.2",
-        "vite": "^6.0.4",
+        "vite": "^5.3.1",
         "vite-plugin-dts": "^4.4.0",
         "vite-tsconfig-paths": "^5.1.4",
         "vitest": "2.1"

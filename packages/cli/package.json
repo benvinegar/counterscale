@@ -31,7 +31,7 @@
         "cli-highlight": "^2.1.11",
         "figlet": "^1.7.0",
         "inquirer": "^9.2.12",
-        "wrangler": "^3.105.0",
+        "wrangler": "^4.23.0",
         "yargs": "^17.7.2",
         "zx": "^8.3.2"
     },
