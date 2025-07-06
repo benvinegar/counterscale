@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { CloudflareClient } from "../cloudflare.js";
+import { CloudflareClient, verifyToken } from "../cloudflare.js";
 import { ProcessOutput } from "zx";
 import path from "path";
 import { homedir } from "node:os";
+import fetch from "node-fetch";
 
 // Mock the entire zx module
-vi.mock("zx", async (importOriginal) => {
+vi.mock("zx", async (importOriginal: any) => {
     const actual = await importOriginal<typeof import("zx")>();
     return {
         ...actual,
@@ -13,8 +14,104 @@ vi.mock("zx", async (importOriginal) => {
     };
 });
 
+// Mock node-fetch
+vi.mock('node-fetch', () => ({
+    default: vi.fn(),
+}));
+
 // Import and spy on the mocked function
 const { $ } = await import("zx");
+const mockedFetch = vi.mocked(fetch);
+
+describe("verifyToken", () => {
+    const validToken = 'test-valid-token';
+    const mockSuccessResponse = {
+            success: true,
+            result: {
+                status: ['account:read', 'workers:write', 'workers_scripts:edit'],
+                // ... other properties
+            }
+        };
+
+        beforeEach(() => {
+            vi.clearAllMocks();
+            mockedFetch.mockClear();
+        });
+
+        it("should verify a valid token with all required permissions", async () => {
+            
+            const mockResponse = {
+                ok: true,
+                json: vi.fn().mockResolvedValue(mockSuccessResponse),
+            };
+            mockedFetch.mockResolvedValue(mockResponse as any);
+
+            
+            await expect(client.verifyToken(validToken)).resolves.toEqual(mockSuccessResponse.result);
+
+            
+            expect(mockedFetch).toHaveBeenCalledWith(
+                'https://api.cloudflare.com/client/v4/user/tokens/verify',
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${validToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+        });
+
+        it("should throw an error for invalid token", async () => {
+            
+            const errorResponse = {
+                success: false,
+                errors: [{ message: 'Invalid API token' }]
+            };
+            const mockResponse = {
+                ok: false,
+                json: vi.fn().mockResolvedValue(errorResponse),
+            };
+            mockedFetch.mockResolvedValue(mockResponse as any);
+
+            
+            await expect(client.verifyToken('invalid-token'))
+                .rejects
+                .toThrow('Invalid Cloudflare API token');
+        });
+
+        it("should throw an error for missing required permissions", async () => {
+            
+            const missingPermsResponse = {
+                ...mockSuccessResponse,
+                result: {
+                    status: ['account:read'], 
+                }
+            };
+            const mockResponse = {
+                ok: true,
+                json: vi.fn().mockResolvedValue(missingPermsResponse),
+            };
+            mockedFetch.mockResolvedValue(mockResponse as any);
+
+
+            await expect(client.verifyToken(validToken))
+                .rejects
+                .toThrow('Missing required permissions: workers:write, workers_scripts:edit');
+        });
+
+        it("should handle network errors", async () => {
+            
+            const error = new Error('Network error');
+            mockedFetch.mockRejectedValue(error);
+
+            
+            await expect(client.verifyToken(validToken))
+                .rejects
+                .toThrow('Failed to verify Cloudflare token: Network error');
+        });
+    });
+});
 
 describe("CloudflareClient", () => {
     let client: CloudflareClient;
@@ -27,6 +124,16 @@ describe("CloudflareClient", () => {
 
     afterEach(() => {
         vi.resetModules();
+    });
+
+    describe("verifyToken", () => {
+        it("should delegate to the standalone verifyToken function", async () => {
+            const mockResult = { status: ['account:read', 'workers:write', 'workers_scripts:edit'] };
+            vi.spyOn(require('../cloudflare'), 'verifyToken').mockResolvedValue(mockResult);
+            
+            await expect(client.verifyToken('test-token')).resolves.toBeUndefined();
+            expect(require('../cloudflare').verifyToken).toHaveBeenCalledWith('test-token');
+        });
     });
 
     describe("constructor", () => {
