@@ -24,7 +24,7 @@ import { DeviceCard } from "./resources.device";
 import { PathsCard } from "./resources.paths";
 import { ReferrerCard } from "./resources.referrer";
 
-import { Suspense, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import SearchFilterBadges from "~/components/SearchFilterBadges";
 import type { SearchFilters } from "~/lib/types";
 import {
@@ -34,6 +34,8 @@ import {
 } from "~/lib/utils";
 import { StatsCard } from "./resources.stats";
 import { TimeSeriesCard } from "./resources.timeseries";
+import { AnalyticsEngineAPI } from "~/analytics/query";
+import { Cloudflare } from "~/load-context";
 
 export const meta: MetaFunction = () => {
 	return [
@@ -44,19 +46,24 @@ export const meta: MetaFunction = () => {
 
 const MAX_RETENTION_DAYS = 90;
 
-export const loader = async ({ context, request }: LoaderFunctionArgs) => {
+export const loader = async ({ context, request }: LoaderFunctionArgs<{
+	analyticsEngine: AnalyticsEngineAPI;
+	cloudflare: Cloudflare;
+}>) => {
+	if (!context) throw new Error("Context is not defined");
+
+	const { analyticsEngine, cloudflare } = context;
 	// NOTE: probably duped from getLoadContext / need to de-duplicate
-	if (!context.cloudflare?.env?.CF_ACCOUNT_ID) {
+	if (!cloudflare?.env?.CF_ACCOUNT_ID) {
 		throw new Response("Missing credentials: CF_ACCOUNT_ID is not set.", {
 			status: 501,
 		});
 	}
-	if (!context.cloudflare?.env?.CF_BEARER_TOKEN) {
+	if (!cloudflare?.env?.CF_BEARER_TOKEN) {
 		throw new Response("Missing credentials: CF_BEARER_TOKEN is not set.", {
 			status: 501,
 		});
 	}
-	const { analyticsEngine } = context;
 
 	const url = new URL(request.url);
 
@@ -96,16 +103,8 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 	const intervalType = getIntervalType(interval);
 
 	// await all requests to AE then return the results
-
-	let out: {
-		siteId: string;
-		sites: string[];
-		intervalType: string;
-		interval: string;
-		filters: SearchFilters;
-	};
 	try {
-		out = {
+		return {
 			siteId: actualSiteId,
 			sites: (await sitesByHits).map(([site, _]: [string, number]) => site),
 			intervalType,
@@ -116,8 +115,6 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 		console.error(err);
 		throw new Error("Failed to fetch data from Analytics Engine");
 	}
-
-	return out;
 };
 
 export default function Dashboard() {
@@ -133,7 +130,7 @@ export default function Dashboard() {
 
 	// Refetch data when window regains focus
 	useEffect(() => {
-		const DEBOUNCE_MS = 1000; // Prevent multiple revalidations within 1 second
+		const DEBOUNCE_MS = 1_000; // Prevent multiple revalidations within 1 second
 
 		const debouncedRevalidate = () => {
 			const now = Date.now();
@@ -192,7 +189,10 @@ export default function Dashboard() {
 		setSearchParams((prev) => {
 			for (const key in filters) {
 				if (Object.hasOwnProperty.call(filters, key)) {
-					prev.set(key, filters[key as keyof SearchFilters] as string);
+					prev.set(
+						key,
+						filters[key as keyof SearchFilters] as string
+					);
 				}
 			}
 			return prev;
@@ -222,7 +222,10 @@ export default function Dashboard() {
 						<SelectContent>
 							{/* SelectItem explodes if given an empty string for `value` so coerce to @unknown */}
 							{data.sites.map((siteId: string) => (
-								<SelectItem key={`k-${siteId}`} value={siteId || "@unknown"}>
+								<SelectItem
+									key={`k-${siteId}`}
+									value={siteId || "@unknown"}
+								>
 									{siteId || "(unknown)"}
 								</SelectItem>
 							))}

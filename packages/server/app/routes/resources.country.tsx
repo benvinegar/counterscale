@@ -1,4 +1,3 @@
-import { useFetcher } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
@@ -64,11 +63,10 @@ export const CountryCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard
+        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Country", "Visitors"]}
-            dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/country"
             filters={filters}
             onClick={(country) => onFilterChange({ ...filters, country })}

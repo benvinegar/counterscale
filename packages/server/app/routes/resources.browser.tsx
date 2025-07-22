@@ -1,13 +1,15 @@
-import { useFetcher } from "react-router";
-
 import type { LoaderFunctionArgs } from "react-router";
 
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 import { SearchFilters } from "~/lib/types";
+import { AnalyticsEngineAPI } from "~/analytics/query";
 
-export async function loader({ context, request }: LoaderFunctionArgs) {
-    const { analyticsEngine } = context;
+export async function loader({ context, request }: LoaderFunctionArgs<{
+	analyticsEngine: AnalyticsEngineAPI;
+}>) {
+    const { analyticsEngine } = context || {};
+    if (!analyticsEngine) throw new Error("Analytics engine is not defined");
 
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
     const url = new URL(request.url);
@@ -40,11 +42,10 @@ export const BrowserCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard
+        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Browser", "Visitors"]}
-            dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/browser"
             filters={filters}
             onClick={(browserName) =>

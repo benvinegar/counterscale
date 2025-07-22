@@ -1,5 +1,3 @@
-import { useFetcher } from "react-router";
-
 import type { LoaderFunctionArgs } from "react-router";
 
 import {
@@ -44,11 +42,10 @@ export const PathsCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard
+        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Path", "Visitors", "Views"]}
-            dataFetcher={useFetcher<typeof loader>()}
             filters={filters}
             loaderUrl="/resources/paths"
             onClick={(path) => onFilterChange({ ...filters, path })}

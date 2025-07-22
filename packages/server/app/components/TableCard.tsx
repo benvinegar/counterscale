@@ -7,16 +7,19 @@ import {
     TableRow,
 } from "~/components/ui/table";
 
-type CountByProperty = [string, string, string?][];
+export type CountByProperty = [string | [string, string], string | number, string?][];
 
 function calculateCountPercentages(countByProperty: CountByProperty) {
     const totalCount = countByProperty.reduce(
-        (sum, row) => sum + parseInt(row[1]),
+        (sum, row) => {
+            const value = typeof row[1] === "number" ? row[1] : parseInt(row[1], 10);
+            return sum + value;
+        },
         0,
     );
 
     return countByProperty.map((row) => {
-        const count = parseInt(row[1]);
+        const count = typeof row[1] === "number" ? row[1] : parseInt(row[1], 10);
         const percentage = ((count / totalCount) * 100).toFixed(2);
         return `${percentage}%`;
     });
@@ -62,6 +65,7 @@ export default function TableCard({
             <TableBody>
                 {(countByProperty || []).map((item, index) => {
                     const desc = item[0];
+                    const value = String(item[1]);
 
                     // the description can be either a single string (that is both the key and the label),
                     // or a tuple of type [key, label]
@@ -76,7 +80,7 @@ export default function TableCard({
 
                     return (
                         <TableRow
-                            key={item[0]}
+                            key={String(item[0])}
                             className={`group [&_td]:last:rounded-b-md ${gridCols}`}
                             width={barChartPercentages[index]}
                         >
@@ -94,7 +98,7 @@ export default function TableCard({
                             </TableCell>
 
                             <TableCell className="text-right min-w-16">
-                                {countFormatter.format(parseInt(item[1], 10))}
+                                {countFormatter.format(parseInt(value, 10))}
                             </TableCell>
 
                             {item.length > 2 && item[2] !== undefined && (

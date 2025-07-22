@@ -1,5 +1,3 @@
-import { useFetcher } from "react-router";
-
 import type { LoaderFunctionArgs } from "react-router";
 
 import PaginatedTableCard from "~/components/PaginatedTableCard";
@@ -42,11 +40,10 @@ export const ReferrerCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard
+        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Referrer", "Visitors", "Views"]}
-            dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/referrer"
             filters={filters}
             onClick={(referrer) => onFilterChange({ ...filters, referrer })}

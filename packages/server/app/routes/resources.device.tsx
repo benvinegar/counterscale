@@ -1,5 +1,3 @@
-import { useFetcher } from "react-router";
-
 import type { LoaderFunctionArgs } from "react-router";
 
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
@@ -41,11 +39,10 @@ export const DeviceCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard
+        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Device", "Visitors"]}
-            dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/device"
             filters={filters}
             onClick={(deviceType) => onFilterChange({ ...filters, deviceType })}

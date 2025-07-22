@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
-import TableCard from "~/components/TableCard";
-
+import TableCard, { CountByProperty } from "~/components/TableCard";
 import type { SearchFilters } from "~/lib/types";
 import PaginationButtons from "./PaginationButtons";
 import { Card } from "./ui/card";
@@ -17,7 +16,7 @@ interface PaginatedTableCardProps {
 	labelFormatter?: (label: string) => string;
 }
 
-const PaginatedTableCard = ({
+const PaginatedTableCard = <T extends { countsByProperty: CountByProperty }>({
 	siteId,
 	interval,
 	columnHeaders,
@@ -27,7 +26,7 @@ const PaginatedTableCard = ({
 	timezone,
 	labelFormatter,
 }: PaginatedTableCardProps) => {
-	const fetcher = useFetcher();
+	const fetcher = useFetcher<T>();
 	const [page, setPage] = useState(1);
 	const lastParamsRef = useRef<string>("");
 
