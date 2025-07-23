@@ -40,7 +40,7 @@ export const ReferrerCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
+        <PaginatedTableCard<typeof loader>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Referrer", "Visitors", "Views"]}

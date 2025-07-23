@@ -39,7 +39,7 @@ export const DeviceCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
+        <PaginatedTableCard<typeof loader>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Device", "Visitors"]}

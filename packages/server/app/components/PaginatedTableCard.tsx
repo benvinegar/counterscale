@@ -16,7 +16,7 @@ interface PaginatedTableCardProps {
     labelFormatter?: (label: string) => string;
 }
 
-const PaginatedTableCard = <T extends { countsByProperty: CountByProperty }>({
+const PaginatedTableCard = <T extends (...args: any[]) => Promise<{ countsByProperty: CountByProperty }>>({
     siteId,
     interval,
     columnHeaders,
@@ -26,7 +26,7 @@ const PaginatedTableCard = <T extends { countsByProperty: CountByProperty }>({
     timezone,
     labelFormatter,
 }: PaginatedTableCardProps) => {
-    const fetcher = useFetcher<T>();
+    const fetcher = useFetcher<Awaited<ReturnType<T>>>();
     const [page, setPage] = useState(1);
     const lastParamsRef = useRef<string>("");
 

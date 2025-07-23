@@ -38,7 +38,7 @@ export const BrowserVersionCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
+        <PaginatedTableCard<typeof loader>
             siteId={siteId}
             interval={interval}
             columnHeaders={[`${filters.browserName} Versions`, "Visitors"]}

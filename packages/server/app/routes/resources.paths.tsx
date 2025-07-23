@@ -42,7 +42,7 @@ export const PathsCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard<Awaited<ReturnType<typeof loader>>>
+        <PaginatedTableCard<typeof loader>
             siteId={siteId}
             interval={interval}
             columnHeaders={["Path", "Visitors", "Views"]}
