@@ -22,9 +22,9 @@ Counterscale is powered primarily by Cloudflare Workers and [Workers Analytics E
 
 ### Requirements
 
-* macOS or Linux environment
-* Node v20 or above
-* An active [Cloudflare](https://cloudflare.com) account (either free or paid)
+- macOS or Linux environment
+- Node v20 or above
+- An active [Cloudflare](https://cloudflare.com) account (either free or paid)
 
 ### Cloudflare Preparation
 
@@ -94,7 +94,8 @@ import * as Counterscale from "@counterscale/tracker";
 
 Counterscale.init({
     siteId: "your-unique-site-id",
-    reporterUrl: "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
+    reporterUrl:
+        "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
 });
 ```
 
@@ -110,7 +111,6 @@ npx @counterscale/cli@latest install
 ```
 
 You won't have to enter a new API key, and your data will carry forrward.
-
 
 Counterscale uses [semantic versioning](https://semver.org/). If upgrading to a major version (e.g. 2.x, 3.x, 4.x), there may be extra steps. Please consult the [release notes](https://github.com/benvinegar/counterscale/releases).
 
@@ -129,7 +129,8 @@ import * as Counterscale from "@counterscale/tracker";
 
 Counterscale.init({
     siteId: "your-unique-site-id",
-    reporterUrl: "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
+    reporterUrl:
+        "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
     autoTrackPageviews: false, // <- don't forget this
 });
 

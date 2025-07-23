@@ -232,7 +232,7 @@ describe("install prompts", () => {
                 { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
             ];
             const selectedAccountId = "abcdef1234567890abcdef1234567890";
-            
+
             const mockPrompts = await import("@clack/prompts");
             (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
                 false,
@@ -250,7 +250,7 @@ describe("install prompts", () => {
                 { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
                 { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
             ];
-            
+
             (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
                 true,
             );
@@ -269,7 +269,7 @@ describe("install prompts", () => {
                 { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
                 { id: "abcdef1234567890abcdef1234567890", name: "Account 2" },
             ];
-            
+
             const mockPrompts = await import("@clack/prompts");
             (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
                 false,
@@ -299,7 +299,7 @@ describe("install prompts", () => {
             const mockAccounts: AccountInfo[] = [
                 { id: "1234567890abcdef1234567890abcdef", name: "Account 1" },
             ];
-            
+
             const mockPrompts = await import("@clack/prompts");
             (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
                 false,
@@ -310,7 +310,7 @@ describe("install prompts", () => {
 
             const result = await promptAccountSelection(mockAccounts);
             expect(result).toBe("1234567890abcdef1234567890abcdef");
-            
+
             expect(mockPrompts.select).toHaveBeenCalledWith({
                 message: "Select a Cloudflare account:",
                 options: [
