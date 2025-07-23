@@ -38,15 +38,20 @@ export class CloudflareClient {
         try {
             const result = await $({ quiet: true })`npx wrangler whoami`;
             const accounts = this.parseAccountsFromTable(result.stdout);
-            
+
             // If table parsing failed, fall back to single account
             if (accounts.length === 0) {
                 const accountId = await this.getAccountId();
                 if (accountId) {
-                    return [{ id: accountId, name: `Account ${accountId.slice(-6)}` }];
+                    return [
+                        {
+                            id: accountId,
+                            name: `Account ${accountId.slice(-6)}`,
+                        },
+                    ];
                 }
             }
-            
+
             return accounts;
         } catch (error) {
             if (error instanceof ProcessOutput) {
@@ -58,26 +63,33 @@ export class CloudflareClient {
 
     private parseAccountsFromTable(output: string): AccountInfo[] {
         const accounts: AccountInfo[] = [];
-        const lines = output.split('\n');
-        
+        const lines = output.split("\n");
+
         for (const line of lines) {
             // Skip header and separator lines
-            if (!line.includes('│') || line.includes('Account Name') || line.includes('─')) {
+            if (
+                !line.includes("│") ||
+                line.includes("Account Name") ||
+                line.includes("─")
+            ) {
                 continue;
             }
-            
-            const parts = line.split('│').map(part => part.trim()).filter(Boolean);
-            
+
+            const parts = line
+                .split("│")
+                .map((part) => part.trim())
+                .filter(Boolean);
+
             if (parts.length >= 2) {
                 const [name, id] = parts;
-                
+
                 // Validate account ID format (32 hex characters)
                 if (/^[0-9a-f]{32}$/.test(id)) {
                     accounts.push({ id, name });
                 }
             }
         }
-        
+
         return accounts;
     }
 

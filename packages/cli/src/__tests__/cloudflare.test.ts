@@ -247,7 +247,10 @@ Getting User settings...
 
             const result = await client.getAccounts();
             expect(result).toEqual([
-                { id: mockAccountId, name: `Account ${mockAccountId.slice(-6)}` },
+                {
+                    id: mockAccountId,
+                    name: `Account ${mockAccountId.slice(-6)}`,
+                },
             ]);
         });
 
@@ -284,7 +287,9 @@ Getting User settings...
                 };
             });
 
-            await expect(client.getAccounts()).rejects.toThrow("Command failed");
+            await expect(client.getAccounts()).rejects.toThrow(
+                "Command failed",
+            );
         });
     });
 
