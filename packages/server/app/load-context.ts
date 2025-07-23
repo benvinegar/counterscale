@@ -3,32 +3,32 @@ import type { PlatformProxy } from "wrangler";
 import { AnalyticsEngineAPI } from "./analytics/query";
 
 interface ExtendedEnv extends Env {
-	CF_PAGES_COMMIT_SHA: string;
+    CF_PAGES_COMMIT_SHA: string;
 }
 
 export type Cloudflare = Omit<PlatformProxy<ExtendedEnv>, "dispose">;
 
 declare module "react-router" {
-	interface AppLoadContext {
-		cloudflare: Cloudflare;
-		analyticsEngine: AnalyticsEngineAPI;
-	}
+    interface AppLoadContext {
+        cloudflare: Cloudflare;
+        analyticsEngine: AnalyticsEngineAPI;
+    }
 }
 
 type GetLoadContext = (args: {
-	request: Request;
-	context: { cloudflare: Cloudflare }; // load context _before_ augmentation
+    request: Request;
+    context: { cloudflare: Cloudflare }; // load context _before_ augmentation
 }) => AppLoadContext;
 
 // Shared implementation compatible with Vite, Wrangler, and Cloudflare Pages
 export const getLoadContext: GetLoadContext = ({ context }) => {
-	const analyticsEngine = new AnalyticsEngineAPI(
-		context.cloudflare.env.CF_ACCOUNT_ID,
-		context.cloudflare.env.CF_BEARER_TOKEN,
-	);
+    const analyticsEngine = new AnalyticsEngineAPI(
+        context.cloudflare.env.CF_ACCOUNT_ID,
+        context.cloudflare.env.CF_BEARER_TOKEN,
+    );
 
-	return {
-		...context,
-		analyticsEngine: analyticsEngine,
-	};
+    return {
+        ...context,
+        analyticsEngine: analyticsEngine,
+    };
 };
