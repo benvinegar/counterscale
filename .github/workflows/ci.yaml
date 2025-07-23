@@ -16,6 +16,7 @@ jobs:
             - run: pnpm install
             - run: cd packages/tracker && pnpm playwright install --with-deps
             - run: pnpm turbo build lint typecheck test-ci --concurrency=1
+            - run: pnpm prettier --check .
             - name: Upload coverage reports to Codecov
               uses: codecov/codecov-action@v3
               env:
