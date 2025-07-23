@@ -3,7 +3,7 @@ import { test, describe, expect } from "vitest";
 import "vitest-dom/extend-expect";
 
 import { createRoutesStub } from "react-router";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 
 import Index from "../_index";
 
@@ -13,12 +13,41 @@ describe("Index route", () => {
             {
                 path: "/",
                 Component: Index,
+                loader: () => ({ user: null }),
+            },
+        ]);
+
+        const { container } = render(<RemixStub />);
+
+        // Check if component renders at all
+        expect(container).toBeInTheDocument();
+        
+        // Wait for content to load
+        await waitFor(() => {
+            expect(screen.getByText("Welcome to Counterscale")).toBeInTheDocument();
+        });
+
+        expect(
+            screen.getByText("Enter your password to access the dashboard"),
+        ).toBeInTheDocument();
+
+        expect(screen.getByText("Sign In")).toBeInTheDocument();
+    });
+
+    test("renders authenticated state", async () => {
+        const RemixStub = createRoutesStub([
+            {
+                path: "/",
+                Component: Index,
+                loader: () => ({ user: { authenticated: true } }),
             },
         ]);
 
         render(<RemixStub />);
 
-        expect(screen.getByText("Welcome to Counterscale")).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText("Welcome to Counterscale")).toBeInTheDocument();
+        });
 
         expect(
             screen.getByText("Continue to access your analytics dashboard."),

@@ -18,6 +18,7 @@ export function getDefaultContext() {
                 env: {
                     CF_BEARER_TOKEN: "fake",
                     CF_ACCOUNT_ID: "fake",
+                    CF_APP_PASSWORD: "test-password",
                 },
                 // eslint-disable-next-line
                 cf: {} as any,

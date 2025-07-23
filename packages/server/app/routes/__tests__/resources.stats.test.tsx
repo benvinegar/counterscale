@@ -1,6 +1,10 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { loader } from "../resources.stats";
 
+vi.mock("~/lib/auth", () => ({
+    requireAuth: vi.fn(),
+}));
+
 describe("resources.stats loader", () => {
     let mockGetCounts: any;
     beforeEach(() => {
@@ -28,6 +32,11 @@ describe("resources.stats loader", () => {
             analyticsEngine: {
                 getCounts: mockGetCounts,
                 getEarliestEvents: mockGetEarliestEvents,
+            },
+            cloudflare: {
+                env: {
+                    CF_APP_PASSWORD: "test-password",
+                },
             },
         };
 
@@ -67,6 +76,11 @@ describe("resources.stats loader", () => {
                 getCounts: mockGetCounts,
                 getEarliestEvents: mockGetEarliestEvents,
             },
+            cloudflare: {
+                env: {
+                    CF_APP_PASSWORD: "test-password",
+                },
+            },
         };
 
         const request = new Request(
@@ -98,6 +112,11 @@ describe("resources.stats loader", () => {
             analyticsEngine: {
                 getCounts: mockGetCounts,
                 getEarliestEvents: mockGetEarliestEvents,
+            },
+            cloudflare: {
+                env: {
+                    CF_APP_PASSWORD: "test-password",
+                },
             },
         };
 

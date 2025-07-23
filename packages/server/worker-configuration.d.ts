@@ -4,5 +4,6 @@
 interface Env {
     CF_BEARER_TOKEN: string;
     CF_ACCOUNT_ID: string;
+    CF_APP_PASSWORD: string;
     WEB_COUNTER_AE: AnalyticsEngineDataset;
 }

@@ -8,6 +8,10 @@ import * as RemixReact from "react-router";
 import "vitest-dom/extend-expect";
 import { getDefaultContext } from "./testutils";
 
+vi.mock("~/lib/auth", () => ({
+    requireAuth: vi.fn(),
+}));
+
 // Mock the useFetcher hook
 vi.mock("react-router", async () => {
     const actual = await vi.importActual("react-router");

@@ -60,6 +60,28 @@ export async function promptApiToken(): Promise<string> {
     return cfApiToken;
 }
 
+export async function promptAppPassword(): Promise<string> {
+    const appPassword = await password({
+        message: "Enter the password you will use to access the Counterscale Dashboard",
+        mask: "*",
+        validate: (val) => {
+            if (val.length === 0) {
+                return "Value is required";
+            }
+        },
+    });
+
+    if (isCancel(appPassword)) {
+        bail();
+    }
+
+    if (typeof appPassword !== "string") {
+        throw new Error("App password is required");
+    }
+
+    return appPassword;
+}
+
 export async function promptDeploy(
     counterscaleVersion: string,
 ): Promise<boolean> {
@@ -282,6 +304,23 @@ Your token needs these permissions:
                 } else {
                     s.stop("Error setting Cloudflare API token", 1);
                     throw new Error("Error setting Cloudflare API token");
+                }
+            }
+
+            const appPassword = await promptAppPassword();
+            if (appPassword) {
+                const s = spinner();
+                s.start(`Setting CounterScale Application Password ...`);
+
+                if (
+                    await cloudflare.setCloudflareSecrets({
+                        CF_APP_PASSWORD: appPassword,
+                    })
+                ) {
+                    s.stop("Setting CounterScale Application Password ... Done!");
+                } else {
+                    s.stop("Error setting CounterScale Application Password", 1);
+                    throw new Error("Error setting CounterScale Application Password");
                 }
             }
         } catch (err) {
