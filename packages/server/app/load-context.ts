@@ -1,12 +1,12 @@
-import { type AppLoadContext } from "react-router";
-import { type PlatformProxy } from "wrangler";
+import type { AppLoadContext } from "react-router";
+import type { PlatformProxy } from "wrangler";
 import { AnalyticsEngineAPI } from "./analytics/query";
 
 interface ExtendedEnv extends Env {
     CF_PAGES_COMMIT_SHA: string;
 }
 
-type Cloudflare = Omit<PlatformProxy<ExtendedEnv>, "dispose">;
+export type Cloudflare = Omit<PlatformProxy<ExtendedEnv>, "dispose">;
 
 declare module "react-router" {
     interface AppLoadContext {
