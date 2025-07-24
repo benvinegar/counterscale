@@ -23,7 +23,7 @@ describe("session", () => {
           path: "/",
           sameSite: "lax",
           secrets: [secret],
-          secure: true,
+          secure: false,
         },
       });
       expect(result).toBe(mockSessionStorage);
@@ -49,7 +49,7 @@ describe("session", () => {
         expect.objectContaining({
           cookie: expect.objectContaining({
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "lax",
             path: "/",
           }),

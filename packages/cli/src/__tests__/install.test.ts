@@ -39,6 +39,7 @@ import {
     promptDeploy,
     promptProjectConfig,
     promptAccountSelection,
+    promptAppPassword,
     type AccountInfo,
 } from "../install.js";
 
@@ -370,6 +371,109 @@ describe("install prompts", () => {
             // Test the logic: with multiple accounts, should prompt for deploy
             const shouldPrompt = mockAccounts.length > 1;
             expect(shouldPrompt).toBe(true);
+        });
+    });
+
+    describe("promptAppPassword", () => {
+        it("should return valid app password", async () => {
+            const mockPassword = "mySecurePassword123";
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue(mockPassword);
+
+            const result = await promptAppPassword();
+            expect(result).toBe(mockPassword);
+        });
+
+        it("should throw error if user cancels", async () => {
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                true,
+            );
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue("password");
+
+            await expect(promptAppPassword()).rejects.toThrow(
+                "Operation canceled",
+            );
+        });
+
+        it("should throw error if password is not a string", async () => {
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue(undefined);
+
+            await expect(promptAppPassword()).rejects.toThrow(
+                "App password is required",
+            );
+        });
+
+        it("should validate password is not empty", async () => {
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+            ).mockImplementationOnce(({ validate }: PasswordOptions) => {
+                if (!validate) {
+                    throw new Error("validate function missing");
+                }
+
+                expect(validate("")).toBe("Value is required");
+                expect(validate("password")).toBeUndefined();
+                return "mock-password";
+            });
+
+            await promptAppPassword();
+            expect(mockPrompts.password).toHaveBeenCalled();
+        });
+
+        it("should call password prompt with correct options", async () => {
+            const mockPrompts = await import("@clack/prompts");
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            (
+                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue("test-password");
+
+            await promptAppPassword();
+
+            expect(mockPrompts.password).toHaveBeenCalledWith({
+                message: "Enter the password you will use to access the Counterscale Dashboard",
+                mask: "*",
+                validate: expect.any(Function),
+            });
+        });
+
+        it("should accept any non-empty password", async () => {
+            const testPasswords = [
+                "a",
+                "short",
+                "a very long password with spaces and symbols!@#$%",
+                "123456",
+                "password123",
+            ];
+
+            for (const testPassword of testPasswords) {
+                (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                    false,
+                );
+                const mockPrompts = await import("@clack/prompts");
+                (
+                    mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+                ).mockResolvedValue(testPassword);
+
+                const result = await promptAppPassword();
+                expect(result).toBe(testPassword);
+            }
         });
     });
 });

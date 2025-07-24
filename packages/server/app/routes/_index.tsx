@@ -56,7 +56,7 @@ export default function Index() {
                       </Button> :
                                           <Form method="post" className="space-y-4">
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1 invisible h-0">
+                            <label htmlFor="password" className="sr-only">
                                 Password
                             </label>
                             <input

@@ -9,7 +9,7 @@ export function createSessionStorage(secret: string) {
       path: "/",
       sameSite: "lax",
       secrets: [secret],
-      secure: true,
+      secure: import.meta.env.PROD,
     },
   });
 }
