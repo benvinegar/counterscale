@@ -153,7 +153,7 @@ export default function App() {
                         >
                             Admin
                         </a>
-                        {data.user && (
+                        {data.user?.authenticated && (
                             <a href="/logout" className="ml-2">
                                 Logout
                             </a>

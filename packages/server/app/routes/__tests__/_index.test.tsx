@@ -1,20 +1,25 @@
 // @vitest-environment jsdom
-import { test, describe, expect, vi, beforeEach } from "vitest";
+import { test, describe, expect, vi, beforeEach, afterEach } from "vitest";
 import "vitest-dom/extend-expect";
 
 import { createRoutesStub } from "react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 
 import Index, { loader, action } from "../_index";
 import * as auth from "~/lib/auth";
 
 describe("Index route", () => {
+    afterEach(() => {
+        cleanup();
+        vi.clearAllMocks();
+    });
+
     test("renders index route", async () => {
         const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Index,
-                loader: () => ({ user: null }),
+                loader: () => ({ user: { authenticated: false } }),
             },
         ]);
 
@@ -64,7 +69,12 @@ describe("Index route", () => {
 
 describe("loader function", () => {
     beforeEach(() => {
-        vi.resetAllMocks();
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        cleanup();
+        vi.clearAllMocks();
     });
 
     test("should return user when authenticated", async () => {
@@ -74,7 +84,7 @@ describe("loader function", () => {
         const mockRequest = new Request("http://localhost/");
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 
@@ -88,13 +98,13 @@ describe("loader function", () => {
         expect(result).toEqual({ user: mockUser });
     });
 
-    test("should return null user when not authenticated", async () => {
-        const getUserSpy = vi.spyOn(auth, "getUser").mockResolvedValue(null);
+    test("should return { authenticated: false } user when not authenticated", async () => {
+        const getUserSpy = vi.spyOn(auth, "getUser").mockResolvedValue({ authenticated: false });
         
         const mockRequest = new Request("http://localhost/");
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 
@@ -105,13 +115,18 @@ describe("loader function", () => {
         });
 
         expect(getUserSpy).toHaveBeenCalledWith(mockRequest, mockContext.cloudflare.env);
-        expect(result).toEqual({ user: null });
+        expect(result).toEqual({ user: { authenticated: false } });
     });
 });
 
 describe("action function", () => {
     beforeEach(() => {
-        vi.resetAllMocks();
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        cleanup();
+        vi.clearAllMocks();
     });
 
     test("should return error when password is missing", async () => {
@@ -122,7 +137,7 @@ describe("action function", () => {
         
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 
@@ -145,7 +160,7 @@ describe("action function", () => {
         
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 
@@ -172,7 +187,7 @@ describe("action function", () => {
         
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 
@@ -198,7 +213,7 @@ describe("action function", () => {
         
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 
@@ -224,7 +239,7 @@ describe("action function", () => {
         
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 
@@ -250,7 +265,7 @@ describe("action function", () => {
         
         const mockContext = {
             cloudflare: {
-                env: { CF_APP_PASSWORD: "test-password" }
+                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
             }
         };
 

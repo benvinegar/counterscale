@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, Form, useActionData, useLoaderData } from "react-router";
+import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, Form, useActionData, useLoaderData, useNavigation } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { getUser, login } from "~/lib/auth";
@@ -33,6 +33,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
 export default function Index() {
     const { user } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
+    const navigation = useNavigation();
+    const isSubmitting = ["submitting", "loading"].includes(navigation.state);
 
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
@@ -47,10 +49,10 @@ export default function Index() {
                             Welcome to Counterscale
                         </h1>
                         <p className="text-gray-600">
-                        {user ? "Continue to access your analytics dashboard." : "Enter your password to access the dashboard"}
+                        {user?.authenticated ? "Continue to access your analytics dashboard." : "Enter your password to access the dashboard"}
                         </p>
                     </div>
-                    {user ? 
+                    {user?.authenticated ? 
                       <Button asChild className="w-full">
                           <a href="/dashboard">Go to Dashboard</a>
                       </Button> :
@@ -64,15 +66,16 @@ export default function Index() {
                                 id="password"
                                 name="password"
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                disabled={isSubmitting}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                 placeholder="Enter your password"
                             />
                         </div>
                         {actionData?.error && (
                             <div className="text-red-600 text-sm">{actionData.error}</div>
                         )}
-                        <Button type="submit" className="w-full">
-                            Sign In
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? "Signing In..." : "Sign In"}
                         </Button>
                     </Form>
                     }

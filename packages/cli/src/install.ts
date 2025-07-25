@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import crypto from "node:crypto";
 
 import {
     intro,
@@ -17,6 +18,7 @@ import {
 } from "@clack/prompts";
 
 import chalk from "chalk";
+import bcrypt from "bcryptjs";
 import type { ArgumentsCamelCase } from "yargs";
 
 import {
@@ -65,8 +67,8 @@ export async function promptAppPassword(): Promise<string> {
         message: "Enter the password you will use to access the Counterscale Dashboard",
         mask: "*",
         validate: (val) => {
-            if (val.length === 0) {
-                return "Value is required";
+            if (val.length < 12) {
+                return "A password of 12 characters or longer is required";
             }
         },
     });
@@ -312,9 +314,12 @@ Your token needs these permissions:
                 const s = spinner();
                 s.start(`Setting CounterScale Application Password ...`);
 
+                const passwordHash = await bcrypt.hash(appPassword, 12);
+
                 if (
                     await cloudflare.setCloudflareSecrets({
-                        CF_APP_PASSWORD: appPassword,
+                        CF_PASSWORD_HASH: passwordHash,
+                        CF_JWT_SECRET: crypto.randomBytes(32).toString('hex'),
                     })
                 ) {
                     s.stop("Setting CounterScale Application Password ... Done!");

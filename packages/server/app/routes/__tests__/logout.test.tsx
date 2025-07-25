@@ -20,7 +20,7 @@ describe("logout route", () => {
             const mockRequest = new Request("http://localhost/logout", { method: "POST" });
             const mockContext = {
                 cloudflare: {
-                    env: { CF_APP_PASSWORD: "test-password" }
+                    env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
                 }
             };
 
@@ -41,7 +41,7 @@ describe("logout route", () => {
             const mockRequest = new Request("http://localhost/logout", { method: "POST" });
             const mockContext = {
                 cloudflare: {
-                    env: { CF_APP_PASSWORD: "test-password" }
+                    env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
                 }
             };
 
@@ -84,7 +84,7 @@ describe("logout route", () => {
             const mockRequest = new Request("http://localhost/logout");
             const mockContext = {
                 cloudflare: {
-                    env: { CF_APP_PASSWORD: "test-password" }
+                    env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
                 }
             };
 
@@ -105,7 +105,7 @@ describe("logout route", () => {
             const mockRequest = new Request("http://localhost/logout");
             const mockContext = {
                 cloudflare: {
-                    env: { CF_APP_PASSWORD: "test-password" }
+                    env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
                 }
             };
 
@@ -152,7 +152,7 @@ describe("logout route", () => {
             const mockRequest = new Request("http://localhost/logout");
             const mockContext = {
                 cloudflare: {
-                    env: { CF_APP_PASSWORD: "test-password" }
+                    env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
                 }
             };
 

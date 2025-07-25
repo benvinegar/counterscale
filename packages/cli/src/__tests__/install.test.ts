@@ -417,7 +417,7 @@ describe("install prompts", () => {
             );
         });
 
-        it("should validate password is not empty", async () => {
+        it("should validate password has at least 12 characters", async () => {
             const mockPrompts = await import("@clack/prompts");
             (
                 mockPrompts.password as unknown as ReturnType<typeof vi.fn>
@@ -426,8 +426,10 @@ describe("install prompts", () => {
                     throw new Error("validate function missing");
                 }
 
-                expect(validate("")).toBe("Value is required");
-                expect(validate("password")).toBeUndefined();
+                expect(validate("")).toBe("A password of 12 characters or longer is required");
+                expect(validate("short")).toBe("A password of 12 characters or longer is required");
+                expect(validate("password123")).toBe("A password of 12 characters or longer is required"); // 11 chars, should fail
+                expect(validate("password1234")).toBeUndefined(); // 12 chars, should pass
                 return "mock-password";
             });
 
@@ -453,13 +455,12 @@ describe("install prompts", () => {
             });
         });
 
-        it("should accept any non-empty password", async () => {
+        it("should accept passwords with 12 or more characters", async () => {
             const testPasswords = [
-                "a",
-                "short",
-                "a very long password with spaces and symbols!@#$%",
-                "123456",
-                "password123",
+                "password1234", // exactly 12 chars
+                "a very long password with spaces and symbols!@#$%", // much longer
+                "123456789012", // exactly 12 chars
+                "verylongpassword", // longer than 12
             ];
 
             for (const testPassword of testPasswords) {

@@ -14,6 +14,11 @@ describe("Root", () => {
         window.scrollTo = vitest.fn(() => {});
     });
 
+    afterEach(() => {
+        cleanup();
+        vitest.clearAllMocks();
+    });
+
     test("renders without crashing", async () => {
         function loader() {
             return {
@@ -79,6 +84,7 @@ describe("Layout", () => {
 
     afterEach(() => {
         cleanup();
+        vitest.clearAllMocks();
     });
 
     test("renders with default data when no route data is available", async () => {

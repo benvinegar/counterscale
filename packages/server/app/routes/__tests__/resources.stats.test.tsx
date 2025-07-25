@@ -35,7 +35,8 @@ describe("resources.stats loader", () => {
             },
             cloudflare: {
                 env: {
-                    CF_APP_PASSWORD: "test-password",
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-jwt-secret",
                 },
             },
         };
@@ -78,7 +79,8 @@ describe("resources.stats loader", () => {
             },
             cloudflare: {
                 env: {
-                    CF_APP_PASSWORD: "test-password",
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-jwt-secret",
                 },
             },
         };
@@ -115,7 +117,8 @@ describe("resources.stats loader", () => {
             },
             cloudflare: {
                 env: {
-                    CF_APP_PASSWORD: "test-password",
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-jwt-secret",
                 },
             },
         };
