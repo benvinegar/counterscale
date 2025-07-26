@@ -21,7 +21,8 @@
         "lint": "eslint .",
         "test": "vitest run",
         "test-ci": "vitest run --coverage",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "generate-secrets": "node scripts/generate-secrets.mjs"
     },
     "dependencies": {
         "@clack/prompts": "^0.10.0",

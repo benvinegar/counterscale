@@ -1,21 +1,13 @@
 #!/usr/bin/env node
 
-import crypto from "node:crypto";
-import bcrypt from "bcryptjs";
 import { intro, password, note, outro, isCancel, cancel } from "@clack/prompts";
-
-function generateJWTSecret() {
-  return crypto.randomBytes(64).toString('hex');
-}
-
-async function generatePasswordHash(password) {
-  return await bcrypt.hash(password, 12);
-}
+import { generateCryptoSecret, generatePasswordHash } from "../dist/auth.js";
 
 async function main() {
-  intro('🔐 Counterscale Secret Generator');
+  intro('🔐 Counterscale Development Secret Generator');
   
-  const jwtSecret = generateJWTSecret();
+  const jwtSecret = generateCryptoSecret();
+;
   
   const userPassword = await password({
     message: 'Enter password to hash:',
@@ -35,12 +27,12 @@ async function main() {
   }
   
   try {
-    const passwordHash = await generatePasswordHash(userPassword);
+    const passwordHash = await generatePasswordHash(userPassword, jwtSecret);
     
     const output = [
       'Copy these values to your .dev.vars file:',
       '',
-      `CF_JWT_SECRET='${jwtSecret}'`,
+      `CF_CRYPTO_SECRET='${jwtSecret}'`,
       `CF_PASSWORD_HASH='${passwordHash}'`
     ].join('\n');
     
@@ -54,3 +46,4 @@ async function main() {
 }
 
 main().catch(console.error);
+

@@ -19,7 +19,7 @@ export function getDefaultContext() {
                     CF_BEARER_TOKEN: "fake",
                     CF_ACCOUNT_ID: "fake",
                     CF_PASSWORD_HASH: "$2b$12$test.hash.value",
-                    CF_JWT_SECRET: "test-jwt-secret",
+                    CF_CRYPTO_SECRET: "test-secret",
                 },
                 // eslint-disable-next-line
                 cf: {} as any,

@@ -27,10 +27,12 @@ describe("Index route", () => {
 
         // Check if component renders at all
         expect(container).toBeInTheDocument();
-        
+
         // Wait for content to load
         await waitFor(() => {
-            expect(screen.getByText("Welcome to Counterscale")).toBeInTheDocument();
+            expect(
+                screen.getByText("Welcome to Counterscale"),
+            ).toBeInTheDocument();
         });
 
         expect(
@@ -52,7 +54,9 @@ describe("Index route", () => {
         render(<RemixStub />);
 
         await waitFor(() => {
-            expect(screen.getByText("Welcome to Counterscale")).toBeInTheDocument();
+            expect(
+                screen.getByText("Welcome to Counterscale"),
+            ).toBeInTheDocument();
         });
 
         expect(
@@ -79,42 +83,58 @@ describe("loader function", () => {
 
     test("should return user when authenticated", async () => {
         const mockUser = { authenticated: true };
-        const getUserSpy = vi.spyOn(auth, "getUser").mockResolvedValue(mockUser);
-        
+        const getUserSpy = vi
+            .spyOn(auth, "getUser")
+            .mockResolvedValue(mockUser);
+
         const mockRequest = new Request("http://localhost/");
         const mockContext = {
             cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
         };
 
-        const result = await loader({ 
-            request: mockRequest, 
+        const result = await loader({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
-        expect(getUserSpy).toHaveBeenCalledWith(mockRequest, mockContext.cloudflare.env);
+        expect(getUserSpy).toHaveBeenCalledWith(
+            mockRequest,
+            mockContext.cloudflare.env,
+        );
         expect(result).toEqual({ user: mockUser });
     });
 
     test("should return { authenticated: false } user when not authenticated", async () => {
-        const getUserSpy = vi.spyOn(auth, "getUser").mockResolvedValue({ authenticated: false });
-        
+        const getUserSpy = vi
+            .spyOn(auth, "getUser")
+            .mockResolvedValue({ authenticated: false });
+
         const mockRequest = new Request("http://localhost/");
         const mockContext = {
             cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
         };
 
-        const result = await loader({ 
-            request: mockRequest, 
+        const result = await loader({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
-        expect(getUserSpy).toHaveBeenCalledWith(mockRequest, mockContext.cloudflare.env);
+        expect(getUserSpy).toHaveBeenCalledWith(
+            mockRequest,
+            mockContext.cloudflare.env,
+        );
         expect(result).toEqual({ user: { authenticated: false } });
     });
 });
@@ -132,19 +152,22 @@ describe("action function", () => {
     test("should return error when password is missing", async () => {
         const formData = new FormData();
         const mockRequest = {
-            formData: vi.fn().mockResolvedValue(formData)
+            formData: vi.fn().mockResolvedValue(formData),
         } as unknown as Request;
-        
+
         const mockContext = {
             cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
         };
 
-        const result = await action({ 
-            request: mockRequest, 
+        const result = await action({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
         expect(result).toEqual({ error: "Password is required" });
@@ -153,21 +176,24 @@ describe("action function", () => {
     test("should return error when password is empty string", async () => {
         const formData = new FormData();
         formData.set("password", "");
-        
+
         const mockRequest = {
-            formData: vi.fn().mockResolvedValue(formData)
+            formData: vi.fn().mockResolvedValue(formData),
         } as unknown as Request;
-        
+
         const mockContext = {
             cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
         };
 
-        const result = await action({ 
-            request: mockRequest, 
+        const result = await action({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
         expect(result).toEqual({ error: "Password is required" });
@@ -178,23 +204,26 @@ describe("action function", () => {
         formData.set("password", "123" as any);
         // Mock formData.get to return a non-string value
         const mockFormData = {
-            get: vi.fn().mockReturnValue(123)
-        };
-        
-        const mockRequest = {
-            formData: vi.fn().mockResolvedValue(mockFormData)
-        } as unknown as Request;
-        
-        const mockContext = {
-            cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+            get: vi.fn().mockReturnValue(123),
         };
 
-        const result = await action({ 
-            request: mockRequest, 
+        const mockRequest = {
+            formData: vi.fn().mockResolvedValue(mockFormData),
+        } as unknown as Request;
+
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await action({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
         expect(result).toEqual({ error: "Password is required" });
@@ -202,80 +231,107 @@ describe("action function", () => {
 
     test("should call login and return redirect when password is valid", async () => {
         const mockRedirect = { status: 302, headers: new Headers() };
-        const loginSpy = vi.spyOn(auth, "login").mockResolvedValue(mockRedirect as any);
-        
+        const loginSpy = vi
+            .spyOn(auth, "login")
+            .mockResolvedValue(mockRedirect as any);
+
         const formData = new FormData();
         formData.set("password", "correct-password");
-        
+
         const mockRequest = {
-            formData: vi.fn().mockResolvedValue(formData)
+            formData: vi.fn().mockResolvedValue(formData),
         } as unknown as Request;
-        
+
         const mockContext = {
             cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
         };
 
-        const result = await action({ 
-            request: mockRequest, 
+        const result = await action({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
-        expect(loginSpy).toHaveBeenCalledWith(mockRequest, "correct-password", mockContext.cloudflare.env);
+        expect(loginSpy).toHaveBeenCalledWith(
+            mockRequest,
+            "correct-password",
+            mockContext.cloudflare.env,
+        );
         expect(result).toBe(mockRedirect);
     });
 
     test("should return error when login throws an error", async () => {
-        const loginSpy = vi.spyOn(auth, "login").mockRejectedValue(new Error("Invalid password"));
-        
+        const loginSpy = vi
+            .spyOn(auth, "login")
+            .mockRejectedValue(new Error("Invalid password"));
+
         const formData = new FormData();
         formData.set("password", "wrong-password");
-        
+
         const mockRequest = {
-            formData: vi.fn().mockResolvedValue(formData)
+            formData: vi.fn().mockResolvedValue(formData),
         } as unknown as Request;
-        
+
         const mockContext = {
             cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
         };
 
-        const result = await action({ 
-            request: mockRequest, 
+        const result = await action({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
-        expect(loginSpy).toHaveBeenCalledWith(mockRequest, "wrong-password", mockContext.cloudflare.env);
+        expect(loginSpy).toHaveBeenCalledWith(
+            mockRequest,
+            "wrong-password",
+            mockContext.cloudflare.env,
+        );
         expect(result).toEqual({ error: "Invalid password" });
     });
 
     test("should handle login rejection gracefully", async () => {
-        const loginSpy = vi.spyOn(auth, "login").mockRejectedValue("Some other error");
-        
+        const loginSpy = vi
+            .spyOn(auth, "login")
+            .mockRejectedValue("Some other error");
+
         const formData = new FormData();
         formData.set("password", "any-password");
-        
+
         const mockRequest = {
-            formData: vi.fn().mockResolvedValue(formData)
+            formData: vi.fn().mockResolvedValue(formData),
         } as unknown as Request;
-        
+
         const mockContext = {
             cloudflare: {
-                env: { CF_PASSWORD_HASH: "$2b$12$test.hash.value", CF_JWT_SECRET: "test-jwt-secret" }
-            }
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_CRYPTO_SECRET: "test-secret",
+                },
+            },
         };
 
-        const result = await action({ 
-            request: mockRequest, 
+        const result = await action({
+            request: mockRequest,
             context: mockContext,
-            params: {}
+            params: {},
         });
 
-        expect(loginSpy).toHaveBeenCalledWith(mockRequest, "any-password", mockContext.cloudflare.env);
+        expect(loginSpy).toHaveBeenCalledWith(
+            mockRequest,
+            "any-password",
+            mockContext.cloudflare.env,
+        );
         expect(result).toEqual({ error: "Invalid password" });
     });
 });
