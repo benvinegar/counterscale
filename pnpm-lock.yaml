@@ -197,6 +197,9 @@ importers:
         specifier: ^1.0.38
         version: 1.0.40
     devDependencies:
+      '@clack/prompts':
+        specifier: ^0.10.0
+        version: 0.10.0
       '@cloudflare/workers-types':
         specifier: ^4.20240620.0
         version: 4.20250204.0
