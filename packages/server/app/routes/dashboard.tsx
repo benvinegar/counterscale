@@ -44,7 +44,6 @@ export const meta: MetaFunction = () => {
 const MAX_RETENTION_DAYS = 90;
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
-    // Check authentication first
     await requireAuth(request, context.cloudflare.env);
     
     // NOTE: probably duped from getLoadContext / need to de-duplicate

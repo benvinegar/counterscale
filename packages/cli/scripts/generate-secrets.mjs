@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { intro, password, note, outro, isCancel, cancel } from "@clack/prompts";
+import { intro, note, outro, isCancel, cancel } from "@clack/prompts";
 import { generateCryptoSecret, generatePasswordHash } from "../dist/auth.js";
+import { promptAppPassword } from "../dist/install.js";
 
 async function main() {
   intro('🔐 Counterscale Development Secret Generator');
@@ -9,17 +10,7 @@ async function main() {
   const jwtSecret = generateCryptoSecret();
 ;
   
-  const userPassword = await password({
-    message: 'Enter password to hash:',
-    validate: (value) => {
-      if (!value.trim()) {
-        return 'Password cannot be empty';
-      }
-      if (value.trim().length < 12) {
-        return 'Password must be 12 characters or more';
-      }
-    }
-  });
+  const userPassword = await promptAppPassword();
   
   if (isCancel(userPassword)) {
     cancel('Operation cancelled');
