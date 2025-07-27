@@ -21,12 +21,15 @@
         "lint": "eslint .",
         "test": "vitest run",
         "test-ci": "vitest run --coverage",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "generate-secrets": "node scripts/generate-secrets.mjs"
     },
     "dependencies": {
         "@clack/prompts": "^0.10.0",
         "@counterscale/server": "3.1.0",
+        "@types/bcryptjs": "^3.0.0",
         "@types/node": "^22.10.2",
+        "bcryptjs": "^3.0.2",
         "chalk": "^5.3.0",
         "cli-highlight": "^2.1.11",
         "figlet": "^1.7.0",

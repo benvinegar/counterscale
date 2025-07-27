@@ -27,6 +27,7 @@ import {
 
 import { CloudflareClient } from "./cloudflare.js";
 import { getScriptSnippet, getPackageSnippet, CLI_COLORS } from "./ui.js";
+import { generateCryptoSecret, generatePasswordHash } from "./auth.js";
 
 export function bail() {
     cancel("Operation canceled.");
@@ -58,6 +59,30 @@ export async function promptApiToken(): Promise<string> {
     }
 
     return cfApiToken;
+}
+
+export const MIN_PASSWORD_LENGTH = 8;
+export async function promptAppPassword(): Promise<string> {
+    const appPassword = await password({
+        message:
+            "Enter the password you will use to access the Counterscale Dashboard",
+        mask: "*",
+        validate: (val) => {
+            if (val.length < MIN_PASSWORD_LENGTH) {
+                return `A password of ${MIN_PASSWORD_LENGTH} characters or longer is required`;
+            }
+        },
+    });
+
+    if (isCancel(appPassword)) {
+        bail();
+    }
+
+    if (typeof appPassword !== "string") {
+        throw new Error("App password is required");
+    }
+
+    return appPassword;
 }
 
 export async function promptDeploy(
@@ -260,7 +285,9 @@ export async function install(
 
     if (Object.keys(secrets).length === 0) {
         note(
-            `Create an API token from your Cloudflare Profile page: ${chalk.bold("https://dash.cloudflare.com/profile/api-tokens")}
+            `Create an API token from your Cloudflare Profile page: ${chalk.bold(
+                "https://dash.cloudflare.com/profile/api-tokens",
+            )}
 
 Your token needs these permissions:
 
@@ -282,6 +309,36 @@ Your token needs these permissions:
                 } else {
                     s.stop("Error setting Cloudflare API token", 1);
                     throw new Error("Error setting Cloudflare API token");
+                }
+            }
+
+            const appPassword = await promptAppPassword();
+            if (appPassword) {
+                const s = spinner();
+                s.start(`Setting CounterScale Application Password ...`);
+                const cryptoSecret = generateCryptoSecret();
+                const passwordHash = await generatePasswordHash(
+                    appPassword,
+                    cryptoSecret,
+                );
+
+                if (
+                    await cloudflare.setCloudflareSecrets({
+                        CF_PASSWORD_HASH: passwordHash,
+                        CF_CRYPTO_SECRET: cryptoSecret,
+                    })
+                ) {
+                    s.stop(
+                        "Setting CounterScale Application Password ... Done!",
+                    );
+                } else {
+                    s.stop(
+                        "Error setting CounterScale Application Password",
+                        1,
+                    );
+                    throw new Error(
+                        "Error setting CounterScale Application Password",
+                    );
                 }
             }
         } catch (err) {
@@ -323,7 +380,9 @@ Your token needs these permissions:
 
             await tick(() =>
                 outro(
-                    `⚡️ Visit your dashboard: ${chalk.rgb(...CLI_COLORS.tan).underline(deployUrl)}`,
+                    `⚡️ Visit your dashboard: ${chalk
+                        .rgb(...CLI_COLORS.tan)
+                        .underline(deployUrl)}`,
                 ),
             );
 

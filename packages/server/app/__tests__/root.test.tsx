@@ -14,6 +14,11 @@ describe("Root", () => {
         window.scrollTo = vitest.fn(() => {});
     });
 
+    afterEach(() => {
+        cleanup();
+        vitest.clearAllMocks();
+    });
+
     test("renders without crashing", async () => {
         function loader() {
             return {
@@ -39,6 +44,37 @@ describe("Root", () => {
         await waitFor(() => screen.findByText("Version"));
         expect(screen.getByText("ABC123")).toBeInTheDocument();
     });
+
+    test("renders logout button when user is authenticated", async () => {
+        function loader() {
+            return {
+                version: {
+                    name: "ABC123",
+                    url: "http://example.com/commit/ABC123",
+                },
+                origin: "http://example.com",
+                url: "http://example.com/path",
+                user: { authenticated: true },
+            };
+        }
+
+        const RemixStub = createRoutesStub([
+            {
+                path: "/",
+                Component: Root,
+                loader,
+            },
+        ]);
+
+        render(<RemixStub />);
+        
+        await waitFor(() => screen.getByText("ABC123"));
+        
+        const logoutLink = screen.getByText("Logout");
+        expect(logoutLink).toBeInTheDocument();
+        expect(logoutLink.closest("a")).toHaveAttribute("href", "/logout");
+        expect(logoutLink.closest("a")).toHaveClass("ml-2");
+    });
 });
 
 describe("Layout", () => {
@@ -48,6 +84,7 @@ describe("Layout", () => {
 
     afterEach(() => {
         cleanup();
+        vitest.clearAllMocks();
     });
 
     test("renders with default data when no route data is available", async () => {

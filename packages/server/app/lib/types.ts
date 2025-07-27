@@ -7,3 +7,7 @@ export interface SearchFilters {
     browserName?: string;
     browserVersion?: string;
 }
+
+export interface User {
+    authenticated: boolean;
+}

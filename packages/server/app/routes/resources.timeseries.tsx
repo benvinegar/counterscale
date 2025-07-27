@@ -1,5 +1,4 @@
 import type { LoaderFunctionArgs } from "react-router";
-import type { AnalyticsEngineAPI } from "~/analytics/query";
 import {
     getFiltersFromSearchParams,
     paramsFromUrl,
@@ -11,14 +10,14 @@ import { useFetcher } from "react-router";
 import { Card, CardContent } from "~/components/ui/card";
 import TimeSeriesChart from "~/components/TimeSeriesChart";
 import { SearchFilters } from "~/lib/types";
+import { requireAuth } from "~/lib/auth";
+import type { ViewsGroupedByInterval } from "~/analytics/query";
 
 export async function loader({
     context,
     request,
-}: LoaderFunctionArgs<{
-    analyticsEngine: AnalyticsEngineAPI;
-}>) {
-    if (!context) throw new Error("Context is not defined");
+}: LoaderFunctionArgs) {
+    await requireAuth(request, context.cloudflare.env);
 
     const { analyticsEngine } = context;
     const { interval, site } = paramsFromUrl(request.url);
@@ -29,7 +28,7 @@ export async function loader({
     const intervalType = getIntervalType(interval);
     const { startDate, endDate } = getDateTimeRange(interval, tz);
 
-    const viewsGroupedByInterval =
+    const viewsGroupedByInterval: ViewsGroupedByInterval =
         await analyticsEngine.getViewsGroupedByInterval(
             site,
             intervalType,
