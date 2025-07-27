@@ -131,7 +131,7 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       '@counterscale/tracker':
-        specifier: '*'
+        specifier: workspace:*
         version: link:../tracker
       '@radix-ui/react-select':
         specifier: ^2.1.0
@@ -183,7 +183,7 @@ importers:
         specifier: ^4.20240620.0
         version: 4.20250204.0
       '@counterscale/eslint-config':
-        specifier: '*'
+        specifier: workspace:*
         version: link:../eslint-config
       '@react-router/dev':
         specifier: 7.1.1
@@ -264,7 +264,7 @@ importers:
   packages/tracker:
     devDependencies:
       '@counterscale/eslint-config':
-        specifier: '*'
+        specifier: workspace:*
         version: link:../eslint-config
       '@playwright/test':
         specifier: ^1.49.1

@@ -33,7 +33,7 @@
     },
     "dependencies": {
         "@cloudflare/kv-asset-handler": "^0.3.3",
-        "@counterscale/tracker": "*",
+        "@counterscale/tracker": "workspace:*",
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
         "@react-router/cloudflare": "7.1.1",
@@ -52,7 +52,7 @@
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20240620.0",
-        "@counterscale/eslint-config": "*",
+        "@counterscale/eslint-config": "workspace:*",
         "@react-router/dev": "7.1.1",
         "@react-router/fs-routes": "7.1.1",
         "@testing-library/react": "^16.2.0",
