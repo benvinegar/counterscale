@@ -286,7 +286,7 @@ Your token needs these permissions:
 - Account Analytics: Read`,
         );
         try {
-            const apiToken = await promptApiToken(cloudfare);
+            const apiToken = await promptApiToken(cloudflare);
             if (apiToken) {
                 const s = spinner();
                 s.start(`Setting Cloudflare API token ...`);
