@@ -35,8 +35,7 @@ export async function verifyToken(token: string): Promise<Record<string, any>> {
         }
 
         // Check if token has necessary permissions
-        const requiredPermissions = ['account:read', 'workers:write', 'workers_scripts:edit'];
-        const missingPermissions = requiredPermissions.filter(
+        const missingPermissions = REQUIRED_PERMISSIONS.filter(
             perm => !data.result.status.includes(perm)
         );
 
