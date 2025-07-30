@@ -1,5 +1,3 @@
-import { useFetcher } from "react-router";
-
 import type { LoaderFunctionArgs } from "react-router";
 
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
@@ -40,11 +38,10 @@ export const BrowserVersionCard = ({
     timezone: string;
 }) => {
     return (
-        <PaginatedTableCard
+        <PaginatedTableCard<typeof loader>
             siteId={siteId}
             interval={interval}
             columnHeaders={[`${filters.browserName} Versions`, "Visitors"]}
-            dataFetcher={useFetcher<typeof loader>()}
             loaderUrl="/resources/browserversion"
             onClick={(browserVersion) =>
                 onFilterChange({ ...filters, browserVersion })
