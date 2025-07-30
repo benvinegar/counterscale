@@ -12,7 +12,7 @@ vi.mock("react-router", () => ({
 
 const mockEnv = {
     CF_PASSWORD_HASH: "$2b$12$test.hash.value",
-    CF_CRYPTO_SECRET: "test-secret-key-for-jwt-signing-and-verification",
+    CF_JWT_SECRET: "test-secret-key-for-jwt-signing-and-verification",
 } as Env;
 
 describe("auth", () => {
@@ -47,7 +47,7 @@ describe("auth", () => {
                 vi.mocked(createJWTCookie).mock.calls[0][0];
             const decoded = jwt.verify(
                 createJWTCookieCall,
-                mockEnv.CF_CRYPTO_SECRET,
+                mockEnv.CF_JWT_SECRET,
             ) as jwt.JwtPayload;
             expect(decoded.authenticated).toBe(true);
             expect(decoded.iat).toBeTypeOf("number");
@@ -122,7 +122,7 @@ describe("auth", () => {
             // Create a real JWT token for testing
             const validToken = jwt.sign(
                 { authenticated: true, iat: Math.floor(Date.now() / 1000) },
-                mockEnv.CF_CRYPTO_SECRET,
+                mockEnv.CF_JWT_SECRET,
                 { expiresIn: "30d", issuer: "counterscale" },
             );
 
@@ -159,7 +159,7 @@ describe("auth", () => {
             // Create an expired token
             const expiredToken = jwt.sign(
                 { authenticated: true, iat: Math.floor(Date.now() / 1000) },
-                mockEnv.CF_CRYPTO_SECRET,
+                mockEnv.CF_JWT_SECRET,
                 { expiresIn: "-1s", issuer: "counterscale" },
             );
 
@@ -179,7 +179,7 @@ describe("auth", () => {
             // Create a real JWT token for testing
             const validToken = jwt.sign(
                 { authenticated: true, iat: Math.floor(Date.now() / 1000) },
-                mockEnv.CF_CRYPTO_SECRET,
+                mockEnv.CF_JWT_SECRET,
                 { expiresIn: "30d", issuer: "counterscale" },
             );
 
@@ -224,7 +224,7 @@ describe("auth", () => {
             // Create an expired token
             const expiredToken = jwt.sign(
                 { authenticated: true, iat: Math.floor(Date.now() / 1000) },
-                mockEnv.CF_CRYPTO_SECRET,
+                mockEnv.CF_JWT_SECRET,
                 { expiresIn: "-1s", issuer: "counterscale" },
             );
 
@@ -241,7 +241,7 @@ describe("auth", () => {
             // Create a token with authenticated: false
             const unauthenticatedToken = jwt.sign(
                 { authenticated: false, iat: Math.floor(Date.now() / 1000) },
-                mockEnv.CF_CRYPTO_SECRET,
+                mockEnv.CF_JWT_SECRET,
                 { expiresIn: "30d", issuer: "counterscale" },
             );
 
@@ -260,7 +260,7 @@ describe("auth", () => {
             // Create a token with wrong issuer
             const wrongIssuerToken = jwt.sign(
                 { authenticated: true, iat: Math.floor(Date.now() / 1000) },
-                mockEnv.CF_CRYPTO_SECRET,
+                mockEnv.CF_JWT_SECRET,
                 { expiresIn: "30d", issuer: "wrong-issuer" },
             );
 

@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
 import { intro, note, outro, isCancel, cancel } from "@clack/prompts";
-import { generateCryptoSecret, generatePasswordHash } from "../dist/auth.js";
+import { generateJWTSecret, generatePasswordHash } from "../dist/auth.js";
 import { promptAppPassword } from "../dist/install.js";
 
 async function main() {
   intro('🔐 Counterscale Development Secret Generator');
   
-  const jwtSecret = generateCryptoSecret();
-;
+  const jwtSecret = generateJWTSecret();
   
   const userPassword = await promptAppPassword();
   
@@ -18,12 +17,12 @@ async function main() {
   }
   
   try {
-    const passwordHash = await generatePasswordHash(userPassword, jwtSecret);
+    const passwordHash = await generatePasswordHash(userPassword);
     
     const output = [
       'Copy these values to your .dev.vars file:',
       '',
-      `CF_CRYPTO_SECRET='${jwtSecret}'`,
+      `CF_JWT_SECRET='${jwtSecret}'`,
       `CF_PASSWORD_HASH='${passwordHash}'`
     ].join('\n');
     

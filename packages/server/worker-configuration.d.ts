@@ -5,6 +5,6 @@ interface Env {
     CF_BEARER_TOKEN: string;
     CF_ACCOUNT_ID: string;
     CF_PASSWORD_HASH: string;
-    CF_CRYPTO_SECRET: string;
+    CF_JWT_SECRET: string;
     WEB_COUNTER_AE: AnalyticsEngineDataset;
 }

@@ -26,7 +26,7 @@ describe("logout route", () => {
                 cloudflare: {
                     env: {
                         CF_PASSWORD_HASH: "$2b$12$test.hash.value",
-                        CF_CRYPTO_SECRET: "test-secret",
+                        CF_JWT_SECRET: "test-secret",
                     },
                 },
             };
@@ -57,7 +57,7 @@ describe("logout route", () => {
                 cloudflare: {
                     env: {
                         CF_PASSWORD_HASH: "$2b$12$test.hash.value",
-                        CF_CRYPTO_SECRET: "test-secret",
+                        CF_JWT_SECRET: "test-secret",
                     },
                 },
             };
@@ -117,7 +117,7 @@ describe("logout route", () => {
                 cloudflare: {
                     env: {
                         CF_PASSWORD_HASH: "$2b$12$test.hash.value",
-                        CF_CRYPTO_SECRET: "test-secret",
+                        CF_JWT_SECRET: "test-secret",
                     },
                 },
             };
@@ -146,7 +146,7 @@ describe("logout route", () => {
                 cloudflare: {
                     env: {
                         CF_PASSWORD_HASH: "$2b$12$test.hash.value",
-                        CF_CRYPTO_SECRET: "test-secret",
+                        CF_JWT_SECRET: "test-secret",
                     },
                 },
             };
@@ -208,7 +208,7 @@ describe("logout route", () => {
                 cloudflare: {
                     env: {
                         CF_PASSWORD_HASH: "$2b$12$test.hash.value",
-                        CF_CRYPTO_SECRET: "test-secret",
+                        CF_JWT_SECRET: "test-secret",
                     },
                 },
             };

@@ -27,7 +27,7 @@ import {
 
 import { CloudflareClient } from "./cloudflare.js";
 import { getScriptSnippet, getPackageSnippet, CLI_COLORS } from "./ui.js";
-import { generateCryptoSecret, generatePasswordHash } from "./auth.js";
+import { generateJWTSecret, generatePasswordHash } from "./auth.js";
 
 export function bail() {
     cancel("Operation canceled.");
@@ -316,16 +316,13 @@ Your token needs these permissions:
             if (appPassword) {
                 const s = spinner();
                 s.start(`Setting CounterScale Application Password ...`);
-                const cryptoSecret = generateCryptoSecret();
-                const passwordHash = await generatePasswordHash(
-                    appPassword,
-                    cryptoSecret,
-                );
+                const jwtSecret = generateJWTSecret();
+                const passwordHash = await generatePasswordHash(appPassword);
 
                 if (
                     await cloudflare.setCloudflareSecrets({
                         CF_PASSWORD_HASH: passwordHash,
-                        CF_CRYPTO_SECRET: cryptoSecret,
+                        CF_JWT_SECRET: jwtSecret,
                     })
                 ) {
                     s.stop(

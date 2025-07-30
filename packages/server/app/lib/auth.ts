@@ -18,7 +18,7 @@ export async function login(_request: Request, password: string, env: Env) {
             authenticated: true,
             iat: Math.floor(Date.now() / 1000),
         },
-        env.CF_CRYPTO_SECRET,
+        env.CF_JWT_SECRET,
         {
             expiresIn: "30d",
             issuer: "counterscale",
@@ -74,7 +74,7 @@ export async function getUser(request: Request, env: Env): Promise<User> {
 
         const decoded = jwt.verify(
             token,
-            env.CF_CRYPTO_SECRET,
+            env.CF_JWT_SECRET,
         ) as jwt.JwtPayload;
 
         if (decoded.authenticated) {
