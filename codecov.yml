@@ -1,7 +1,7 @@
 ignore:
     - "*.config.js"
     - "*.config.ts"
-    - "/packages/cli/scripts/generate-secrets.mjs"
+    - "/packages/cli/scripts/**"
 
 # Coverage checks shouldn't fail the build
 coverage:
