@@ -68,16 +68,8 @@ export class CloudflareClient {
      * @throws {Error} If token is invalid or lacks necessary permissions
      */
     async verifyToken(token: string): Promise<void> {
-        const result = await verifyToken(token);
-        // Check if token has necessary permissions
-        const requiredPermissions = ['account:read', 'workers:write', 'workers_scripts:edit'];
-        const missingPermissions = requiredPermissions.filter(
-            perm => !result.status.includes(perm)
-        );
-
-        if (missingPermissions.length > 0) {
-            throw new Error(`Missing required permissions: ${missingPermissions.join(', ')}`);
-        }
+        // Delegate token verification and permission checking to the standalone function
+        await verifyToken(token);
     }
 
     async getAccountId(): Promise<string | null> {
