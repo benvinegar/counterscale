@@ -23,6 +23,7 @@ interface AnalyticsCountResult {
     bounces: number;
 }
 
+export type ViewsGroupedByInterval = [string, AnalyticsCountResult][];
 /** Given an AnalyticsCountResult object, and an object representing a row returned from
  *  CF Analytics Engine w/ counts grouped by isVisitor, accumulate view,
  *  visit, and visitor counts.
@@ -193,7 +194,7 @@ export class AnalyticsEngineAPI {
         endDateTime: Date, // end date/time in local timezone
         tz?: string, // local timezone
         filters: SearchFilters = {},
-    ) {
+    ): Promise<ViewsGroupedByInterval> {
         let intervalCount = 1;
 
         // keeping this code here once we start allowing bigger intervals (e.g. intervals of 2 hours)

@@ -10,6 +10,7 @@ import {
     expect,
     Mock,
 } from "vitest";
+import { requireAuth } from "~/lib/auth";
 import "vitest-dom/extend-expect";
 
 import { createRoutesStub } from "react-router";
@@ -19,6 +20,10 @@ import Dashboard, { loader } from "../dashboard";
 import { AnalyticsEngineAPI } from "~/analytics/query";
 import { createFetchResponse, getDefaultContext } from "./testutils";
 import ResizeObserverPolyfill from "resize-observer-polyfill";
+
+vi.mock("~/lib/auth", () => ({
+    requireAuth: vi.fn(),
+}));
 
 describe("Dashboard route", () => {
     let fetch: Mock;
@@ -30,6 +35,7 @@ describe("Dashboard route", () => {
 
     beforeEach(() => {
         fetch = global.fetch = vi.fn();
+        vi.mocked(requireAuth).mockResolvedValue({} as any);
     });
 
     afterEach(() => {

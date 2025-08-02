@@ -1,6 +1,7 @@
 ignore:
     - "*.config.js"
     - "*.config.ts"
+    - "/packages/cli/scripts/**"
 
 # Coverage checks shouldn't fail the build
 coverage:

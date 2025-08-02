@@ -1,24 +1,63 @@
 // @vitest-environment jsdom
-import { test, describe, expect } from "vitest";
+import { test, describe, expect, vi, beforeEach, afterEach } from "vitest";
 import "vitest-dom/extend-expect";
 
 import { createRoutesStub } from "react-router";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 
-import Index from "../_index";
+import Index, { loader, action } from "../_index";
+import * as auth from "~/lib/auth";
 
 describe("Index route", () => {
+    afterEach(() => {
+        cleanup();
+        vi.clearAllMocks();
+    });
+
     test("renders index route", async () => {
         const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Index,
+                loader: () => ({ user: { authenticated: false } }),
+            },
+        ]);
+
+        const { container } = render(<RemixStub />);
+
+        // Check if component renders at all
+        expect(container).toBeInTheDocument();
+
+        // Wait for content to load
+        await waitFor(() => {
+            expect(
+                screen.getByText("Welcome to Counterscale"),
+            ).toBeInTheDocument();
+        });
+
+        expect(
+            screen.getByText("Enter your password to access the dashboard"),
+        ).toBeInTheDocument();
+
+        expect(screen.getByText("Sign In")).toBeInTheDocument();
+    });
+
+    test("renders authenticated state", async () => {
+        const RemixStub = createRoutesStub([
+            {
+                path: "/",
+                Component: Index,
+                loader: () => ({ user: { authenticated: true } }),
             },
         ]);
 
         render(<RemixStub />);
 
-        expect(screen.getByText("Welcome to Counterscale")).toBeInTheDocument();
+        await waitFor(() => {
+            expect(
+                screen.getByText("Welcome to Counterscale"),
+            ).toBeInTheDocument();
+        });
 
         expect(
             screen.getByText("Continue to access your analytics dashboard."),
@@ -29,5 +68,270 @@ describe("Index route", () => {
         expect(
             screen.getByRole("link", { name: "Go to Dashboard" }),
         ).toHaveAttribute("href", "/dashboard");
+    });
+});
+
+describe("loader function", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        cleanup();
+        vi.clearAllMocks();
+    });
+
+    test("should return user when authenticated", async () => {
+        const mockUser = { authenticated: true };
+        const getUserSpy = vi
+            .spyOn(auth, "getUser")
+            .mockResolvedValue(mockUser);
+
+        const mockRequest = new Request("http://localhost/");
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await loader({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(getUserSpy).toHaveBeenCalledWith(
+            mockRequest,
+            mockContext.cloudflare.env,
+        );
+        expect(result).toEqual({ user: mockUser });
+    });
+
+    test("should return { authenticated: false } user when not authenticated", async () => {
+        const getUserSpy = vi
+            .spyOn(auth, "getUser")
+            .mockResolvedValue({ authenticated: false });
+
+        const mockRequest = new Request("http://localhost/");
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await loader({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(getUserSpy).toHaveBeenCalledWith(
+            mockRequest,
+            mockContext.cloudflare.env,
+        );
+        expect(result).toEqual({ user: { authenticated: false } });
+    });
+});
+
+describe("action function", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        cleanup();
+        vi.clearAllMocks();
+    });
+
+    test("should return error when password is missing", async () => {
+        const formData = new FormData();
+        const mockRequest = {
+            formData: vi.fn().mockResolvedValue(formData),
+        } as unknown as Request;
+
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await action({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(result).toEqual({ error: "Password is required" });
+    });
+
+    test("should return error when password is empty string", async () => {
+        const formData = new FormData();
+        formData.set("password", "");
+
+        const mockRequest = {
+            formData: vi.fn().mockResolvedValue(formData),
+        } as unknown as Request;
+
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await action({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(result).toEqual({ error: "Password is required" });
+    });
+
+    test("should return error when password is not a string", async () => {
+        const formData = new FormData();
+        formData.set("password", "123" as any);
+        // Mock formData.get to return a non-string value
+        const mockFormData = {
+            get: vi.fn().mockReturnValue(123),
+        };
+
+        const mockRequest = {
+            formData: vi.fn().mockResolvedValue(mockFormData),
+        } as unknown as Request;
+
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await action({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(result).toEqual({ error: "Password is required" });
+    });
+
+    test("should call login and return redirect when password is valid", async () => {
+        const mockRedirect = { status: 302, headers: new Headers() };
+        const loginSpy = vi
+            .spyOn(auth, "login")
+            .mockResolvedValue(mockRedirect as any);
+
+        const formData = new FormData();
+        formData.set("password", "correct-password");
+
+        const mockRequest = {
+            formData: vi.fn().mockResolvedValue(formData),
+        } as unknown as Request;
+
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await action({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(loginSpy).toHaveBeenCalledWith(
+            mockRequest,
+            "correct-password",
+            mockContext.cloudflare.env,
+        );
+        expect(result).toBe(mockRedirect);
+    });
+
+    test("should return error when login throws an error", async () => {
+        const loginSpy = vi
+            .spyOn(auth, "login")
+            .mockRejectedValue(new Error("Invalid password"));
+
+        const formData = new FormData();
+        formData.set("password", "wrong-password");
+
+        const mockRequest = {
+            formData: vi.fn().mockResolvedValue(formData),
+        } as unknown as Request;
+
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await action({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(loginSpy).toHaveBeenCalledWith(
+            mockRequest,
+            "wrong-password",
+            mockContext.cloudflare.env,
+        );
+        expect(result).toEqual({ error: "Invalid password" });
+    });
+
+    test("should handle login rejection gracefully", async () => {
+        const loginSpy = vi
+            .spyOn(auth, "login")
+            .mockRejectedValue("Some other error");
+
+        const formData = new FormData();
+        formData.set("password", "any-password");
+
+        const mockRequest = {
+            formData: vi.fn().mockResolvedValue(formData),
+        } as unknown as Request;
+
+        const mockContext = {
+            cloudflare: {
+                env: {
+                    CF_PASSWORD_HASH: "$2b$12$test.hash.value",
+                    CF_JWT_SECRET: "test-secret",
+                },
+            },
+        };
+
+        const result = await action({
+            request: mockRequest,
+            context: mockContext,
+            params: {},
+        });
+
+        expect(loginSpy).toHaveBeenCalledWith(
+            mockRequest,
+            "any-password",
+            mockContext.cloudflare.env,
+        );
+        expect(result).toEqual({ error: "Invalid password" });
     });
 });

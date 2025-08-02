@@ -4,6 +4,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
     test: {
+        pool: 'forks', // Forces process isolation
         coverage: {
             provider: "v8", // or 'v8'
             exclude: [
