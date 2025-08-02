@@ -283,17 +283,18 @@ export async function install(
 
     const secrets = await cloudflare.getCloudflareSecrets();
 
-    if (Object.keys(secrets).length === 0) {
-        note(
-            `Create an API token from your Cloudflare Profile page: ${chalk.bold(
-                "https://dash.cloudflare.com/profile/api-tokens",
-            )}
+    try {
+        // Check if CF_BEARER_TOKEN is missing
+        if (!secrets?.CF_BEARER_TOKEN) {
+            note(
+                `Create an API token from your Cloudflare Profile page: ${chalk.bold(
+                    "https://dash.cloudflare.com/profile/api-tokens",
+                )}
 
 Your token needs these permissions:
 
 - Account Analytics: Read`,
-        );
-        try {
+            );
             const apiToken = await promptApiToken();
             if (apiToken) {
                 const s = spinner();
@@ -311,7 +312,10 @@ Your token needs these permissions:
                     throw new Error("Error setting Cloudflare API token");
                 }
             }
+        }
 
+        // Check if password-related secrets are missing
+        if (!secrets?.CF_PASSWORD_HASH || !secrets?.CF_JWT_SECRET) {
             const appPassword = await promptAppPassword();
             if (appPassword) {
                 const s = spinner();
@@ -338,10 +342,10 @@ Your token needs these permissions:
                     );
                 }
             }
-        } catch (err) {
-            console.error(err);
-            process.exit(1);
         }
+    } catch (err) {
+        console.error(err);
+        process.exit(1);
     }
 
     if (await promptDeploy(serverPkgJson.version)) {
