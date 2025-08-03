@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -7,7 +8,7 @@ import {
     TableRow,
 } from "~/components/ui/table";
 
-type CountByProperty = [string, string, string?][];
+type CountByProperty = [string | [string, string], string, string?][];
 
 function calculateCountPercentages(countByProperty: CountByProperty) {
     const totalCount = countByProperty.reduce(
@@ -76,11 +77,11 @@ export default function TableCard({
 
                     return (
                         <TableRow
-                            key={item[0]}
+                            key={key}
                             className={`group [&_td]:last:rounded-b-md ${gridCols}`}
                             width={barChartPercentages[index]}
                         >
-                            <TableCell className="font-medium min-w-48 break-all">
+                            <TableCell className="font-medium min-w-48 whitespace-normal relative flex items-center justify-start gap-2">
                                 {onClick ? (
                                     <button
                                         onClick={() => onClick(key as string)}
@@ -91,6 +92,18 @@ export default function TableCard({
                                 ) : (
                                     formattedLabel
                                 )}
+                                {/^https?:\/\//.test(label) ? 
+                                  (<a
+                                        href={label}
+                                        target={"_blank"}
+                                        rel="noreferrer"
+                                        aria-hidden="true"
+                                        className="inline whitespace-nowrap"
+                                    >
+                                        <ExternalLink size={16} />
+                                    </a>): 
+                                    null
+                                }
                             </TableCell>
 
                             <TableCell className="text-right min-w-16">
