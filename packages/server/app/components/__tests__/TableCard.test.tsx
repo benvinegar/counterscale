@@ -77,33 +77,6 @@ describe("TableCard", () => {
         expect(externalLinks).toHaveLength(0);
     });
 
-    test("renders external link icon with tuple format [key, label]", () => {
-        const propsWithTuples = {
-            countByProperty: [
-                [["key1", "https://example.com"], "100"],
-                [["key2", "http://test.com"], "50"],
-                [["key3", "not-a-url"], "25"],
-            ] as [string | [string, string], string, string?][],
-            columnHeaders: ["Site", "Views"],
-        };
-
-        const { container } = render(<TableCard {...propsWithTuples} />);
-        
-        // Should render external link icons for URLs in tuple format
-        const externalLinks = container.querySelectorAll('a[href^="http"]');
-        expect(externalLinks).toHaveLength(2);
-        
-        expect(externalLinks[0]).toHaveAttribute("href", "https://example.com");
-        expect(externalLinks[1]).toHaveAttribute("href", "http://test.com");
-        
-        // Check that the labels are displayed within this container
-        expect(container.querySelector('[href="https://example.com"]')).toBeInTheDocument();
-        expect(container.querySelector('[href="http://test.com"]')).toBeInTheDocument();
-        expect(container).toHaveTextContent("https://example.com");
-        expect(container).toHaveTextContent("http://test.com");
-        expect(container).toHaveTextContent("not-a-url");
-    });
-
     test("works with onClick handler and external links", () => {
         const mockOnClick = vi.fn();
         const propsWithOnClick = {

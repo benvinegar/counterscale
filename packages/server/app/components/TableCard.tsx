@@ -8,7 +8,7 @@ import {
     TableRow,
 } from "~/components/ui/table";
 
-type CountByProperty = [string | [string, string], string, string?][];
+type CountByProperty = [string, string, string?][];
 
 function calculateCountPercentages(countByProperty: CountByProperty) {
     const totalCount = countByProperty.reduce(
