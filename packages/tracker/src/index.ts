@@ -10,9 +10,17 @@ const GLOBALS = {
 
 export function init(opts: ClientOpts) {
     if (GLOBALS.client) {
-        throw new Error("Counterscale has already been initialized.");
+        return;
     }
     GLOBALS.client = new Client(opts);
+}
+
+export function isInitialized() {
+    return Boolean(GLOBALS.client);
+}
+
+export function getInitializedClient(): typeof GLOBALS["client"] {
+    return GLOBALS.client 
 }
 
 export function trackPageview(opts?: TrackPageviewOpts) {

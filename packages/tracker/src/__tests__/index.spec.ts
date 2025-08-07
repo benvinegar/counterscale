@@ -2,6 +2,7 @@ import { describe, test, expect, beforeAll, afterEach, vi } from "vitest";
 
 import * as Counterscale from "../index";
 import * as requestModule from "../lib/request";
+import { Client } from "~/lib/client";
 
 // Define a type for our mock XHR objects
 interface MockXHR {
@@ -46,11 +47,57 @@ describe("api", () => {
         Counterscale.cleanup();
     });
 
-    test("initializes", () => {
-        Counterscale.init({
-            siteId: "test-id",
-            reporterUrl: "https://example.com/collect",
-            autoTrackPageviews: false,
+    describe("init", () => {
+        test("initializes", () => {
+            Counterscale.init({
+                siteId: "test-id",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+        });
+        test("does not error when init is called twice", () => {
+            expect(() => {
+                Counterscale.init({
+                    siteId: "test-id",
+                    reporterUrl: "https://example.com/collect",
+                    autoTrackPageviews: false,
+                });
+                Counterscale.init({
+                    siteId: "test-id",
+                    reporterUrl: "https://example.com/collect",
+                    autoTrackPageviews: false,
+                });
+            }).not.toThrow()
+        });
+    });
+
+    describe("isInitialized", () => {
+        test("returns true when init has been called", () => {
+            Counterscale.init({
+                siteId: "test-id",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+            expect(Counterscale.isInitialized()).toBe(true);
+        });
+        test("returns false when init has not been called", () => {
+            expect(Counterscale.isInitialized()).toBe(false);
+        });
+    });
+
+    describe("getInitializedClient", () => {
+        test("returns an instance of a client if called after init", () => {
+            Counterscale.init({
+                siteId: "test-id",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            expect(Counterscale.getInitializedClient()).toBeInstanceOf(Client);
+        });
+
+        test("returns undefined if called without init", () => {
+            expect(Counterscale.getInitializedClient()).toBeUndefined();
         });
     });
 
