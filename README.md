@@ -50,7 +50,10 @@ Afterwards, run the Counterscale installer:
 npx @counterscale/cli@latest install
 ```
 
-Follow the prompts. You will be asked for the Cloudflare API token you created earlier.
+Follow the prompts. You will be asked for the Cloudflare API token you created earlier. You'll also be asked if you want to protect your dashboard with a password:
+
+- If you choose **Yes** (recommended for public deployments), you'll be prompted to create a password that will be required to access your analytics dashboard.
+- If you choose **No**, your dashboard will be publicly accessible without authentication.
 
 Once the script has finished, the server application should be deployed. Visit `https://{subdomain-emitted-during-deploy}.workers.dev` to verify.
 

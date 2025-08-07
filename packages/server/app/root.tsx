@@ -10,7 +10,7 @@ import {
     ScrollRestoration,
     useLoaderData,
 } from "react-router";
-import { getUser } from "~/lib/auth";
+import { getUser, isAuthEnabled } from "~/lib/auth";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
@@ -55,6 +55,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
         origin: new URL(request.url).origin,
         url: request.url,
         user,
+        isAuthEnabled: isAuthEnabled(context.cloudflare.env),
     };
 };
 
@@ -153,7 +154,7 @@ export default function App() {
                         >
                             Admin
                         </a>
-                        {data.user?.authenticated && (
+                        {(data.user?.authenticated && data.isAuthEnabled) && (
                             <a href="/logout" className="ml-2">
                                 Logout
                             </a>

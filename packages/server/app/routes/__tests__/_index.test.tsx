@@ -8,6 +8,15 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import Index, { loader, action } from "../_index";
 import * as auth from "~/lib/auth";
 
+// Mock isAuthEnabled to control test behavior
+vi.mock("~/lib/auth", async () => {
+    const actual = await vi.importActual("~/lib/auth");
+    return {
+        ...actual,
+        isAuthEnabled: vi.fn().mockReturnValue(true)
+    };
+});
+
 describe("Index route", () => {
     afterEach(() => {
         cleanup();
@@ -15,11 +24,14 @@ describe("Index route", () => {
     });
 
     test("renders index route", async () => {
+        // Set isAuthEnabled to true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Index,
-                loader: () => ({ user: { authenticated: false } }),
+                loader: () => ({ user: { authenticated: false }, authEnabled: true }),
             },
         ]);
 
@@ -43,11 +55,14 @@ describe("Index route", () => {
     });
 
     test("renders authenticated state", async () => {
+        // Set isAuthEnabled to true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const RemixStub = createRoutesStub([
             {
                 path: "/",
                 Component: Index,
-                loader: () => ({ user: { authenticated: true } }),
+                loader: () => ({ user: { authenticated: true }, authEnabled: true }),
             },
         ]);
 
@@ -86,6 +101,9 @@ describe("loader function", () => {
         const getUserSpy = vi
             .spyOn(auth, "getUser")
             .mockResolvedValue(mockUser);
+            
+        // Mock isAuthEnabled for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
 
         const mockRequest = new Request("http://localhost/");
         const mockContext = {
@@ -107,13 +125,16 @@ describe("loader function", () => {
             mockRequest,
             mockContext.cloudflare.env,
         );
-        expect(result).toEqual({ user: mockUser });
+        expect(result).toEqual({ user: mockUser, authEnabled: true });
     });
 
     test("should return { authenticated: false } user when not authenticated", async () => {
         const getUserSpy = vi
             .spyOn(auth, "getUser")
             .mockResolvedValue({ authenticated: false });
+            
+        // Mock isAuthEnabled for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
 
         const mockRequest = new Request("http://localhost/");
         const mockContext = {
@@ -135,7 +156,7 @@ describe("loader function", () => {
             mockRequest,
             mockContext.cloudflare.env,
         );
-        expect(result).toEqual({ user: { authenticated: false } });
+        expect(result).toEqual({ user: { authenticated: false }, authEnabled: true });
     });
 });
 
@@ -150,6 +171,9 @@ describe("action function", () => {
     });
 
     test("should return error when password is missing", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const formData = new FormData();
         const mockRequest = {
             formData: vi.fn().mockResolvedValue(formData),
@@ -174,6 +198,9 @@ describe("action function", () => {
     });
 
     test("should return error when password is empty string", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const formData = new FormData();
         formData.set("password", "");
 
@@ -200,6 +227,9 @@ describe("action function", () => {
     });
 
     test("should return error when password is not a string", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const formData = new FormData();
         formData.set("password", "123" as any);
         // Mock formData.get to return a non-string value
@@ -230,6 +260,9 @@ describe("action function", () => {
     });
 
     test("should call login and return redirect when password is valid", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const mockRedirect = { status: 302, headers: new Headers() };
         const loginSpy = vi
             .spyOn(auth, "login")
@@ -266,6 +299,9 @@ describe("action function", () => {
     });
 
     test("should return error when login throws an error", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const loginSpy = vi
             .spyOn(auth, "login")
             .mockRejectedValue(new Error("Invalid password"));
@@ -301,6 +337,9 @@ describe("action function", () => {
     });
 
     test("should handle login rejection gracefully", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         const loginSpy = vi
             .spyOn(auth, "login")
             .mockRejectedValue("Some other error");

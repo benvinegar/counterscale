@@ -1,8 +1,9 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
-import { login, logout, requireAuth, getUser } from "../auth";
+import { login, logout, requireAuth, getUser, isAuthEnabled } from "../auth";
 import { createJWTCookie, clearJWTCookie } from "../session";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { AnalyticsEngineDataset } from "@cloudflare/workers-types";
 
 vi.mock("../session");
 vi.mock("bcryptjs");
@@ -13,6 +14,13 @@ vi.mock("react-router", () => ({
 const mockEnv = {
     CF_PASSWORD_HASH: "$2b$12$test.hash.value",
     CF_JWT_SECRET: "test-secret-key-for-jwt-signing-and-verification",
+} as Env;
+
+const mockEnvAuthDisabled = {
+    CF_BEARER_TOKEN: "test-bearer-token",
+    CF_ACCOUNT_ID: "test-account-id",
+    CF_AUTH_ENABLED: "false",
+    WEB_COUNTER_AE: {} as AnalyticsEngineDataset,
 } as Env;
 
 describe("auth", () => {
@@ -28,6 +36,46 @@ describe("auth", () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+    });
+    
+    describe("isAuthEnabled", () => {
+        test("should return true when CF_AUTH_ENABLED is true", () => {
+            const env = {
+                ...mockEnv,
+                CF_AUTH_ENABLED: "true",
+            } as Env;
+            
+            expect(isAuthEnabled(env)).toBe(true);
+        });
+        
+        test("should return false when CF_AUTH_ENABLED is false", () => {
+            const env = {
+                ...mockEnv,
+                CF_AUTH_ENABLED: "false",
+            } as Env;
+            
+            expect(isAuthEnabled(env)).toBe(false);
+        });
+        
+        test("should return true when CF_AUTH_ENABLED is not set but password secrets exist", () => {
+            //@ts-expect-error emulate missing var
+            const env = {
+                ...mockEnv,
+                CF_AUTH_ENABLED: undefined,
+            } as Env;
+            
+            expect(isAuthEnabled(env)).toBe(true);
+        });
+        
+        test("should throw error when CF_AUTH_ENABLED is true but password secrets are missing", () => {
+            const env = {
+                CF_AUTH_ENABLED: "true",
+                CF_BEARER_TOKEN: "test-bearer-token",
+                CF_ACCOUNT_ID: "test-account-id",
+            } as Env;
+            
+            expect(() => isAuthEnabled(env)).toThrow("Authentication is enabled but password secrets are missing");
+        });
     });
 
     describe("login", () => {
@@ -76,6 +124,21 @@ describe("auth", () => {
                 "wrong-password",
                 mockEnv.CF_PASSWORD_HASH,
             );
+        });
+        
+        test("should redirect to dashboard when auth is disabled", async () => {
+            const request = new Request("http://localhost");
+
+            const result = await login(request, "any-password", mockEnvAuthDisabled);
+
+            // Should not attempt to verify password
+            expect(bcrypt.compare).not.toHaveBeenCalled();
+            
+            // Should redirect directly to dashboard without setting cookie
+            expect(result).toEqual({
+                url: "/dashboard",
+                options: undefined,
+            });
         });
     });
 
@@ -171,6 +234,14 @@ describe("auth", () => {
                 url: "/",
                 options: undefined,
             });
+        });
+        
+        test("should always return authenticated user when auth is disabled", async () => {
+            const request = new Request("http://localhost");
+
+            const result = await requireAuth(request, mockEnvAuthDisabled);
+
+            expect(result).toEqual({ authenticated: true });
         });
     });
 
@@ -289,6 +360,14 @@ describe("auth", () => {
             const result = await getUser(request, mockEnv);
 
             expect(result).toEqual({ authenticated: false });
+        });
+        
+        test("should always return authenticated user when auth is disabled", async () => {
+            const request = new Request("http://localhost");
+
+            const result = await getUser(request, mockEnvAuthDisabled);
+
+            expect(result).toEqual({ authenticated: true });
         });
     });
 });

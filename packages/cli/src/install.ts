@@ -85,6 +85,15 @@ export async function promptAppPassword(): Promise<string> {
     return appPassword;
 }
 
+export async function promptPasswordProtection(): Promise<boolean> {
+    const enableAuth = await confirm({
+        message: "Do you want to protect your dashboard with a password?",
+        initialValue: true,
+    });
+
+    return enableAuth === true;
+}
+
 export async function promptDeploy(
     counterscaleVersion: string,
 ): Promise<boolean> {
@@ -314,31 +323,56 @@ Your token needs these permissions:
             }
         }
 
-        // Check if password-related secrets are missing
-        if (!secrets?.CF_PASSWORD_HASH || !secrets?.CF_JWT_SECRET) {
-            const appPassword = await promptAppPassword();
-            if (appPassword) {
-                const s = spinner();
-                s.start(`Setting CounterScale Application Password ...`);
-                const jwtSecret = generateJWTSecret();
-                const passwordHash = await generatePasswordHash(appPassword);
+        if (!secrets?.CF_AUTH_ENABLED || !secrets?.CF_PASSWORD_HASH || !secrets?.CF_JWT_SECRET) {
+            const enableAuth = await promptPasswordProtection();
+            
+            const s = spinner();
+            s.start(`Setting CounterScale Authentication Settings ...`);
+            
+            if (enableAuth) {
+                // If auth is enabled, prompt for password and set all required secrets
+                const appPassword = await promptAppPassword();
+                if (appPassword) {
+                    const jwtSecret = generateJWTSecret();
+                    const passwordHash = await generatePasswordHash(appPassword);
 
+                    if (
+                        await cloudflare.setCloudflareSecrets({
+                            CF_AUTH_ENABLED: "true",
+                            CF_PASSWORD_HASH: passwordHash,
+                            CF_JWT_SECRET: jwtSecret,
+                        })
+                    ) {
+                        s.stop(
+                            "Setting CounterScale Authentication Settings ... Done!",
+                        );
+                    } else {
+                        s.stop(
+                            "Error setting CounterScale Authentication Settings",
+                            1,
+                        );
+                        throw new Error(
+                            "Error setting CounterScale Authentication Settings",
+                        );
+                    }
+                }
+            } else {
+                // If auth is disabled, just set CF_AUTH_ENABLED to false
                 if (
                     await cloudflare.setCloudflareSecrets({
-                        CF_PASSWORD_HASH: passwordHash,
-                        CF_JWT_SECRET: jwtSecret,
+                        CF_AUTH_ENABLED: "false",
                     })
                 ) {
                     s.stop(
-                        "Setting CounterScale Application Password ... Done!",
+                        "Setting CounterScale Authentication Settings ... Done!",
                     );
                 } else {
                     s.stop(
-                        "Error setting CounterScale Application Password",
+                        "Error setting CounterScale Authentication Settings",
                         1,
                     );
                     throw new Error(
-                        "Error setting CounterScale Application Password",
+                        "Error setting CounterScale Authentication Settings",
                     );
                 }
             }

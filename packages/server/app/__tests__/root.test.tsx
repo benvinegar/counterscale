@@ -1,10 +1,20 @@
 // @vitest-environment jsdom
-import { beforeAll, afterEach, describe, expect, test, vitest } from "vitest";
+import { beforeAll, afterEach, describe, expect, test, vitest, vi } from "vitest";
 import "vitest-dom/extend-expect";
 import { render, waitFor, screen, cleanup } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 
 import Root, { Layout } from "../root";
+import * as auth from "~/lib/auth";
+
+// Mock isAuthEnabled to control test behavior
+vi.mock("~/lib/auth", async () => {
+    const actual = await vi.importActual("~/lib/auth");
+    return {
+        ...actual,
+        isAuthEnabled: vi.fn().mockReturnValue(true)
+    };
+});
 
 describe("Root", () => {
     beforeAll(() => {
@@ -46,6 +56,9 @@ describe("Root", () => {
     });
 
     test("renders logout button when user is authenticated", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
         function loader() {
             return {
                 version: {
@@ -55,6 +68,7 @@ describe("Root", () => {
                 origin: "http://example.com",
                 url: "http://example.com/path",
                 user: { authenticated: true },
+                isAuthEnabled: true
             };
         }
 

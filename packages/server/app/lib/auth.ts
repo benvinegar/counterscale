@@ -4,7 +4,38 @@ import jwt from "jsonwebtoken";
 import { createJWTCookie, clearJWTCookie } from "./session";
 import { User } from "./types";
 
+/**
+ * Checks if authentication is enabled based on environment variables
+ */
+export function isAuthEnabled(env: Env): boolean {
+    // Explicitly disabled
+    if (env.CF_AUTH_ENABLED === "false") {
+        return false;
+    }
+    
+    // Explicitly enabled
+    if (env.CF_AUTH_ENABLED === "true") {
+        // Require both secrets to be present for auth to work
+        if (!env.CF_PASSWORD_HASH || !env.CF_JWT_SECRET) {
+            throw new Error("Authentication is enabled but password secrets are missing");
+        }
+        return true;
+    }
+    
+    // If not explicitly set but password hash exists, consider auth enabled
+    if (!env.CF_AUTH_ENABLED && env.CF_PASSWORD_HASH && env.CF_JWT_SECRET) {
+        return true;
+    }
+    
+    return false;
+}
+
 export async function login(_request: Request, password: string, env: Env) {
+    // If auth is disabled, redirect directly to dashboard
+    if (!isAuthEnabled(env)) {
+        return redirect("/dashboard");
+    }
+
     const isValidPassword = await bcrypt.compare(
         password,
         env.CF_PASSWORD_HASH,
@@ -41,6 +72,11 @@ export async function logout(_request: Request, _env: Env) {
 }
 
 export async function requireAuth(request: Request, env: Env) {
+    // If auth is disabled, allow access without checking
+    if (!isAuthEnabled(env)) {
+        return { authenticated: true };
+    }
+
     const user = await getUser(request, env);
 
     if (!user.authenticated) {
@@ -51,6 +87,11 @@ export async function requireAuth(request: Request, env: Env) {
 }
 
 export async function getUser(request: Request, env: Env): Promise<User> {
+    // If auth is disabled, user is always authenticated
+    if (!isAuthEnabled(env)) {
+        return { authenticated: true };
+    }
+
     try {
         const cookieHeader = request.headers.get("Cookie");
         if (!cookieHeader) {
