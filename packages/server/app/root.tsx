@@ -75,7 +75,7 @@ export const Layout = ({ children = [] }: { children: React.ReactNode }) => {
                 />
                 <link rel="icon" type="image/x-icon" href="/favicon.png" />
                 <meta name="robots" content="noindex" />
-                
+
                 <meta property="og:url" content={data.url} />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Counterscale" />
