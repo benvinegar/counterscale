@@ -23,7 +23,8 @@ async function main() {
       'Copy these values to your .dev.vars file:',
       '',
       `CF_JWT_SECRET='${jwtSecret}'`,
-      `CF_PASSWORD_HASH='${passwordHash}'`
+      `CF_PASSWORD_HASH='${passwordHash}'`,
+      `CF_AUTH_ENABLED='true'`
     ].join('\n');
     
     note(output, 'Generated Secrets');
