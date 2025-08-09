@@ -1,10 +1,20 @@
 // @vitest-environment jsdom
-import { beforeAll, afterEach, describe, expect, test, vitest } from "vitest";
+import { beforeAll, afterEach, describe, expect, test, vitest, vi } from "vitest";
 import "vitest-dom/extend-expect";
 import { render, waitFor, screen, cleanup } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 
 import Root, { Layout } from "../root";
+import * as auth from "~/lib/auth";
+
+// Mock isAuthEnabled to control test behavior
+vi.mock("~/lib/auth", async () => {
+    const actual = await vi.importActual("~/lib/auth");
+    return {
+        ...actual,
+        isAuthEnabled: vi.fn().mockReturnValue(true)
+    };
+});
 
 describe("Root", () => {
     beforeAll(() => {
@@ -12,6 +22,11 @@ describe("Root", () => {
         // called in this test - and if we don't mock it this
         // will throw an exception/warning
         window.scrollTo = vitest.fn(() => {});
+    });
+
+    afterEach(() => {
+        cleanup();
+        vitest.clearAllMocks();
     });
 
     test("renders without crashing", async () => {
@@ -39,6 +54,41 @@ describe("Root", () => {
         await waitFor(() => screen.findByText("Version"));
         expect(screen.getByText("ABC123")).toBeInTheDocument();
     });
+
+    test("renders logout button when user is authenticated", async () => {
+        // Mock isAuthEnabled to return true for this test
+        vi.mocked(auth.isAuthEnabled).mockReturnValue(true);
+        
+        function loader() {
+            return {
+                version: {
+                    name: "ABC123",
+                    url: "http://example.com/commit/ABC123",
+                },
+                origin: "http://example.com",
+                url: "http://example.com/path",
+                user: { authenticated: true },
+                isAuthEnabled: true
+            };
+        }
+
+        const RemixStub = createRoutesStub([
+            {
+                path: "/",
+                Component: Root,
+                loader,
+            },
+        ]);
+
+        render(<RemixStub />);
+        
+        await waitFor(() => screen.getByText("ABC123"));
+        
+        const logoutLink = screen.getByText("Logout");
+        expect(logoutLink).toBeInTheDocument();
+        expect(logoutLink.closest("a")).toHaveAttribute("href", "/logout");
+        expect(logoutLink.closest("a")).toHaveClass("ml-2");
+    });
 });
 
 describe("Layout", () => {
@@ -48,6 +98,7 @@ describe("Layout", () => {
 
     afterEach(() => {
         cleanup();
+        vitest.clearAllMocks();
     });
 
     test("renders with default data when no route data is available", async () => {

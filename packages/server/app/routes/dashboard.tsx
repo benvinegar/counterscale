@@ -32,6 +32,7 @@ import { SearchFilters } from "~/lib/types";
 import SearchFilterBadges from "~/components/SearchFilterBadges";
 import { TimeSeriesCard } from "./resources.timeseries";
 import { StatsCard } from "./resources.stats";
+import { requireAuth } from "~/lib/auth";
 
 export const meta: MetaFunction = () => {
     return [
@@ -43,6 +44,8 @@ export const meta: MetaFunction = () => {
 const MAX_RETENTION_DAYS = 90;
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
+    await requireAuth(request, context.cloudflare.env);
+    
     // NOTE: probably duped from getLoadContext / need to de-duplicate
     if (!context.cloudflare?.env?.CF_ACCOUNT_ID) {
         throw new Response("Missing credentials: CF_ACCOUNT_ID is not set.", {

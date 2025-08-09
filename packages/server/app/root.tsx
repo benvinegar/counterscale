@@ -10,6 +10,7 @@ import {
     ScrollRestoration,
     useLoaderData,
 } from "react-router";
+import { getUser, isAuthEnabled } from "~/lib/auth";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
@@ -42,9 +43,10 @@ function getVersionMeta(version: string | null | undefined): {
     }
 }
 
-export const loader = ({ context, request }: LoaderFunctionArgs) => {
+export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     // specified during deploy via wrangler --var VERSION:value
     const version = context.cloudflare?.env?.VERSION;
+    const user = await getUser(request, context.cloudflare.env);
 
     return {
         version: {
@@ -52,6 +54,8 @@ export const loader = ({ context, request }: LoaderFunctionArgs) => {
         },
         origin: new URL(request.url).origin,
         url: request.url,
+        user,
+        isAuthEnabled: isAuthEnabled(context.cloudflare.env),
     };
 };
 
@@ -150,6 +154,11 @@ export default function App() {
                         >
                             Admin
                         </a>
+                        {(data.user?.authenticated && data.isAuthEnabled) && (
+                            <a href="/logout" className="ml-2">
+                                Logout
+                            </a>
+                        )}
                         <a
                             href="https://github.com/benvinegar/counterscale"
                             className="w-6 ml-2"
