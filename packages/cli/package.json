@@ -18,6 +18,7 @@
     },
     "scripts": {
         "build": "tsc --build",
+        "dev": "pnpm run build && node ./dist/index.js",
         "lint": "eslint .",
         "test": "vitest run",
         "test-ci": "vitest run --coverage",

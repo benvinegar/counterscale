@@ -2,9 +2,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { getTitle } from "./ui.js";
-import { getServerPkgDir } from "./config.js";
-import { install } from "./install.js";
+import { getTitle } from "./lib/ui.js";
+import { getServerPkgDir } from "./lib/config.js";
+import { install } from "./commands/install.js";
+import { enableAuth, disableAuth, updatePassword } from "./commands/auth.js";
 
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs/yargs";
@@ -38,17 +39,73 @@ const parser = yargs(hideBin(process.argv))
             await install(argv, SERVER_PKG_DIR, SERVER_PKG);
         },
     )
+    .command(
+        "auth",
+        "Manage authentication settings",
+        (yargs) => {
+            const authYargs = yargs
+                .command(
+                    "enable",
+                    "Enable authentication for your Counterscale deployment",
+                    {},
+                    enableAuth
+                )
+                .command(
+                    "disable",
+                    "Disable authentication for your Counterscale deployment",
+                    {},
+                    disableAuth
+                )
+                .command(
+                    "role",
+                    "Update the authentication password",
+                    {},
+                    updatePassword
+                )
+                .help();
+            return authYargs;
+        },
+        async (argv) => {
+            // Show help if no subcommand was provided
+            if (argv._.length === 1) {
+                const authYargs = yargs(hideBin(process.argv))
+                    .command(
+                        "enable",
+                        "Enable authentication for your Counterscale deployment",
+                        {},
+                        enableAuth
+                    )
+                    .command(
+                        "disable",
+                        "Disable authentication for your Counterscale deployment",
+                        {},
+                        disableAuth
+                    )
+                    .command(
+                        "role",
+                        "Update the authentication password",
+                        {},
+                        updatePassword
+                    )
+                    .help();
+                authYargs.showHelp();
+            }
+        }
+    )
     .options({
         verbose: {
             type: "boolean",
             default: false,
         },
     })
-    .demandCommand(1)
+    .help()
     .fail(false);
 
 try {
-    await parser.parse();
+    const argv = await parser.parse();
+    if (argv._.length === 0) {
+        parser.showHelp();
+    }
 } catch (err) {
     console.log("\n");
     console.error(err);

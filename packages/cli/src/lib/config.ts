@@ -20,6 +20,7 @@ export function getServerPkgDir(): string {
         "..",
         "..",
         "..",
+        "..",
         "packages",
         "server",
     );
@@ -31,6 +32,7 @@ export function getServerPkgDir(): string {
     // 2) next check common node_modules directory (if this is npm installed)
     const nodeModulesDir = path.join(
         __dirname,
+        "..",
         "..",
         "..",
         "..",

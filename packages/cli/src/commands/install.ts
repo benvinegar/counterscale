@@ -23,11 +23,11 @@ import {
     stageDeployConfig,
     readInitialServerConfig,
     getWorkerAndDatasetName,
-} from "./config.js";
+} from "../lib/config.js";
 
-import { CloudflareClient } from "./cloudflare.js";
-import { getScriptSnippet, getPackageSnippet, CLI_COLORS } from "./ui.js";
-import { generateJWTSecret, generatePasswordHash } from "./auth.js";
+import { CloudflareClient } from "../lib/cloudflare.js";
+import { getScriptSnippet, getPackageSnippet, CLI_COLORS } from "../lib/ui.js";
+import { generateJWTSecret, generatePasswordHash } from "../lib/auth.js";
 
 export function bail() {
     cancel("Operation canceled.");

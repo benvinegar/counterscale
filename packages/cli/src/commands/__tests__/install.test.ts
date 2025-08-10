@@ -21,7 +21,7 @@ vi.mock("@clack/prompts", () => ({
     },
 }));
 
-vi.mock("../cloudflare.js", () => ({
+vi.mock("../../lib/cloudflare.js", () => ({
     CloudflareClient: vi.fn().mockImplementation(() => ({
         getAccounts: vi.fn(),
         getCloudflareSecrets: vi.fn(),

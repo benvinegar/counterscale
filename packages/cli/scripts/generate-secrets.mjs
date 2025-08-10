@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { intro, note, outro, isCancel, cancel } from "@clack/prompts";
-import { generateJWTSecret, generatePasswordHash } from "../dist/auth.js";
-import { promptAppPassword } from "../dist/install.js";
+import { generateJWTSecret, generatePasswordHash } from "../dist/lib/auth.js";
+import { promptAppPassword } from "../dist/commands/install.js";
 
 async function main() {
   intro('🔐 Counterscale Development Secret Generator');
