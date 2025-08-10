@@ -2,14 +2,14 @@
 
 import { intro, note, outro, isCancel, cancel } from "@clack/prompts";
 import { generateJWTSecret, generatePasswordHash } from "../dist/lib/auth.js";
-import { promptAppPassword } from "../dist/commands/install.js";
+import { promptForPassword } from "../dist/lib/ui.js";
 
 async function main() {
   intro('🔐 Counterscale Development Secret Generator');
   
   const jwtSecret = generateJWTSecret();
   
-  const userPassword = await promptAppPassword();
+  const userPassword = await promptForPassword();
   
   if (isCancel(userPassword)) {
     cancel('Operation cancelled');

@@ -4,6 +4,8 @@ import { enableAuth, disableAuth, updatePassword } from "../auth.js";
 // Mock dependencies
 vi.mock("@clack/prompts", () => ({
     password: vi.fn(),
+    isCancel: vi.fn(),
+    cancel: vi.fn(),
 }));
 
 vi.mock("../../lib/auth.js", () => ({
@@ -15,7 +17,7 @@ vi.mock("../../lib/cloudflare.js", () => ({
     CloudflareClient: vi.fn(),
 }));
 
-import { password } from "@clack/prompts";
+import { password, isCancel } from "@clack/prompts";
 import { generatePasswordHash, generateJWTSecret } from "../../lib/auth.js";
 import { CloudflareClient } from "../../lib/cloudflare.js";
 
@@ -42,6 +44,9 @@ describe("Auth Commands", () => {
 
         // Reset all mocks
         vi.clearAllMocks();
+        
+        // Set up default mock behavior
+        (isCancel as any).mockReturnValue(false);
     });
 
     afterEach(() => {
@@ -66,6 +71,7 @@ describe("Auth Commands", () => {
             expect(mockCloudflareClient.getCloudflareSecrets).toHaveBeenCalledOnce();
             expect(password).toHaveBeenCalledWith({
                 message: "Enter a password for authentication:",
+                mask: "*",
                 validate: expect.any(Function),
             });
             expect(generatePasswordHash).toHaveBeenCalledWith("testpassword123");
@@ -117,8 +123,8 @@ describe("Auth Commands", () => {
             await enableAuth();
 
             // Assert - Test the validation function that was passed to password()
-            expect(capturedValidate("short")).toBe("Password must be at least 8 characters long");
-            expect(capturedValidate("")).toBe("Password must be at least 8 characters long");
+            expect(capturedValidate("short")).toBe("A password of 8 characters or longer is required");
+            expect(capturedValidate("")).toBe("A password of 8 characters or longer is required");
             expect(capturedValidate("validpassword")).toBeUndefined();
         });
 
@@ -201,6 +207,7 @@ describe("Auth Commands", () => {
             expect(mockCloudflareClient.getCloudflareSecrets).toHaveBeenCalledOnce();
             expect(password).toHaveBeenCalledWith({
                 message: "Enter new password:",
+                mask: "*",
                 validate: expect.any(Function),
             });
             expect(generatePasswordHash).toHaveBeenCalledWith("newpassword123");
@@ -240,8 +247,8 @@ describe("Auth Commands", () => {
             await updatePassword();
 
             // Assert - Test the validation function that was passed to password()
-            expect(capturedValidate("short")).toBe("Password must be at least 8 characters long");
-            expect(capturedValidate("")).toBe("Password must be at least 8 characters long");
+            expect(capturedValidate("short")).toBe("A password of 8 characters or longer is required");
+            expect(capturedValidate("")).toBe("A password of 8 characters or longer is required");
             expect(capturedValidate("validpassword")).toBeUndefined();
         });
 
@@ -275,12 +282,11 @@ describe("Auth Commands", () => {
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({
                 CF_AUTH_ENABLED: "true",
             });
-            (password as any).mockResolvedValue(undefined); // User cancelled
+            (password as any).mockResolvedValue("password");
+            (isCancel as any).mockReturnValue(true); // User cancelled
 
-            // Act
-            await updatePassword();
-
-            // Assert
+            // Act & Assert
+            await expect(updatePassword()).rejects.toThrow("process.exit called");
             expect(generatePasswordHash).not.toHaveBeenCalled();
             expect(mockCloudflareClient.setCloudflareSecrets).not.toHaveBeenCalled();
         });

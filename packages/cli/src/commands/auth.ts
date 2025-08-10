@@ -1,7 +1,7 @@
-import { password } from "@clack/prompts";
 import { generatePasswordHash, generateJWTSecret } from "../lib/auth.js";
 import { CloudflareClient } from "../lib/cloudflare.js";
 import { getServerPkgDir } from "../lib/config.js";
+import { promptForPassword } from "../lib/ui.js";
 import path from "path";
 
 export async function enableAuth() {
@@ -21,19 +21,9 @@ export async function enableAuth() {
         
         // Set password hash if it doesn't exist
         if (!existingSecrets.CF_PASSWORD_HASH) {
-            const userPassword = await password({
-                message: "Enter a password for authentication:",
-                validate: (value) => {
-                    if (!value || value.length < 8) {
-                        return "Password must be at least 8 characters long";
-                    }
-                }
-            });
-            
-            if (typeof userPassword === 'string') {
-                const passwordHash = await generatePasswordHash(userPassword);
-                secretsToSet.CF_PASSWORD_HASH = passwordHash;
-            }
+            const userPassword = await promptForPassword("Enter a password for authentication:");
+            const passwordHash = await generatePasswordHash(userPassword);
+            secretsToSet.CF_PASSWORD_HASH = passwordHash;
         }
         
         // Set JWT secret if it doesn't exist
@@ -105,30 +95,20 @@ export async function updatePassword() {
         }
         
         // Prompt for new password
-        const newPassword = await password({
-            message: "Enter new password:",
-            validate: (value) => {
-                if (!value || value.length < 8) {
-                    return "Password must be at least 8 characters long";
-                }
-            }
+        const newPassword = await promptForPassword("Enter new password:");
+        const passwordHash = await generatePasswordHash(newPassword);
+        
+        // Update only the password hash, keep JWT secret intact
+        const success = await cloudflare.setCloudflareSecrets({
+            CF_PASSWORD_HASH: passwordHash
         });
         
-        if (typeof newPassword === 'string') {
-            const passwordHash = await generatePasswordHash(newPassword);
-            
-            // Update only the password hash, keep JWT secret intact
-            const success = await cloudflare.setCloudflareSecrets({
-                CF_PASSWORD_HASH: passwordHash
-            });
-            
-            if (success) {
-                console.log("✅ Password updated successfully!");
-                console.log("   Existing sessions remain valid");
-            } else {
-                console.error("❌ Failed to update password");
-                process.exit(1);
-            }
+        if (success) {
+            console.log("✅ Password updated successfully!");
+            console.log("   Existing sessions remain valid");
+        } else {
+            console.error("❌ Failed to update password");
+            process.exit(1);
         }
     } catch (error) {
         console.error("❌ Error updating password:", error);
