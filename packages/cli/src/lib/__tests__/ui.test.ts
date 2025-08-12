@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { PasswordOptions } from "@clack/prompts";
 import { getTitle, getScriptSnippet, getPackageSnippet, promptForPassword } from "../ui.js";
 
-// Mock @clack/prompts
 vi.mock("@clack/prompts", () => ({
     isCancel: vi.fn(),
     cancel: vi.fn(),
@@ -12,14 +11,12 @@ vi.mock("@clack/prompts", () => ({
 function stripAnsiEscapeCodes(str: string) {
     return str.replace(
         // https://stackoverflow.com/questions/25245716/remove-all-ansi-colors-styles-from-strings
-
         // eslint-disable-next-line no-control-regex
         /\x1b\[[0-9;]*m/g,
         "",
     );
 }
 
-// Import mocked functions
 import { isCancel } from "@clack/prompts";
 
 describe("UI module", () => {

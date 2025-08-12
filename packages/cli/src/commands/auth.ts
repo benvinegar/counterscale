@@ -12,26 +12,21 @@ export async function enableAuth() {
     try {
         console.log("Enabling authentication...");
         
-        // Get existing secrets
         const existingSecrets = await cloudflare.getCloudflareSecrets();
         const secretsToSet: Record<string, string> = {};
         
-        // Always set CF_AUTH_ENABLED to true
         secretsToSet.CF_AUTH_ENABLED = "true";
         
-        // Set password hash if it doesn't exist
         if (!existingSecrets.CF_PASSWORD_HASH) {
             const userPassword = await promptForPassword("Enter a password for authentication:");
             const passwordHash = await generatePasswordHash(userPassword);
             secretsToSet.CF_PASSWORD_HASH = passwordHash;
         }
         
-        // Set JWT secret if it doesn't exist
         if (!existingSecrets.CF_JWT_SECRET) {
             secretsToSet.CF_JWT_SECRET = generateJWTSecret();
         }
         
-        // Set the secrets
         const success = await cloudflare.setCloudflareSecrets(secretsToSet);
         
         if (success) {
@@ -86,7 +81,6 @@ export async function updatePassword() {
     try {
         console.log("Updating authentication password...");
         
-        // Check if authentication is set up
         const existingSecrets = await cloudflare.getCloudflareSecrets();
         
         if (!existingSecrets.CF_AUTH_ENABLED) {
@@ -94,11 +88,9 @@ export async function updatePassword() {
             process.exit(1);
         }
         
-        // Prompt for new password
         const newPassword = await promptForPassword("Enter new password:");
         const passwordHash = await generatePasswordHash(newPassword);
         
-        // Update only the password hash, keep JWT secret intact
         const success = await cloudflare.setCloudflareSecrets({
             CF_PASSWORD_HASH: passwordHash
         });

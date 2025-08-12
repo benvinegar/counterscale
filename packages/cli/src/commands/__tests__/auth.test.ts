@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 import { enableAuth, disableAuth, updatePassword } from "../auth.js";
 
-// Mock dependencies
 vi.mock("@clack/prompts", () => ({
     password: vi.fn(),
     isCancel: vi.fn(),
@@ -28,24 +27,20 @@ describe("Auth Commands", () => {
     let mockProcessExit: any;
 
     beforeEach(() => {
-        // Mock CloudflareClient instance
         mockCloudflareClient = {
             getCloudflareSecrets: vi.fn(),
             setCloudflareSecrets: vi.fn(),
         };
         (CloudflareClient as any).mockImplementation(() => mockCloudflareClient);
 
-        // Mock console methods
         mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
         mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
         mockProcessExit = vi.spyOn(process, "exit").mockImplementation(() => {
             throw new Error("process.exit called");
         });
 
-        // Reset all mocks
         vi.clearAllMocks();
         
-        // Set up default mock behavior
         (isCancel as any).mockReturnValue(false);
     });
 
@@ -57,17 +52,14 @@ describe("Auth Commands", () => {
 
     describe("enableAuth", () => {
         it("should enable auth with new password and JWT secret when neither exist", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({});
             mockCloudflareClient.setCloudflareSecrets.mockResolvedValue(true);
             (password as any).mockResolvedValue("testpassword123");
             (generatePasswordHash as any).mockResolvedValue("hashedpassword");
             (generateJWTSecret as any).mockReturnValue("jwtsecret");
 
-            // Act
             await enableAuth();
 
-            // Assert
             expect(mockCloudflareClient.getCloudflareSecrets).toHaveBeenCalledOnce();
             expect(password).toHaveBeenCalledWith({
                 message: "Enter a password for authentication:",
@@ -87,17 +79,14 @@ describe("Auth Commands", () => {
         });
 
         it("should only enable auth when password and JWT secret already exist", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({
                 CF_PASSWORD_HASH: "existing",
                 CF_JWT_SECRET: "existing",
             });
             mockCloudflareClient.setCloudflareSecrets.mockResolvedValue(true);
 
-            // Act
             await enableAuth();
 
-            // Assert
             expect(password).not.toHaveBeenCalled();
             expect(generatePasswordHash).not.toHaveBeenCalled();
             expect(generateJWTSecret).not.toHaveBeenCalled();
@@ -108,7 +97,6 @@ describe("Auth Commands", () => {
         });
 
         it("should validate password length", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({});
             mockCloudflareClient.setCloudflareSecrets.mockResolvedValue(true);
             let capturedValidate: any;
@@ -119,34 +107,28 @@ describe("Auth Commands", () => {
             (generatePasswordHash as any).mockResolvedValue("hashedpassword");
             (generateJWTSecret as any).mockReturnValue("jwtsecret");
 
-            // Act
             await enableAuth();
 
-            // Assert - Test the validation function that was passed to password()
             expect(capturedValidate("short")).toBe("A password of 8 characters or longer is required");
             expect(capturedValidate("")).toBe("A password of 8 characters or longer is required");
             expect(capturedValidate("validpassword")).toBeUndefined();
         });
 
         it("should handle cloudflare secrets setting failure", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({});
             mockCloudflareClient.setCloudflareSecrets.mockResolvedValue(false);
             (password as any).mockResolvedValue("testpassword123");
             (generatePasswordHash as any).mockResolvedValue("hashedpassword");
             (generateJWTSecret as any).mockReturnValue("jwtsecret");
 
-            // Act & Assert
             await expect(enableAuth()).rejects.toThrow("process.exit called");
             expect(mockConsoleError).toHaveBeenCalledWith("❌ Failed to set authentication secrets");
             expect(mockProcessExit).toHaveBeenCalledWith(1);
         });
 
         it("should handle errors during execution", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockRejectedValue(new Error("API Error"));
 
-            // Act & Assert
             await expect(enableAuth()).rejects.toThrow("process.exit called");
             expect(mockConsoleError).toHaveBeenCalledWith("❌ Error enabling authentication:", expect.any(Error));
             expect(mockProcessExit).toHaveBeenCalledWith(1);
@@ -155,13 +137,10 @@ describe("Auth Commands", () => {
 
     describe("disableAuth", () => {
         it("should disable auth successfully", async () => {
-            // Arrange
             mockCloudflareClient.setCloudflareSecrets.mockResolvedValue(true);
 
-            // Act
             await disableAuth();
 
-            // Assert
             expect(mockCloudflareClient.setCloudflareSecrets).toHaveBeenCalledWith({
                 CF_AUTH_ENABLED: "false",
             });
@@ -170,20 +149,16 @@ describe("Auth Commands", () => {
         });
 
         it("should handle cloudflare secrets setting failure", async () => {
-            // Arrange
             mockCloudflareClient.setCloudflareSecrets.mockResolvedValue(false);
 
-            // Act & Assert
             await expect(disableAuth()).rejects.toThrow("process.exit called");
             expect(mockConsoleError).toHaveBeenCalledWith("❌ Failed to disable authentication");
             expect(mockProcessExit).toHaveBeenCalledWith(1);
         });
 
         it("should handle errors during execution", async () => {
-            // Arrange
             mockCloudflareClient.setCloudflareSecrets.mockRejectedValue(new Error("API Error"));
 
-            // Act & Assert
             await expect(disableAuth()).rejects.toThrow("process.exit called");
             expect(mockConsoleError).toHaveBeenCalledWith("❌ Error disabling authentication:", expect.any(Error));
             expect(mockProcessExit).toHaveBeenCalledWith(1);
@@ -192,7 +167,6 @@ describe("Auth Commands", () => {
 
     describe("updatePassword", () => {
         it("should update password successfully when auth is enabled", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({
                 CF_AUTH_ENABLED: "true",
             });
@@ -200,10 +174,8 @@ describe("Auth Commands", () => {
             (password as any).mockResolvedValue("newpassword123");
             (generatePasswordHash as any).mockResolvedValue("newhashedpassword");
 
-            // Act
             await updatePassword();
 
-            // Assert
             expect(mockCloudflareClient.getCloudflareSecrets).toHaveBeenCalledOnce();
             expect(password).toHaveBeenCalledWith({
                 message: "Enter new password:",
@@ -219,10 +191,8 @@ describe("Auth Commands", () => {
         });
 
         it("should fail when authentication is not enabled", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({});
 
-            // Act & Assert
             await expect(updatePassword()).rejects.toThrow("process.exit called");
             expect(mockConsoleError).toHaveBeenCalledWith(
                 "❌ Authentication is not enabled. Run 'counterscale auth enable' first."
@@ -231,7 +201,6 @@ describe("Auth Commands", () => {
         });
 
         it("should validate password length", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({
                 CF_AUTH_ENABLED: "true",
             });
@@ -243,17 +212,14 @@ describe("Auth Commands", () => {
             });
             (generatePasswordHash as any).mockResolvedValue("newhashedpassword");
 
-            // Act
             await updatePassword();
 
-            // Assert - Test the validation function that was passed to password()
             expect(capturedValidate("short")).toBe("A password of 8 characters or longer is required");
             expect(capturedValidate("")).toBe("A password of 8 characters or longer is required");
             expect(capturedValidate("validpassword")).toBeUndefined();
         });
 
         it("should handle cloudflare secrets setting failure", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({
                 CF_AUTH_ENABLED: "true",
             });
@@ -261,31 +227,26 @@ describe("Auth Commands", () => {
             (password as any).mockResolvedValue("newpassword123");
             (generatePasswordHash as any).mockResolvedValue("newhashedpassword");
 
-            // Act & Assert
             await expect(updatePassword()).rejects.toThrow("process.exit called");
             expect(mockConsoleError).toHaveBeenCalledWith("❌ Failed to update password");
             expect(mockProcessExit).toHaveBeenCalledWith(1);
         });
 
         it("should handle errors during execution", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockRejectedValue(new Error("API Error"));
 
-            // Act & Assert
             await expect(updatePassword()).rejects.toThrow("process.exit called");
             expect(mockConsoleError).toHaveBeenCalledWith("❌ Error updating password:", expect.any(Error));
             expect(mockProcessExit).toHaveBeenCalledWith(1);
         });
 
         it("should handle cancelled password input", async () => {
-            // Arrange
             mockCloudflareClient.getCloudflareSecrets.mockResolvedValue({
                 CF_AUTH_ENABLED: "true",
             });
             (password as any).mockResolvedValue("password");
             (isCancel as any).mockReturnValue(true); // User cancelled
 
-            // Act & Assert
             await expect(updatePassword()).rejects.toThrow("process.exit called");
             expect(generatePasswordHash).not.toHaveBeenCalled();
             expect(mockCloudflareClient.setCloudflareSecrets).not.toHaveBeenCalled();
