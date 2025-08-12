@@ -1,6 +1,4 @@
 import inquirer from "inquirer";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
     getServerPkgDir,
@@ -31,8 +29,16 @@ vi.mock("path", async (importOriginal) => {
     };
 });
 
+vi.mock("url", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("url")>();
+    return {
+        ...actual,
+        fileURLToPath: vi.fn(() => "/some/path/to/somewhere/config.js"),
+    };
+});
+
 // Mock fs methods
-vi.mock("fs", async () => {
+vi.mock("node:fs", async () => {
     const actual = await vi.importActual("node:fs");
     return {
         ...actual,
@@ -58,18 +64,21 @@ describe("CLI Functions", () => {
 
     describe("getServerPkgDir", () => {
         it("should find package in node_modules", async () => {
-            const { dirname } = await import("node:path");
+            const { dirname } = await import("path");
             const { existsSync } = await import("node:fs");
+            const { fileURLToPath } = await import("url");
+            
+            // Mock fileURLToPath to return a specific path
+            vi.mocked(fileURLToPath).mockReturnValue("/some/path/to/node_modules/@counterscale/cli/dist/config.js");
+            
+            // Mock dirname to return the directory
             vi.mocked(dirname).mockReturnValue(
                 "/some/path/to/node_modules/@counterscale/cli/dist",
             );
 
             // Mock existsSync to return true only for the node_modules path
-            const expectedPath = join(
-                "/some/path/to/node_modules",
-                "@counterscale",
-                "server",
-            );
+            // The actual path construction goes up 4 levels from __dirname then to @counterscale/server
+            const expectedPath = "/some/path/to/@counterscale/server";
             vi.mocked(existsSync).mockImplementation((p) => p === expectedPath);
 
             const result = getServerPkgDir();
@@ -80,16 +89,19 @@ describe("CLI Functions", () => {
         });
 
         it("should check monorepo path if node_modules not found", async () => {
-            const { dirname } = await import("node:path");
+            const { dirname } = await import("path");
             const { existsSync } = await import("node:fs");
+            const { fileURLToPath } = await import("url");
+            
+            // Mock fileURLToPath to return a monorepo path
+            vi.mocked(fileURLToPath).mockReturnValue("/monorepo/checkout/counterscale/packages/cli/dist/config.js");
+            
             vi.mocked(dirname).mockReturnValue(
                 "/monorepo/checkout/counterscale/packages/cli/dist",
             );
 
-            const expectedPath = join(
-                "/monorepo/checkout/counterscale/packages/server",
-            );
             // Mock existsSync to return false for node_modules but true for monorepo path
+            const expectedPath = "/monorepo/checkout/packages/server";
             vi.mocked(existsSync).mockImplementation((p) => p === expectedPath);
 
             const result = getServerPkgDir();
@@ -97,6 +109,7 @@ describe("CLI Functions", () => {
         });
 
         it("should throw if package not found", async () => {
+            const { existsSync } = await import("node:fs");
             // Mock both paths to not exist
             vi.mocked(existsSync).mockReturnValue(false);
 

@@ -1,6 +1,7 @@
 import figlet from "figlet";
 import chalk from "chalk";
 import { highlight } from "cli-highlight";
+import { password, isCancel, cancel } from "@clack/prompts";
 
 export const CLI_COLORS: Record<string, [number, number, number]> = {
     orange: [245, 107, 61],
@@ -67,4 +68,32 @@ Counterscale.init({
 });`,
         { language: "typescript", theme: highlightTheme },
     );
+}
+
+export const MIN_PASSWORD_LENGTH = 8;
+
+export async function promptForPassword(message: string = "Enter a password for authentication:"): Promise<string> {
+    const userPassword = await password({
+        message,
+        mask: "*",
+        validate: (val) => {
+            if (val.length < MIN_PASSWORD_LENGTH) {
+                return `A password of ${MIN_PASSWORD_LENGTH} characters or longer is required`;
+            }
+        },
+    });
+
+    if (isCancel(userPassword)) {
+        cancel("Operation canceled.");
+        if (process.env.NODE_ENV === "test") {
+            throw new Error("Operation canceled");
+        }
+        process.exit(0);
+    }
+
+    if (typeof userPassword !== "string") {
+        throw new Error("Password is required");
+    }
+
+    return userPassword;
 }

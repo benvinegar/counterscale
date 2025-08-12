@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 import { intro, note, outro, isCancel, cancel } from "@clack/prompts";
-import { generateJWTSecret, generatePasswordHash } from "../dist/auth.js";
-import { promptAppPassword } from "../dist/install.js";
+import { generateJWTSecret, generatePasswordHash } from "../dist/lib/auth.js";
+import { promptForPassword } from "../dist/lib/ui.js";
 
 async function main() {
   intro('🔐 Counterscale Development Secret Generator');
   
   const jwtSecret = generateJWTSecret();
   
-  const userPassword = await promptAppPassword();
+  const userPassword = await promptForPassword();
   
   if (isCancel(userPassword)) {
     cancel('Operation cancelled');

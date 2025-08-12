@@ -23,11 +23,11 @@ import {
     stageDeployConfig,
     readInitialServerConfig,
     getWorkerAndDatasetName,
-} from "./config.js";
+} from "../lib/config.js";
 
-import { CloudflareClient } from "./cloudflare.js";
-import { getScriptSnippet, getPackageSnippet, CLI_COLORS } from "./ui.js";
-import { generateJWTSecret, generatePasswordHash } from "./auth.js";
+import { CloudflareClient } from "../lib/cloudflare.js";
+import { getScriptSnippet, getPackageSnippet, CLI_COLORS, promptForPassword } from "../lib/ui.js";
+import { generateJWTSecret, generatePasswordHash } from "../lib/auth.js";
 
 export function bail() {
     cancel("Operation canceled.");
@@ -61,29 +61,7 @@ export async function promptApiToken(): Promise<string> {
     return cfApiToken;
 }
 
-export const MIN_PASSWORD_LENGTH = 8;
-export async function promptAppPassword(): Promise<string> {
-    const appPassword = await password({
-        message:
-            "Enter the password you will use to access the Counterscale Dashboard",
-        mask: "*",
-        validate: (val) => {
-            if (val.length < MIN_PASSWORD_LENGTH) {
-                return `A password of ${MIN_PASSWORD_LENGTH} characters or longer is required`;
-            }
-        },
-    });
 
-    if (isCancel(appPassword)) {
-        bail();
-    }
-
-    if (typeof appPassword !== "string") {
-        throw new Error("App password is required");
-    }
-
-    return appPassword;
-}
 
 export async function promptPasswordProtection(): Promise<boolean> {
     const enableAuth = await confirm({
@@ -331,7 +309,7 @@ Your token needs these permissions:
             
             if (enableAuth) {
                 // If auth is enabled, prompt for password and set all required secrets
-                const appPassword = await promptAppPassword();
+                const appPassword = await promptForPassword("Enter the password you will use to access the Counterscale Dashboard");
                 if (appPassword) {
                     const jwtSecret = generateJWTSecret();
                     const passwordHash = await generatePasswordHash(appPassword);
