@@ -37,7 +37,6 @@
         "@radix-ui/react-select": "^2.1.0",
         "@radix-ui/react-slot": "^1.1.0",
         "@react-router/cloudflare": "7.1.1",
-        "@types/bcryptjs": "^3.0.0",
         "@types/jsonwebtoken": "^9.0.10",
         "bcryptjs": "^3.0.2",
         "class-variance-authority": "^0.7.0",
