@@ -82,28 +82,66 @@ export default function TableCard({
                             width={barChartPercentages[index]}
                         >
                             <TableCell className="font-medium min-w-48 whitespace-normal relative flex items-center justify-start gap-2">
-                                {onClick ? (
-                                    <button
-                                        onClick={() => onClick(key as string)}
-                                        className="hover:underline select-text text-left"
-                                    >
-                                        {formattedLabel}
-                                    </button>
+                                {/^https?:\/\//.test(label) ? (
+                                    <>
+                                        <img
+                                            src={`https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(label)}&size=128`}
+                                            alt="Favicon"
+                                            className="w-5 h-5 mr-1 bg-white p-0.5 rounded-full"
+                                            onError={(e) => {
+                                                // Fallback to external link icon if favicon fails to load
+                                                const target =
+                                                    e.target as HTMLImageElement;
+                                                target.style.display = "none";
+                                            }}
+                                        />
+                                        {onClick ? (
+                                            <button
+                                                onClick={() =>
+                                                    onClick(key as string)
+                                                }
+                                                className="hover:underline select-text text-left"
+                                            >
+                                                {formattedLabel}
+                                            </button>
+                                        ) : (
+                                            formattedLabel
+                                        )}
+                                        <a
+                                            href={label}
+                                            target={"_blank"}
+                                            rel="noreferrer"
+                                            aria-hidden="true"
+                                            className="inline whitespace-nowrap ml-1"
+                                        >
+                                            <ExternalLink size={16} />
+                                        </a>
+                                    </>
                                 ) : (
-                                    formattedLabel
+                                    <>
+                                        {onClick ? (
+                                            <button
+                                                onClick={() =>
+                                                    onClick(key as string)
+                                                }
+                                                className="hover:underline select-text text-left"
+                                            >
+                                                {formattedLabel}
+                                            </button>
+                                        ) : (
+                                            formattedLabel
+                                        )}
+                                        <a
+                                            href={label}
+                                            target={"_blank"}
+                                            rel="noreferrer"
+                                            aria-hidden="true"
+                                            className="inline whitespace-nowrap ml-1"
+                                        >
+                                            <ExternalLink size={16} />
+                                        </a>
+                                    </>
                                 )}
-                                {/^https?:\/\//.test(label) ? 
-                                  (<a
-                                        href={label}
-                                        target={"_blank"}
-                                        rel="noreferrer"
-                                        aria-hidden="true"
-                                        className="inline whitespace-nowrap"
-                                    >
-                                        <ExternalLink size={16} />
-                                    </a>): 
-                                    null
-                                }
                             </TableCell>
 
                             <TableCell className="text-right min-w-16">
