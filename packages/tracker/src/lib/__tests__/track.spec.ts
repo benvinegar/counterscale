@@ -132,4 +132,124 @@ describe("trackPageview", () => {
         // Verify that makeRequest was called
         expect(makeRequestMock).toHaveBeenCalledTimes(1);
     });
+
+    test("should not make a request on localhost when reportOnLocalhost is false", async () => {
+        // Mock localhost hostname
+        Object.defineProperty(window, "location", {
+            writable: true,
+            value: {
+                pathname: "/test-path",
+                search: "?test=true",
+                host: "localhost:3000",
+                hostname: "localhost",
+            },
+        });
+
+        const client = new Client({
+            siteId: "test-site",
+            reporterUrl: "https://example.com/collect",
+            autoTrackPageviews: false,
+            reportOnLocalhost: false,
+        });
+
+        await trackPageview(client);
+
+        // Verify that makeRequest was not called
+        expect(makeRequestMock).not.toHaveBeenCalled();
+    });
+
+    test("should make a request on localhost when reportOnLocalhost is true", async () => {
+        // Mock localhost hostname
+        Object.defineProperty(window, "location", {
+            writable: true,
+            value: {
+                pathname: "/test-path",
+                search: "?test=true",
+                host: "localhost:3000",
+                hostname: "localhost",
+            },
+        });
+
+        const client = new Client({
+            siteId: "test-site",
+            reporterUrl: "https://example.com/collect",
+            autoTrackPageviews: false,
+            reportOnLocalhost: true,
+        });
+
+        await trackPageview(client);
+
+        // Verify that makeRequest was called
+        expect(makeRequestMock).toHaveBeenCalledTimes(1);
+    });
+
+    describe("localhost detection", () => {
+        test.each([
+            "localhost",
+            "127.0.0.1",
+            "127.1",
+            "127.0.1",
+            "::1",
+            "0:0:0:0:0:0:0:1",
+        ])(
+            "should not track on %s when reportOnLocalhost is false",
+            async (hostname) => {
+                // Mock localhost-like hostname
+                Object.defineProperty(window, "location", {
+                    writable: true,
+                    value: {
+                        pathname: "/test-path",
+                        search: "?test=true",
+                        host: hostname,
+                        hostname: hostname,
+                    },
+                });
+
+                const client = new Client({
+                    siteId: "test-site",
+                    reporterUrl: "https://example.com/collect",
+                    autoTrackPageviews: false,
+                    reportOnLocalhost: false,
+                });
+
+                await trackPageview(client);
+
+                expect(makeRequestMock).not.toHaveBeenCalled();
+            },
+        );
+
+        test.each([
+            "localhost",
+            "127.0.0.1",
+            "127.1",
+            "127.0.1",
+            "::1",
+            "0:0:0:0:0:0:0:1",
+        ])(
+            "should track on %s when reportOnLocalhost is true",
+            async (hostname) => {
+                // Mock localhost-like hostname
+                Object.defineProperty(window, "location", {
+                    writable: true,
+                    value: {
+                        pathname: "/test-path",
+                        search: "?test=true",
+                        host: hostname,
+                        hostname: hostname,
+                    },
+                });
+
+                const client = new Client({
+                    siteId: "test-site",
+                    reporterUrl: "https://example.com/collect",
+                    autoTrackPageviews: false,
+                    reportOnLocalhost: true,
+                });
+
+                await trackPageview(client);
+
+                expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            },
+        );
+    });
 });

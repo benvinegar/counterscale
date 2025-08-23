@@ -105,6 +105,7 @@ describe("api", () => {
         test("records a pageview for the current url", async () => {
             Counterscale.init({
                 siteId: "test-id",
+                reportOnLocalhost: true,
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: false,
             });
@@ -131,6 +132,7 @@ describe("api", () => {
         test("records a pageview for the given url and referrer", async () => {
             Counterscale.init({
                 siteId: "test-id",
+                reportOnLocalhost: true,
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: false,
             });
@@ -163,6 +165,7 @@ describe("api", () => {
             // Initialize with autoTrackPageviews: true
             Counterscale.init({
                 siteId: "test-id",
+                reportOnLocalhost: true,
                 reporterUrl: "https://example.com/collect",
                 autoTrackPageviews: true,
             });
@@ -192,6 +195,45 @@ describe("api", () => {
 
             // Check that a third XHR request was made
             expect(mockXhrObjects.length).toBeGreaterThan(initialCount);
+        });
+    });
+
+    describe("reportOnLocalhost", () => {
+        test("should not report on localhost by default", async () => {
+            Counterscale.init({
+                siteId: "test-id",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            // since auto: false, no requests should be made yet
+            expect(mockXhrObjects).toHaveLength(0);
+
+            await Counterscale.trackPageview({
+                url: "https://example.com/foo",
+                referrer: "https://referrer.com/",
+            });
+
+            expect(mockXhrObjects).toHaveLength(0);
+        });
+
+        test("should report on localhost when reportOnLocalhost is set to true", async () => {
+            Counterscale.init({
+                siteId: "test-id",
+                reportOnLocalhost: true,
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            // since auto: false, no requests should be made yet
+            expect(mockXhrObjects).toHaveLength(0);
+
+            await Counterscale.trackPageview({
+                url: "https://example.com/foo",
+                referrer: "https://referrer.com/",
+            });
+
+            expect(mockXhrObjects).toHaveLength(1);
         });
     });
 });

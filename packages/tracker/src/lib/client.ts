@@ -2,6 +2,7 @@ import { autoTrackPageviews } from "./track";
 
 export type ClientOpts = {
     siteId: string;
+    reportOnLocalhost?: boolean;
     reporterUrl: string;
     autoTrackPageviews?: boolean;
 };
@@ -9,12 +10,17 @@ export type ClientOpts = {
 export class Client {
     siteId: string;
     reporterUrl: string;
+    reportOnLocalhost = false;
 
     _cleanupAutoTrackPageviews?: () => void;
 
     constructor(opts: ClientOpts) {
         this.siteId = opts.siteId;
         this.reporterUrl = opts.reporterUrl;
+
+        if (opts.reportOnLocalhost) {
+          this.reportOnLocalhost = opts.reportOnLocalhost;
+        }
 
         // default to true
         if (opts.autoTrackPageviews === undefined || opts.autoTrackPageviews) {
