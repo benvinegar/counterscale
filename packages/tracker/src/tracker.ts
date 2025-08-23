@@ -31,6 +31,7 @@ function getLegacySiteId(): string | undefined {
 function init() {
     const script = findReporterScript();
     const siteId = script?.getAttribute("data-site-id") || getLegacySiteId();
+    const reportOnLocalhost = script?.hasAttribute("data-report-localhost") || true;
 
     const reporterUrl = script?.src.replace("tracker.js", "collect");
 
@@ -40,6 +41,7 @@ function init() {
 
     Counterscale.init({
         siteId,
+        reportOnLocalhost,
         reporterUrl,
         autoTrackPageviews: true,
     });
