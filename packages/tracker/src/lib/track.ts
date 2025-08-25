@@ -48,12 +48,20 @@ function getReferrer(hostname: string, referrer: string) {
     return referrer.split("?")[0];
 }
 
+function isLocalhostAddress(hostname: Location["hostname"]): boolean {
+  return /^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*:)*?:?0*1$/.test(hostname)
+}
+
 export async function trackPageview(
     client: Client,
     opts: TrackPageviewOpts = {},
 ) {
     const canonical = getCanonicalUrl();
     const location = canonical ?? window.location;
+
+    if (!client.reportOnLocalhost && isLocalhostAddress(window.location.hostname)) {
+      return;
+    }
 
     // if host is empty, we're probably loading a file:/// URI
     // -- exit early if this is not an Electron app
