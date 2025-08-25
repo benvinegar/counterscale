@@ -131,15 +131,6 @@ export default function TableCard({
                                         ) : (
                                             formattedLabel
                                         )}
-                                        <a
-                                            href={label}
-                                            target={"_blank"}
-                                            rel="noreferrer"
-                                            aria-hidden="true"
-                                            className="inline whitespace-nowrap ml-1"
-                                        >
-                                            <ExternalLink size={16} />
-                                        </a>
                                     </>
                                 )}
                             </TableCell>
