@@ -37,10 +37,11 @@
         "inquirer": "^9.2.12",
         "wrangler": "^4.23.0",
         "yargs": "^17.7.2",
-        "zx": "^8.3.2"
+        "zx": "^8.8.1"
     },
     "devDependencies": {
         "@types/figlet": "^1.5.8",
+        "@types/fs-extra": "^11.0.4",
         "@types/inquirer": "^9.0.7",
         "@types/shelljs": "^0.8.15",
         "@types/yargs": "^17.0.33",
