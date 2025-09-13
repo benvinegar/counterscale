@@ -252,4 +252,177 @@ describe("trackPageview", () => {
             },
         );
     });
+
+    describe("UTM parameter tracking", () => {
+        test("should include UTM parameters when present in URL", async () => {
+            // Mock location with UTM parameters
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?utm_source=google&utm_medium=cpc&utm_campaign=summer_sale&utm_term=analytics&utm_content=banner",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    p: "/test-path",
+                    h: "http://localhost",
+                    r: "",
+                    sid: "test-site",
+                    ht: "1",
+                    us: "google",
+                    um: "cpc",
+                    uc: "summer_sale",
+                    ut: "analytics",
+                    uco: "banner",
+                }),
+            );
+        });
+
+        test("should include only non-empty UTM parameters", async () => {
+            // Mock location with partial UTM parameters
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?utm_source=google&utm_medium=&utm_campaign=summer_sale",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            const callArgs = makeRequestMock.mock.calls[0][1];
+            expect(callArgs).toHaveProperty("us", "google");
+            expect(callArgs).toHaveProperty("uc", "summer_sale");
+            expect(callArgs).not.toHaveProperty("um");
+            expect(callArgs).not.toHaveProperty("ut");
+            expect(callArgs).not.toHaveProperty("uco");
+        });
+
+        test("should work without UTM parameters (backwards compatibility)", async () => {
+            // Mock location without UTM parameters
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?regular=param",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            const callArgs = makeRequestMock.mock.calls[0][1];
+            expect(callArgs).toHaveProperty("p", "/test-path");
+            expect(callArgs).toHaveProperty("h", "http://localhost");
+            expect(callArgs).toHaveProperty("r", "");
+            expect(callArgs).toHaveProperty("sid", "test-site");
+            expect(callArgs).toHaveProperty("ht", "1");
+            expect(callArgs).not.toHaveProperty("us");
+            expect(callArgs).not.toHaveProperty("um");
+            expect(callArgs).not.toHaveProperty("uc");
+            expect(callArgs).not.toHaveProperty("ut");
+            expect(callArgs).not.toHaveProperty("uco");
+        });
+
+        test("should handle custom URL with UTM parameters", async () => {
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client, {
+                url: "/custom-path?utm_source=newsletter&utm_medium=email",
+            });
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            const callArgs = makeRequestMock.mock.calls[0][1];
+            expect(callArgs).toHaveProperty("us", "newsletter");
+            expect(callArgs).toHaveProperty("um", "email");
+            expect(callArgs).not.toHaveProperty("uc");
+            expect(callArgs).not.toHaveProperty("ut");
+            expect(callArgs).not.toHaveProperty("uco");
+        });
+
+        test("should handle URL-encoded UTM parameters", async () => {
+            // Mock location with URL-encoded UTM parameters
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?utm_campaign=summer%20sale&utm_content=blue%20button",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            const callArgs = makeRequestMock.mock.calls[0][1];
+            expect(callArgs).toHaveProperty("uc", "summer sale");
+            expect(callArgs).toHaveProperty("uco", "blue button");
+        });
+
+        test("should handle mixed UTM and non-UTM parameters", async () => {
+            // Mock location with mixed parameters
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?page=1&utm_source=twitter&sort=date&utm_campaign=launch",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            const callArgs = makeRequestMock.mock.calls[0][1];
+            expect(callArgs).toHaveProperty("us", "twitter");
+            expect(callArgs).toHaveProperty("uc", "launch");
+            expect(callArgs).not.toHaveProperty("um");
+            expect(callArgs).not.toHaveProperty("ut");
+            expect(callArgs).not.toHaveProperty("uco");
+        });
+    });
 });

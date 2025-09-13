@@ -35,9 +35,11 @@ http.createServer(function (req, res) {
         res.writeHead(404, { "Content-Type": "text/html" });
         res.end("Not found");
     } else {
-        const resolvedUrl = req.url.endsWith("/")
-            ? req.url + "index.html"
-            : req.url;
+        // Strip query parameters for file resolution
+        const urlWithoutQuery = requestUrl.pathname;
+        const resolvedUrl = urlWithoutQuery.endsWith("/")
+            ? urlWithoutQuery + "index.html"
+            : urlWithoutQuery;
         const filePath = path.join(__dirname, resolvedUrl);
         let file;
         try {
