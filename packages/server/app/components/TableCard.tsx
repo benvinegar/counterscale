@@ -100,7 +100,7 @@ export default function TableCard({
                                                 onClick={() =>
                                                     onClick(key as string)
                                                 }
-                                                className="hover:underline select-text text-left break-all"
+                                                className="hover:underline select-text text-left whitespace-nowrap text-ellipsis"
                                             >
                                                 {formattedLabel}
                                             </button>
