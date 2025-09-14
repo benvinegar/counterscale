@@ -22,6 +22,11 @@ import { BrowserCard } from "./resources.browser";
 import { BrowserVersionCard } from "./resources.browserversion";
 import { CountryCard } from "./resources.country";
 import { DeviceCard } from "./resources.device";
+import { UtmSourceCard } from "./resources.utm-source";
+import { UtmMediumCard } from "./resources.utm-medium";
+import { UtmCampaignCard } from "./resources.utm-campaign";
+import { UtmTermCard } from "./resources.utm-term";
+import { UtmContentCard } from "./resources.utm-content";
 
 import {
     getFiltersFromSearchParams,
@@ -45,7 +50,7 @@ const MAX_RETENTION_DAYS = 90;
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     await requireAuth(request, context.cloudflare.env);
-    
+
     // NOTE: probably duped from getLoadContext / need to de-duplicate
     if (!context.cloudflare?.env?.CF_ACCOUNT_ID) {
         throw new Response("Missing credentials: CF_ACCOUNT_ID is not set.", {
@@ -281,6 +286,48 @@ export default function Dashboard() {
                     />
 
                     <DeviceCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
+                    />
+                </div>
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <UtmSourceCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
+                    />
+
+                    <UtmMediumCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
+                    />
+
+                    <UtmCampaignCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
+                    />
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <UtmTermCard
+                        siteId={data.siteId}
+                        interval={data.interval}
+                        filters={data.filters}
+                        onFilterChange={handleFilterChange}
+                        timezone={userTimezone}
+                    />
+
+                    <UtmContentCard
                         siteId={data.siteId}
                         interval={data.interval}
                         filters={data.filters}

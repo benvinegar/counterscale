@@ -272,6 +272,36 @@ describe("Dashboard route", () => {
                             return { countsByProperty: [] };
                         },
                     },
+                    {
+                        path: "/resources/utm-source",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-medium",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-campaign",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-term",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-content",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
                 ],
             },
         ]);
@@ -284,6 +314,11 @@ describe("Dashboard route", () => {
         expect(screen.getByText("Browser")).toBeInTheDocument();
         expect(screen.getByText("Country")).toBeInTheDocument();
         expect(screen.getByText("Device")).toBeInTheDocument();
+        expect(screen.getByText("UTM Source")).toBeInTheDocument();
+        expect(screen.getByText("UTM Medium")).toBeInTheDocument();
+        expect(screen.getByText("UTM Campaign")).toBeInTheDocument();
+        expect(screen.getByText("UTM Term")).toBeInTheDocument();
+        expect(screen.getByText("UTM Content")).toBeInTheDocument();
     });
 
     const defaultMockedLoaderJson = {
@@ -309,7 +344,9 @@ describe("Dashboard route", () => {
 
     test("renders with valid data", async () => {
         function loader() {
-            return { ...defaultMockedLoaderJson };
+            return {
+                ...defaultMockedLoaderJson,
+            };
         }
 
         const RemixStub = createRoutesStub([
@@ -395,6 +432,36 @@ describe("Dashboard route", () => {
                     },
                     {
                         path: "/resources/browserversion",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-source",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-medium",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-campaign",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-term",
+                        loader: () => {
+                            return { countsByProperty: [] };
+                        },
+                    },
+                    {
+                        path: "/resources/utm-content",
                         loader: () => {
                             return { countsByProperty: [] };
                         },

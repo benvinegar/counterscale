@@ -135,6 +135,11 @@ function filtersToSql(filters: SearchFilters) {
         "browserVersion",
         "country",
         "deviceType",
+        "utmSource",
+        "utmMedium",
+        "utmCampaign",
+        "utmTerm",
+        "utmContent",
     ];
 
     let filterStr = "";
@@ -700,6 +705,91 @@ export class AnalyticsEngineAPI {
         return this.getVisitorCountByColumn(
             siteId,
             "deviceType",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
+    async getCountByUtmSource(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ): Promise<[utmSource: string, visitors: number][]> {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "utmSource",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
+    async getCountByUtmMedium(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ): Promise<[utmMedium: string, visitors: number][]> {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "utmMedium",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
+    async getCountByUtmCampaign(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ): Promise<[utmCampaign: string, visitors: number][]> {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "utmCampaign",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
+    async getCountByUtmTerm(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ): Promise<[utmTerm: string, visitors: number][]> {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "utmTerm",
+            interval,
+            tz,
+            filters,
+            page,
+        );
+    }
+
+    async getCountByUtmContent(
+        siteId: string,
+        interval: string,
+        tz?: string,
+        filters: SearchFilters = {},
+        page: number = 1,
+    ): Promise<[utmContent: string, visitors: number][]> {
+        return this.getVisitorCountByColumn(
+            siteId,
+            "utmContent",
             interval,
             tz,
             filters,
