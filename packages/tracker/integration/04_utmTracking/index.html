@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+    <head>
+        <title>04 UTM Tracking</title>
+    </head>
+    <body>
+        <h1>UTM Tracking Test</h1>
+        <p>This page tests UTM parameter tracking functionality.</p>
+
+        <script>
+            (function () {
+                window.counterscale = {
+                    q: [
+                        ["set", "siteId", "utm-test-site-id"],
+                        ["trackPageview"],
+                    ],
+                };
+            })();
+        </script>
+        <script
+            id="counterscale-script"
+            data-report-localhost
+            src="http://localhost:3004/tracker.js"
+        ></script>
+    </body>
+</html>

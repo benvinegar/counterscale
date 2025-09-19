@@ -34,6 +34,33 @@ describe("getFiltersFromSearchParams", () => {
             path: "/about",
         });
     });
+
+    test("it should handle UTM parameters correctly", () => {
+        const searchParams = new URLSearchParams(
+            "?utmSource=google&utmMedium=cpc&utmCampaign=summer_sale&utmTerm=analytics&utmContent=banner_ad&path=/landing",
+        );
+        expect(getFiltersFromSearchParams(searchParams)).toEqual({
+            utmSource: "google",
+            utmMedium: "cpc",
+            utmCampaign: "summer_sale",
+            utmTerm: "analytics",
+            utmContent: "banner_ad",
+            path: "/landing",
+        });
+    });
+
+    test("it should handle mixed standard and UTM parameters", () => {
+        const searchParams = new URLSearchParams(
+            "?path=/about&referrer=google.com&utmSource=google&utmMedium=email&browserName=chrome",
+        );
+        expect(getFiltersFromSearchParams(searchParams)).toEqual({
+            path: "/about",
+            referrer: "google.com",
+            utmSource: "google",
+            utmMedium: "email",
+            browserName: "chrome",
+        });
+    });
 });
 
 describe("getDateTimeRange", () => {

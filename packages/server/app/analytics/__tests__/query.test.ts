@@ -483,6 +483,143 @@ describe("AnalyticsEngineAPI", () => {
             });
         });
     });
+
+    describe("UTM query methods", () => {
+        test("getCountByUtmSource should return visitor counts by UTM source", async () => {
+            fetch.mockResolvedValue(
+                createFetchResponse({
+                    data: [
+                        {
+                            blob11: "google",
+                            count: 50,
+                        },
+                        {
+                            blob11: "facebook",
+                            count: 30,
+                        },
+                        {
+                            blob11: "twitter",
+                            count: 20,
+                        },
+                    ],
+                }),
+            );
+
+            const result = await api.getCountByUtmSource("example.com", "7d");
+
+            expect(fetch).toHaveBeenCalled();
+            expect(result).toEqual([
+                ["google", 50],
+                ["facebook", 30],
+                ["twitter", 20],
+            ]);
+        });
+
+        test("getCountByUtmMedium should return visitor counts by UTM medium", async () => {
+            fetch.mockResolvedValue(
+                createFetchResponse({
+                    data: [
+                        {
+                            blob12: "cpc",
+                            count: 40,
+                        },
+                        {
+                            blob12: "email",
+                            count: 35,
+                        },
+                        {
+                            blob12: "social",
+                            count: 25,
+                        },
+                    ],
+                }),
+            );
+
+            const result = await api.getCountByUtmMedium("example.com", "7d");
+
+            expect(fetch).toHaveBeenCalled();
+            expect(result).toEqual([
+                ["cpc", 40],
+                ["email", 35],
+                ["social", 25],
+            ]);
+        });
+
+        test("getCountByUtmCampaign should return visitor counts by UTM campaign", async () => {
+            fetch.mockResolvedValue(
+                createFetchResponse({
+                    data: [
+                        {
+                            blob13: "summer_sale",
+                            count: 60,
+                        },
+                        {
+                            blob13: "newsletter",
+                            count: 40,
+                        },
+                    ],
+                }),
+            );
+
+            const result = await api.getCountByUtmCampaign("example.com", "7d");
+
+            expect(fetch).toHaveBeenCalled();
+            expect(result).toEqual([
+                ["summer_sale", 60],
+                ["newsletter", 40],
+            ]);
+        });
+
+        test("getCountByUtmTerm should return visitor counts by UTM term", async () => {
+            fetch.mockResolvedValue(
+                createFetchResponse({
+                    data: [
+                        {
+                            blob14: "analytics",
+                            count: 15,
+                        },
+                        {
+                            blob14: "web tracking",
+                            count: 10,
+                        },
+                    ],
+                }),
+            );
+
+            const result = await api.getCountByUtmTerm("example.com", "7d");
+
+            expect(fetch).toHaveBeenCalled();
+            expect(result).toEqual([
+                ["analytics", 15],
+                ["web tracking", 10],
+            ]);
+        });
+
+        test("getCountByUtmContent should return visitor counts by UTM content", async () => {
+            fetch.mockResolvedValue(
+                createFetchResponse({
+                    data: [
+                        {
+                            blob15: "banner_ad",
+                            count: 25,
+                        },
+                        {
+                            blob15: "text_link",
+                            count: 15,
+                        },
+                    ],
+                }),
+            );
+
+            const result = await api.getCountByUtmContent("example.com", "7d");
+
+            expect(fetch).toHaveBeenCalled();
+            expect(result).toEqual([
+                ["banner_ad", 25],
+                ["text_link", 15],
+            ]);
+        });
+    });
 });
 
 describe("intervalToSql", () => {

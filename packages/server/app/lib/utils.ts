@@ -27,6 +27,11 @@ interface SearchFilters {
     country?: string;
     browserName?: string;
     browserVersion?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
 }
 
 export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
@@ -49,6 +54,21 @@ export function getFiltersFromSearchParams(searchParams: URLSearchParams) {
     }
     if (searchParams.has("browserVersion")) {
         filters.browserVersion = searchParams.get("browserVersion") || "";
+    }
+    if (searchParams.has("utmSource")) {
+        filters.utmSource = searchParams.get("utmSource") || "";
+    }
+    if (searchParams.has("utmMedium")) {
+        filters.utmMedium = searchParams.get("utmMedium") || "";
+    }
+    if (searchParams.has("utmCampaign")) {
+        filters.utmCampaign = searchParams.get("utmCampaign") || "";
+    }
+    if (searchParams.has("utmTerm")) {
+        filters.utmTerm = searchParams.get("utmTerm") || "";
+    }
+    if (searchParams.has("utmContent")) {
+        filters.utmContent = searchParams.get("utmContent") || "";
     }
 
     return filters;

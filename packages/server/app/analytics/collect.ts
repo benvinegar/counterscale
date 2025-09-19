@@ -193,6 +193,12 @@ export function collectRequestHandler(
         browserVersion: browserVersion,
         deviceModel: parsedUserAgent.getDevice().model,
         deviceType: getDeviceTypeFromDevice(parsedUserAgent.getDevice()),
+        // UTM parameters
+        utmSource: params.us,
+        utmMedium: params.um,
+        utmCampaign: params.uc,
+        utmTerm: params.ut,
+        utmContent: params.uco,
     };
 
     // NOTE: location is derived from Cloudflare-specific request properties
@@ -247,6 +253,11 @@ interface DataPoint {
     browserVersion?: string;
     deviceModel?: string;
     deviceType?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
 
     // doubles
     newVisitor: number;
@@ -274,6 +285,11 @@ export function writeDataPoint(
             data.siteId || "", // blob8
             data.browserVersion || "", // blob9
             data.deviceType || "", // blob10
+            data.utmSource || "", // blob11
+            data.utmMedium || "", // blob12
+            data.utmCampaign || "", // blob13
+            data.utmTerm || "", // blob14
+            data.utmContent || "", // blob15
         ],
         doubles: [data.newVisitor || 0, data.newSession || 0, data.bounce],
     };

@@ -6,6 +6,11 @@ export interface SearchFilters {
     country?: string;
     browserName?: string;
     browserVersion?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
 }
 
 export interface User {

@@ -22,6 +22,11 @@ function generateRequestParams(headers: Record<string, string>) {
                 r: "https://google.com",
                 nv: "1",
                 ns: "1",
+                us: "google",
+                um: "search",
+                uc: "summer_sale",
+                ut: "running_shoes",
+                uco: "ad1",
             }).toString(),
         headers: {
             get: (_header: string) => {
@@ -124,6 +129,11 @@ describe("collectRequestHandler", () => {
                 "example", // site id
                 "51.x.x.x", // browser version
                 "desktop", // device type
+                "google", // utm_source
+                "search", // utm_medium
+                "summer_sale", // utm_campaign
+                "running_shoes", // utm_term
+                "ad1", // utm_content
             ],
             doubles: [
                 1, // new visitor
@@ -354,5 +364,66 @@ describe("collectRequestHandler", () => {
                 0, // After the second visit so no bounce
             ],
         );
+    });
+
+    test("handles UTM parameters correctly", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as AnalyticsEngineDataset,
+        } as Env;
+
+        const request = generateRequestParams({
+            "user-agent":
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+        });
+
+        collectRequestHandler(request as any, env, {
+            country: "US",
+        });
+
+        const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+
+        const blobs = (writeDataPoint as Mock).mock.calls[0][0].blobs;
+        expect(blobs[10]).toBe("google"); // utm_source
+        expect(blobs[11]).toBe("search"); // utm_medium
+        expect(blobs[12]).toBe("summer_sale"); // utm_campaign
+        expect(blobs[13]).toBe("running_shoes"); // utm_term
+        expect(blobs[14]).toBe("ad1"); // utm_content
+    });
+
+    test("handles missing UTM parameters gracefully", () => {
+        const env = {
+            WEB_COUNTER_AE: {
+                writeDataPoint: vi.fn(),
+            } as AnalyticsEngineDataset,
+        } as Env;
+
+        const request = generateRequestParams({
+            "user-agent":
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+        });
+        // Remove UTM parameters from URL
+        request.url = request.url
+            .replace(/&us=[^&]*/, "")
+            .replace(/&um=[^&]*/, "")
+            .replace(/&uc=[^&]*/, "")
+            .replace(/&ut=[^&]*/, "")
+            .replace(/&uco=[^&]*/, "");
+
+        collectRequestHandler(request as any, env, {
+            country: "US",
+        });
+
+        const writeDataPoint = env.WEB_COUNTER_AE.writeDataPoint;
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+
+        const blobs = (writeDataPoint as Mock).mock.calls[0][0].blobs;
+        expect(blobs[10]).toBe(""); // utm_source (empty)
+        expect(blobs[11]).toBe(""); // utm_medium (empty)
+        expect(blobs[12]).toBe(""); // utm_campaign (empty)
+        expect(blobs[13]).toBe(""); // utm_term (empty)
+        expect(blobs[14]).toBe(""); // utm_content (empty)
     });
 });

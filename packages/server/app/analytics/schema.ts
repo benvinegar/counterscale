@@ -24,6 +24,11 @@ export const ColumnMappings = {
     siteId: "blob8",
     browserVersion: "blob9",
     deviceType: "blob10",
+    utmSource: "blob11",
+    utmMedium: "blob12",
+    utmCampaign: "blob13",
+    utmTerm: "blob14",
+    utmContent: "blob15",
 
     /**
      * doubles
