@@ -75,7 +75,7 @@ export async function promptApiToken(): Promise<string> {
 
     try {
         const result = await validateCloudflareToken(cfApiToken);
-        s.stop();
+        s.stop("Token Validated");
 
         if (!result.valid) {
             throw new Error(
