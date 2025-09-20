@@ -155,3 +155,67 @@ export class CloudflareClient {
         }
     }
 }
+
+interface TokenValidationResponse {
+    success: boolean;
+    result?: {
+        id: string;
+        status: string;
+    };
+    errors?: Array<{ code: number; message: string }>;
+}
+
+export async function validateCloudflareToken(
+    token: string,
+): Promise<{ valid: boolean; error?: string }> {
+    try {
+        const response = await fetch(
+            "https://api.cloudflare.com/client/v4/user/tokens/verify",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            },
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                return { valid: false, error: "Invalid or expired token" };
+            }
+            if (response.status === 403) {
+                return {
+                    valid: false,
+                    error: "Token lacks required permissions",
+                };
+            }
+            return {
+                valid: false,
+                error: `HTTP ${response.status}: ${response.statusText}`,
+            };
+        }
+
+        const data: TokenValidationResponse = await response.json();
+
+        if (!data.success) {
+            const errorMessage =
+                data.errors?.[0]?.message || "Token validation failed";
+            return { valid: false, error: errorMessage };
+        }
+
+        if (data.result?.status !== "active") {
+            return { valid: false, error: "Token is not active" };
+        }
+
+        return { valid: true };
+    } catch (error) {
+        return {
+            valid: false,
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Network error during validation",
+        };
+    }
+}
