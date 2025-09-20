@@ -25,10 +25,7 @@ import {
     getWorkerAndDatasetName,
 } from "../lib/config.js";
 
-import {
-    CloudflareClient,
-    validateCloudflareToken,
-} from "../lib/cloudflare.js";
+import { CloudflareClient } from "../lib/cloudflare.js";
 import {
     getScriptSnippet,
     getPackageSnippet,
@@ -74,7 +71,7 @@ export async function promptApiToken(): Promise<string> {
     s.start("Validating token...");
 
     try {
-        const result = await validateCloudflareToken(cfApiToken);
+        const result = await CloudflareClient.validateToken(cfApiToken);
         s.stop("Token Validated");
 
         if (!result.valid) {

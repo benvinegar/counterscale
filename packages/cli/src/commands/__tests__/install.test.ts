@@ -20,15 +20,21 @@ vi.mock("@clack/prompts", () => ({
     },
 }));
 
-vi.mock("../../lib/cloudflare.js", () => ({
-    CloudflareClient: vi.fn().mockImplementation(() => ({
+vi.mock("../../lib/cloudflare.js", () => {
+    const mockValidateToken = vi.fn();
+    const MockCloudflareClient = vi.fn().mockImplementation(() => ({
         getAccounts: vi.fn(),
         getCloudflareSecrets: vi.fn(),
         setCloudflareSecrets: vi.fn(),
         deploy: vi.fn(),
-    })),
-    validateCloudflareToken: vi.fn(),
-}));
+    }));
+
+    (MockCloudflareClient as any).validateToken = mockValidateToken;
+
+    return {
+        CloudflareClient: MockCloudflareClient,
+    };
+});
 
 // Now import the actual modules
 import { isCancel } from "@clack/prompts";
@@ -88,10 +94,8 @@ describe("install prompts", () => {
             ).mockResolvedValue(mockToken);
 
             const mockCloudflare = await import("../../lib/cloudflare.js");
-            (
-                mockCloudflare.validateCloudflareToken as unknown as ReturnType<
-                    typeof vi.fn
-                >
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
             ).mockResolvedValue({ valid: true });
 
             const result = await promptApiToken();
@@ -123,10 +127,8 @@ describe("install prompts", () => {
             ).mockResolvedValue(mockToken);
 
             const mockCloudflare = await import("../../lib/cloudflare.js");
-            (
-                mockCloudflare.validateCloudflareToken as unknown as ReturnType<
-                    typeof vi.fn
-                >
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
             ).mockResolvedValue({
                 valid: false,
                 error: "Invalid token or insufficient permissions",
@@ -148,10 +150,8 @@ describe("install prompts", () => {
             ).mockResolvedValue(mockToken);
 
             const mockCloudflare = await import("../../lib/cloudflare.js");
-            (
-                mockCloudflare.validateCloudflareToken as unknown as ReturnType<
-                    typeof vi.fn
-                >
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
             ).mockRejectedValue(new Error("Network error"));
 
             await expect(promptApiToken()).rejects.toThrow("Network error");
@@ -168,10 +168,8 @@ describe("install prompts", () => {
             ).mockResolvedValue(mockToken);
 
             const mockCloudflare = await import("../../lib/cloudflare.js");
-            (
-                mockCloudflare.validateCloudflareToken as unknown as ReturnType<
-                    typeof vi.fn
-                >
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
             ).mockRejectedValue("string error");
 
             await expect(promptApiToken()).rejects.toThrow(

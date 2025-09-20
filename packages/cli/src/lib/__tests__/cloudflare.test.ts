@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { CloudflareClient, validateCloudflareToken } from "../cloudflare.js";
+import { CloudflareClient } from "../cloudflare.js";
 import { ProcessOutput } from "zx";
 import path from "path";
 import { homedir } from "node:os";
@@ -250,7 +250,10 @@ Getting User settings...
 
             const result = await client.getAccounts();
             expect(result).toEqual([
-                { id: mockAccountId, name: `Account ${mockAccountId.slice(-6)}` },
+                {
+                    id: mockAccountId,
+                    name: `Account ${mockAccountId.slice(-6)}`,
+                },
             ]);
         });
 
@@ -287,7 +290,9 @@ Getting User settings...
                 };
             });
 
-            await expect(client.getAccounts()).rejects.toThrow("Command failed");
+            await expect(client.getAccounts()).rejects.toThrow(
+                "Command failed",
+            );
         });
     });
 
@@ -326,7 +331,7 @@ Getting User settings...
     });
 });
 
-describe("validateCloudflareToken", () => {
+describe("CloudflareClient.validateToken", () => {
     beforeEach(() => {
         vi.resetAllMocks();
     });
@@ -340,7 +345,7 @@ describe("validateCloudflareToken", () => {
             }),
         });
 
-        const result = await validateCloudflareToken("valid-token");
+        const result = await CloudflareClient.validateToken("valid-token");
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
     });
@@ -352,7 +357,7 @@ describe("validateCloudflareToken", () => {
             statusText: "Unauthorized",
         });
 
-        const result = await validateCloudflareToken("invalid-token");
+        const result = await CloudflareClient.validateToken("invalid-token");
         expect(result.valid).toBe(false);
         expect(result.error).toBe("Invalid or expired token");
     });
@@ -364,7 +369,7 @@ describe("validateCloudflareToken", () => {
             statusText: "Forbidden",
         });
 
-        const result = await validateCloudflareToken(
+        const result = await CloudflareClient.validateToken(
             "insufficient-permissions",
         );
         expect(result.valid).toBe(false);
@@ -378,7 +383,7 @@ describe("validateCloudflareToken", () => {
             statusText: "Internal Server Error",
         });
 
-        const result = await validateCloudflareToken("any-token");
+        const result = await CloudflareClient.validateToken("any-token");
         expect(result.valid).toBe(false);
         expect(result.error).toBe("HTTP 500: Internal Server Error");
     });
@@ -392,7 +397,7 @@ describe("validateCloudflareToken", () => {
             }),
         });
 
-        const result = await validateCloudflareToken("failed-token");
+        const result = await CloudflareClient.validateToken("failed-token");
         expect(result.valid).toBe(false);
         expect(result.error).toBe("Authentication failed");
     });
@@ -406,7 +411,7 @@ describe("validateCloudflareToken", () => {
             }),
         });
 
-        const result = await validateCloudflareToken("inactive-token");
+        const result = await CloudflareClient.validateToken("inactive-token");
         expect(result.valid).toBe(false);
         expect(result.error).toBe("Token is not active");
     });
@@ -414,7 +419,7 @@ describe("validateCloudflareToken", () => {
     it("should handle network errors", async () => {
         (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
 
-        const result = await validateCloudflareToken("any-token");
+        const result = await CloudflareClient.validateToken("any-token");
         expect(result.valid).toBe(false);
         expect(result.error).toBe("Network error");
     });
@@ -422,7 +427,7 @@ describe("validateCloudflareToken", () => {
     it("should handle unknown errors", async () => {
         (global.fetch as any).mockRejectedValueOnce("Unknown error");
 
-        const result = await validateCloudflareToken("any-token");
+        const result = await CloudflareClient.validateToken("any-token");
         expect(result.valid).toBe(false);
         expect(result.error).toBe("Network error during validation");
     });
@@ -436,7 +441,7 @@ describe("validateCloudflareToken", () => {
             }),
         });
 
-        await validateCloudflareToken("test-token");
+        await CloudflareClient.validateToken("test-token");
 
         expect(global.fetch).toHaveBeenCalledWith(
             "https://api.cloudflare.com/client/v4/user/tokens/verify",
