@@ -1,7 +1,6 @@
 process.env.NODE_ENV = "test";
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { PasswordOptions } from "@clack/prompts";
 
 // Mock modules must be imported before the actual imports
 vi.mock("@clack/prompts", () => ({
@@ -21,14 +20,21 @@ vi.mock("@clack/prompts", () => ({
     },
 }));
 
-vi.mock("../../lib/cloudflare.js", () => ({
-    CloudflareClient: vi.fn().mockImplementation(() => ({
+vi.mock("../../lib/cloudflare.js", () => {
+    const mockValidateToken = vi.fn();
+    const MockCloudflareClient = vi.fn().mockImplementation(() => ({
         getAccounts: vi.fn(),
         getCloudflareSecrets: vi.fn(),
         setCloudflareSecrets: vi.fn(),
         deploy: vi.fn(),
-    })),
-}));
+    }));
+
+    (MockCloudflareClient as any).validateToken = mockValidateToken;
+
+    return {
+        CloudflareClient: MockCloudflareClient,
+    };
+});
 
 // Now import the actual modules
 import { isCancel } from "@clack/prompts";
@@ -61,7 +67,23 @@ describe("install prompts", () => {
     });
 
     describe("promptApiToken", () => {
-        it("should return valid API token", async () => {
+        let mockSpinner: {
+            start: ReturnType<typeof vi.fn>;
+            stop: ReturnType<typeof vi.fn>;
+        };
+
+        beforeEach(async () => {
+            mockSpinner = {
+                start: vi.fn(),
+                stop: vi.fn(),
+            };
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.spinner as unknown as ReturnType<typeof vi.fn>
+            ).mockReturnValue(mockSpinner);
+        });
+
+        it("should return valid API token when validation passes", async () => {
             const mockToken = "a".repeat(40);
             (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
                 false,
@@ -70,6 +92,11 @@ describe("install prompts", () => {
             (
                 mockPrompts.password as unknown as ReturnType<typeof vi.fn>
             ).mockResolvedValue(mockToken);
+
+            const mockCloudflare = await import("../../lib/cloudflare.js");
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
+            ).mockResolvedValue({ valid: true });
 
             const result = await promptApiToken();
             expect(result).toBe(mockToken);
@@ -89,43 +116,65 @@ describe("install prompts", () => {
             );
         });
 
-        it("should throw error if token is not a string", async () => {
+        it("should throw error if token validation fails", async () => {
+            const mockToken = "a".repeat(40);
             (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
                 false,
             );
             const mockPrompts = await import("@clack/prompts");
             (
                 mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockResolvedValue(undefined);
+            ).mockResolvedValue(mockToken);
+
+            const mockCloudflare = await import("../../lib/cloudflare.js");
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
+            ).mockResolvedValue({
+                valid: false,
+                error: "Invalid token or insufficient permissions",
+            });
 
             await expect(promptApiToken()).rejects.toThrow(
-                "API token is required",
+                "Invalid token or insufficient permissions",
             );
         });
 
-        it("should validate token length", async () => {
-            // Call promptApiToken to get the actual validate function
+        it("should throw error if validation throws", async () => {
+            const mockToken = "a".repeat(40);
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
             const mockPrompts = await import("@clack/prompts");
             (
                 mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockImplementationOnce(({ validate }: PasswordOptions) => {
-                if (!validate) {
-                    throw new Error("validate function missing");
-                }
+            ).mockResolvedValue(mockToken);
 
-                expect(validate("")).toBe("Value is required");
-                expect(validate("a".repeat(39))).toBe(
-                    "Value must be exactly 40 characters",
-                );
-                expect(validate("a".repeat(41))).toBe(
-                    "Value must be exactly 40 characters",
-                );
-                expect(validate("a".repeat(40))).toBeUndefined();
-                return "mock-token";
-            });
+            const mockCloudflare = await import("../../lib/cloudflare.js");
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
+            ).mockRejectedValue(new Error("Network error"));
 
-            await promptApiToken();
-            expect(mockPrompts.password).toHaveBeenCalled();
+            await expect(promptApiToken()).rejects.toThrow("Network error");
+        });
+
+        it("should throw generic error if validation throws non-Error", async () => {
+            const mockToken = "a".repeat(40);
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue(mockToken);
+
+            const mockCloudflare = await import("../../lib/cloudflare.js");
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
+            ).mockRejectedValue("string error");
+
+            await expect(promptApiToken()).rejects.toThrow(
+                "Failed to validate token. Please check your internet connection.",
+            );
         });
     });
 
@@ -372,6 +421,4 @@ describe("install prompts", () => {
             expect(shouldPrompt).toBe(true);
         });
     });
-
-
 });

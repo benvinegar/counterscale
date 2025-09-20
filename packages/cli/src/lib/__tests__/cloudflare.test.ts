@@ -16,6 +16,9 @@ vi.mock("zx", async (importOriginal) => {
 // Import and spy on the mocked function
 const { $ } = await import("zx");
 
+// Mock fetch globally
+global.fetch = vi.fn();
+
 describe("CloudflareClient", () => {
     let client: CloudflareClient;
     const mockConfigPath = "/mock/path/wrangler.json";
@@ -247,7 +250,10 @@ Getting User settings...
 
             const result = await client.getAccounts();
             expect(result).toEqual([
-                { id: mockAccountId, name: `Account ${mockAccountId.slice(-6)}` },
+                {
+                    id: mockAccountId,
+                    name: `Account ${mockAccountId.slice(-6)}`,
+                },
             ]);
         });
 
@@ -284,7 +290,9 @@ Getting User settings...
                 };
             });
 
-            await expect(client.getAccounts()).rejects.toThrow("Command failed");
+            await expect(client.getAccounts()).rejects.toThrow(
+                "Command failed",
+            );
         });
     });
 
@@ -320,5 +328,130 @@ Getting User settings...
                 "Deployment failed",
             );
         });
+    });
+});
+
+describe("CloudflareClient.validateToken", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("should return valid: true for active token", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                success: true,
+                result: { id: "test-id", status: "active" },
+            }),
+        });
+
+        const result = await CloudflareClient.validateToken("valid-token");
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+    });
+
+    it("should return valid: false for 401 unauthorized", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: false,
+            status: 401,
+            statusText: "Unauthorized",
+        });
+
+        const result = await CloudflareClient.validateToken("invalid-token");
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Invalid or expired token");
+    });
+
+    it("should return valid: false for 403 forbidden", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: false,
+            status: 403,
+            statusText: "Forbidden",
+        });
+
+        const result = await CloudflareClient.validateToken(
+            "insufficient-permissions",
+        );
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Token lacks required permissions");
+    });
+
+    it("should return valid: false for other HTTP errors", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: false,
+            status: 500,
+            statusText: "Internal Server Error",
+        });
+
+        const result = await CloudflareClient.validateToken("any-token");
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("HTTP 500: Internal Server Error");
+    });
+
+    it("should return valid: false when API returns success: false", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                success: false,
+                errors: [{ code: 10000, message: "Authentication failed" }],
+            }),
+        });
+
+        const result = await CloudflareClient.validateToken("failed-token");
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Authentication failed");
+    });
+
+    it("should return valid: false when token is not active", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                success: true,
+                result: { id: "test-id", status: "inactive" },
+            }),
+        });
+
+        const result = await CloudflareClient.validateToken("inactive-token");
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Token is not active");
+    });
+
+    it("should handle network errors", async () => {
+        (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
+
+        const result = await CloudflareClient.validateToken("any-token");
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Network error");
+    });
+
+    it("should handle unknown errors", async () => {
+        (global.fetch as any).mockRejectedValueOnce("Unknown error");
+
+        const result = await CloudflareClient.validateToken("any-token");
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Network error during validation");
+    });
+
+    it("should call the correct Cloudflare API endpoint", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                success: true,
+                result: { id: "test-id", status: "active" },
+            }),
+        });
+
+        await CloudflareClient.validateToken("test-token");
+
+        expect(global.fetch).toHaveBeenCalledWith(
+            "https://api.cloudflare.com/client/v4/user/tokens/verify",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: "Bearer test-token",
+                    "Content-Type": "application/json",
+                },
+            },
+        );
     });
 });

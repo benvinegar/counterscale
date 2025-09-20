@@ -26,7 +26,12 @@ import {
 } from "../lib/config.js";
 
 import { CloudflareClient } from "../lib/cloudflare.js";
-import { getScriptSnippet, getPackageSnippet, CLI_COLORS, promptForPassword } from "../lib/ui.js";
+import {
+    getScriptSnippet,
+    getPackageSnippet,
+    CLI_COLORS,
+    promptForPassword,
+} from "../lib/ui.js";
 import { generateJWTSecret, generatePasswordHash } from "../lib/auth.js";
 
 export function bail() {
@@ -41,12 +46,16 @@ export async function promptApiToken(): Promise<string> {
     const cfApiToken = await password({
         message: "Enter your Cloudflare API Token",
         mask: "*",
-        validate: (val) => {
-            if (val.length === 0) {
-                return "Value is required";
-            } else if (val.length !== 40) {
-                return "Value must be exactly 40 characters";
+        validate: (value) => {
+            if (typeof value !== "string" || value.length === 0) {
+                return "API token is required";
             }
+
+            if (value.length < 40) {
+                return "Token appears to be too short";
+            }
+
+            return undefined;
         },
     });
 
@@ -54,14 +63,35 @@ export async function promptApiToken(): Promise<string> {
         bail();
     }
 
-    if (typeof cfApiToken !== "string") {
+    if (typeof cfApiToken !== "string" || cfApiToken.length === 0) {
         throw new Error("API token is required");
+    }
+
+    const s = spinner();
+    s.start("Validating token...");
+
+    try {
+        const result = await CloudflareClient.validateToken(cfApiToken);
+        s.stop("Token Validated");
+
+        if (!result.valid) {
+            throw new Error(
+                result.error ||
+                    "Invalid token or insufficient permissions. Please verify your token has 'Account Analytics: Read' permission.",
+            );
+        }
+    } catch (error) {
+        s.stop();
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error(
+            "Failed to validate token. Please check your internet connection.",
+        );
     }
 
     return cfApiToken;
 }
-
-
 
 export async function promptPasswordProtection(): Promise<boolean> {
     const enableAuth = await confirm({
