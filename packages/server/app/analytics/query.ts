@@ -46,14 +46,18 @@ function accumulateCountsFromRowResult(
     counts.views += Number(row.count);
 }
 
-export function intervalToSql(interval: string, tz?: string) {
+export function intervalToSql(
+    interval: string,
+    tz?: string,
+    bucketIntervalMinutes: number = 5,
+) {
     let startIntervalSql = "";
     let endIntervalSql = "";
     switch (interval) {
         case "today":
             // example: toDateTime('2024-01-07 00:00:00', 'America/New_York')
             startIntervalSql = `toDateTime('${dayjs().tz(tz).startOf("day").utc().format("YYYY-MM-DD HH:mm:ss")}')`;
-            endIntervalSql = "NOW()";
+            endIntervalSql = `toStartOfInterval(NOW(), INTERVAL '${bucketIntervalMinutes}' MINUTE)`;
             break;
         case "yesterday":
             startIntervalSql = `toDateTime('${dayjs().tz(tz).startOf("day").utc().subtract(1, "day").format("YYYY-MM-DD HH:mm:ss")}')`;
@@ -63,12 +67,12 @@ export function intervalToSql(interval: string, tz?: string) {
         case "7d":
         case "30d":
         case "90d":
-            startIntervalSql = `NOW() - INTERVAL '${interval.split("d")[0]}' DAY`;
-            endIntervalSql = "NOW()";
+            startIntervalSql = `toStartOfInterval(NOW() - INTERVAL '${interval.split("d")[0]}' DAY, INTERVAL '${bucketIntervalMinutes}' MINUTE)`;
+            endIntervalSql = `toStartOfInterval(NOW(), INTERVAL '${bucketIntervalMinutes}' MINUTE)`;
             break;
         default:
-            startIntervalSql = `NOW() - INTERVAL '1' DAY`;
-            endIntervalSql = "NOW()";
+            startIntervalSql = `toStartOfInterval(NOW() - INTERVAL '1' DAY, INTERVAL '${bucketIntervalMinutes}' MINUTE)`;
+            endIntervalSql = `toStartOfInterval(NOW(), INTERVAL '${bucketIntervalMinutes}' MINUTE)`;
     }
     return { startIntervalSql, endIntervalSql };
 }
