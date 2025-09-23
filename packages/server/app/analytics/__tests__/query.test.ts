@@ -630,27 +630,30 @@ describe("intervalToSql", () => {
     // test intervalToSql
     test("should return the proper sql interval for 1d, 30d, 90d, etc (days)", () => {
         expect(intervalToSql("1d")).toStrictEqual({
-            startIntervalSql: "NOW() - INTERVAL '1' DAY",
-            endIntervalSql: "NOW()",
+            startIntervalSql:
+                "toStartOfInterval(NOW() - INTERVAL '1' DAY, INTERVAL '5' MINUTE)",
+            endIntervalSql: "toStartOfInterval(NOW(), INTERVAL '5' MINUTE)",
         });
         expect(intervalToSql("30d")).toStrictEqual({
-            startIntervalSql: "NOW() - INTERVAL '30' DAY",
-            endIntervalSql: "NOW()",
+            startIntervalSql:
+                "toStartOfInterval(NOW() - INTERVAL '30' DAY, INTERVAL '5' MINUTE)",
+            endIntervalSql: "toStartOfInterval(NOW(), INTERVAL '5' MINUTE)",
         });
         expect(intervalToSql("90d")).toStrictEqual({
-            startIntervalSql: "NOW() - INTERVAL '90' DAY",
-            endIntervalSql: "NOW()",
+            startIntervalSql:
+                "toStartOfInterval(NOW() - INTERVAL '90' DAY, INTERVAL '5' MINUTE)",
+            endIntervalSql: "toStartOfInterval(NOW(), INTERVAL '5' MINUTE)",
         });
     });
 
     test("should return the proper tz-adjusted sql interval for 'today'", () => {
         expect(intervalToSql("today", "America/New_York")).toStrictEqual({
             startIntervalSql: "toDateTime('2024-04-29 04:00:00')",
-            endIntervalSql: "NOW()",
+            endIntervalSql: "toStartOfInterval(NOW(), INTERVAL '5' MINUTE)",
         });
         expect(intervalToSql("today", "America/Los_Angeles")).toStrictEqual({
             startIntervalSql: "toDateTime('2024-04-29 07:00:00')",
-            endIntervalSql: "NOW()",
+            endIntervalSql: "toStartOfInterval(NOW(), INTERVAL '5' MINUTE)",
         });
     });
 
@@ -665,5 +668,17 @@ describe("intervalToSql", () => {
                 endIntervalSql: "toDateTime('2024-04-29 07:00:00')",
             },
         );
+    });
+
+    test("should support custom bucket intervals", () => {
+        expect(intervalToSql("1d", undefined, 10)).toStrictEqual({
+            startIntervalSql:
+                "toStartOfInterval(NOW() - INTERVAL '1' DAY, INTERVAL '10' MINUTE)",
+            endIntervalSql: "toStartOfInterval(NOW(), INTERVAL '10' MINUTE)",
+        });
+        expect(intervalToSql("today", "America/New_York", 15)).toStrictEqual({
+            startIntervalSql: "toDateTime('2024-04-29 04:00:00')",
+            endIntervalSql: "toStartOfInterval(NOW(), INTERVAL '15' MINUTE)",
+        });
     });
 });
