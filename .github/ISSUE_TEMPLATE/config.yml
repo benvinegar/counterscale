@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Documentation
+      url: https://github.com/benvinegar/counterscale#readme
+      about: Check the documentation for setup and usage information
+    - name: Discussions
+      url: https://github.com/benvinegar/counterscale/discussions
+      about: Ask questions and discuss ideas with the community
