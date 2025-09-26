@@ -1,30 +1,5 @@
-type CollectRequestParams = {
-    p: string; // path
-    h: string; // host
-    r: string; // referrer
-    sid: string; // siteId
-    ht?: string; // hit type
-    us?: string; // utm_source
-    um?: string; // utm_medium
-    uc?: string; // utm_campaign
-    ut?: string; // utm_term
-    uco?: string; // utm_content
-    [key: string]: string | undefined; // Allow additional string properties
-};
-
-function queryParamStringify(obj: { [key: string]: string | undefined }) {
-    return (
-        "?" +
-        Object.keys(obj)
-            .filter((k) => obj[k] !== undefined && obj[k] !== "")
-            .map(function (k) {
-                return (
-                    encodeURIComponent(k) + "=" + encodeURIComponent(obj[k]!)
-                );
-            })
-            .join("&")
-    );
-}
+import type { CollectRequestParams } from "../shared/types";
+import { buildCollectUrl } from "../shared/request";
 
 export async function makeRequest(
     url: string,
@@ -32,7 +7,7 @@ export async function makeRequest(
     timeout = 1000,
 ): Promise<void> {
     try {
-        const fullUrl = url + queryParamStringify(params);
+        const fullUrl = buildCollectUrl(url, params, true); // Filter empty strings for server
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);

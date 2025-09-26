@@ -1,27 +1,7 @@
-type CollectRequestParams = {
-    p: string; // path
-    h: string; // host
-    r: string; // referrer
-    sid: string; // siteId
-    hits?: string; // hit count (1=first visit, 2=anti-bounce, 3=regular)
-};
+import type { CollectRequestParams, CacheResponse } from "../shared/types";
+import { buildCollectUrl } from "../shared/request";
 
 const REQUEST_TIMEOUT = 1000;
-
-type CacheResponse = {
-    ht: number; // Number of hits in the current session (hit type)
-};
-
-function queryParamStringify(obj: { [key: string]: string }) {
-    return (
-        "?" +
-        Object.keys(obj)
-            .map(function (k) {
-                return encodeURIComponent(k) + "=" + encodeURIComponent(obj[k]);
-            })
-            .join("&")
-    );
-}
 
 /**
  * Checks the cache status by calling the /cache endpoint
@@ -81,7 +61,7 @@ export function checkCacheStatus(
  */
 export function makeRequest(url: string, params: CollectRequestParams) {
     const xhr = new XMLHttpRequest();
-    const fullUrl = url + queryParamStringify(params);
+    const fullUrl = buildCollectUrl(url, params); // Don't filter empty strings for browser compatibility
 
     xhr.open("GET", fullUrl, true);
     xhr.setRequestHeader("Content-Type", "text/plain");

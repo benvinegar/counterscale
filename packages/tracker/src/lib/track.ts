@@ -1,6 +1,13 @@
 import type { Client } from "./client";
 import { instrumentHistoryBuiltIns } from "./instrument";
 import { makeRequest, checkCacheStatus } from "./request";
+import {
+    getHostnameAndPath,
+    getReferrer,
+    getUtmParamsFromBrowserUrl,
+    isLocalhostAddress,
+} from "../shared/utils";
+import { buildCollectRequestParams } from "../shared/request";
 
 export type TrackPageviewOpts = {
     url?: string;
@@ -30,53 +37,16 @@ function getCanonicalUrl() {
     return a;
 }
 
-function getHostnameAndPath(url: string) {
-    const a = document.createElement("a");
-    a.href = url;
-
-    const hostname = a.protocol + "//" + a.hostname;
-    const path = a.pathname;
-
-    return { hostname, path };
-}
-
-function getReferrer(hostname: string, referrer: string) {
-    if (!referrer && document.referrer.indexOf(hostname) < 0) {
+function getBrowserReferrer(hostname: string, referrer: string): string {
+    if (
+        !referrer &&
+        document.referrer &&
+        document.referrer.indexOf(hostname) < 0
+    ) {
         referrer = document.referrer;
     }
 
-    return referrer.split("?")[0];
-}
-
-function getUtmParams(url: string) {
-    const utmParams: Record<string, string> = {};
-
-    // Extract query string from path
-    const queryStart = url.indexOf("?");
-    if (queryStart === -1) return utmParams;
-
-    const queryString = url.substring(queryStart + 1);
-    const params = new URLSearchParams(queryString);
-
-    const utmSource = params.get("utm_source");
-    const utmMedium = params.get("utm_medium");
-    const utmCampaign = params.get("utm_campaign");
-    const utmTerm = params.get("utm_term");
-    const utmContent = params.get("utm_content");
-
-    if (utmSource) utmParams.us = utmSource;
-    if (utmMedium) utmParams.um = utmMedium;
-    if (utmCampaign) utmParams.uc = utmCampaign;
-    if (utmTerm) utmParams.ut = utmTerm;
-    if (utmContent) utmParams.uco = utmContent;
-
-    return utmParams;
-}
-
-function isLocalhostAddress(hostname: Location["hostname"]): boolean {
-    return /^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*:)*?:?0*1$/.test(
-        hostname,
-    );
+    return getReferrer(hostname, referrer || "");
 }
 
 export async function trackPageview(
@@ -101,32 +71,30 @@ export async function trackPageview(
 
     const url = opts.url || location.pathname + location.search || "/";
 
-    const { hostname, path } = getHostnameAndPath(url);
-    const referrer = getReferrer(hostname, opts.referrer || "");
+    const { hostname, path } = getHostnameAndPath(url, true);
+    const referrer = getBrowserReferrer(hostname, opts.referrer || "");
+    const utmParams = getUtmParamsFromBrowserUrl(url);
 
-    const d = {
-        p: path,
-        h: hostname,
-        r: referrer,
-        sid: client.siteId,
-    };
-
-    const utmParams = getUtmParams(url);
-    Object.assign(d, utmParams);
-
+    let hitType: string | undefined;
     try {
         const cacheStatus = await checkCacheStatus(
             client.reporterUrl,
             client.siteId,
         );
-
-        Object.assign(d, {
-            ht: cacheStatus.ht.toString(),
-        });
+        hitType = cacheStatus.ht.toString();
     } catch {
         // If cache check fails, we proceed without hit count data
         // The collect endpoint will handle the missing parameters
     }
 
-    makeRequest(client.reporterUrl, d);
+    const requestParams = buildCollectRequestParams(
+        client.siteId,
+        hostname,
+        path,
+        referrer,
+        utmParams,
+        hitType,
+    );
+
+    makeRequest(client.reporterUrl, requestParams);
 }

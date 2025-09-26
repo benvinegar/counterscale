@@ -1,9 +1,7 @@
 import { autoTrackPageviews } from "./track";
+import type { BaseClientConfig } from "../shared/types";
 
-export type ClientOpts = {
-    siteId: string;
-    reportOnLocalhost?: boolean;
-    reporterUrl: string;
+export type ClientOpts = BaseClientConfig & {
     autoTrackPageviews?: boolean;
 };
 
@@ -19,7 +17,7 @@ export class Client {
         this.reporterUrl = opts.reporterUrl;
 
         if (opts.reportOnLocalhost) {
-          this.reportOnLocalhost = opts.reportOnLocalhost;
+            this.reportOnLocalhost = opts.reportOnLocalhost;
         }
 
         // default to true

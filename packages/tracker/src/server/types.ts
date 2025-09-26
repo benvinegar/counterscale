@@ -1,7 +1,6 @@
-export type ServerClientOpts = {
-    siteId: string;
-    reporterUrl: string;
-    reportOnLocalhost?: boolean;
+import type { BaseClientConfig } from "../shared/types";
+
+export type ServerClientOpts = BaseClientConfig & {
     userAgent?: string;
     timeout?: number;
 };
