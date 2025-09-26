@@ -53,7 +53,14 @@ export async function trackPageview(
 
         // Validate URL format
         new URL(fullUrl);
-    } catch {
+    } catch (error) {
+        // Re-throw hostname-specific errors
+        if (
+            error instanceof Error &&
+            error.message.includes("hostname is required")
+        ) {
+            throw error;
+        }
         throw new Error(`Invalid URL: ${opts.url}`);
     }
 
