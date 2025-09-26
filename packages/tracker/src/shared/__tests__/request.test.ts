@@ -138,10 +138,9 @@ describe("Shared Request Utils", () => {
     describe("buildCollectUrl", () => {
         it("should build URL with query parameters", async () => {
             const { queryParamStringify } = await import("../utils");
-            const mockQueryParamStringify =
-                queryParamStringify as vi.MockedFunction<
-                    typeof queryParamStringify
-                >;
+            const mockQueryParamStringify = queryParamStringify as ReturnType<
+                typeof vi.fn
+            >;
 
             mockQueryParamStringify.mockReturnValue("?p=test&h=example");
 
@@ -163,10 +162,9 @@ describe("Shared Request Utils", () => {
 
         it("should pass filterEmpty parameter to queryParamStringify", async () => {
             const { queryParamStringify } = await import("../utils");
-            const mockQueryParamStringify =
-                queryParamStringify as vi.MockedFunction<
-                    typeof queryParamStringify
-                >;
+            const mockQueryParamStringify = queryParamStringify as ReturnType<
+                typeof vi.fn
+            >;
 
             mockQueryParamStringify.mockReturnValue("?p=test&h=example");
 
@@ -184,10 +182,9 @@ describe("Shared Request Utils", () => {
 
         it("should handle empty base URL", async () => {
             const { queryParamStringify } = await import("../utils");
-            const mockQueryParamStringify =
-                queryParamStringify as vi.MockedFunction<
-                    typeof queryParamStringify
-                >;
+            const mockQueryParamStringify = queryParamStringify as ReturnType<
+                typeof vi.fn
+            >;
 
             mockQueryParamStringify.mockReturnValue("?p=test");
 
@@ -205,10 +202,9 @@ describe("Shared Request Utils", () => {
 
         it("should handle complex parameters", async () => {
             const { queryParamStringify } = await import("../utils");
-            const mockQueryParamStringify =
-                queryParamStringify as vi.MockedFunction<
-                    typeof queryParamStringify
-                >;
+            const mockQueryParamStringify = queryParamStringify as ReturnType<
+                typeof vi.fn
+            >;
 
             const complexQuery =
                 "?p=%2Fpath&h=https%3A//example.com&us=google&um=cpc";

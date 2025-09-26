@@ -8,9 +8,9 @@ global.AbortController = vi.fn().mockImplementation(() => ({
     signal: {},
     abort: vi.fn(),
 }));
-global.setTimeout = vi.fn().mockImplementation((fn) => {
-    return 123; // Mock timeout ID
-});
+global.setTimeout = vi.fn().mockImplementation(() => {
+    return 123 as any; // Mock timeout ID
+}) as any;
 global.clearTimeout = vi.fn();
 
 vi.mock("../../shared/request", () => ({
@@ -18,7 +18,7 @@ vi.mock("../../shared/request", () => ({
 }));
 
 describe("makeRequest", () => {
-    const mockFetch = fetch as vi.MockedFunction<typeof fetch>;
+    const mockFetch = fetch as ReturnType<typeof vi.fn>;
     const mockAbort = vi.fn();
     const mockAbortController = {
         signal: {},
@@ -32,9 +32,7 @@ describe("makeRequest", () => {
 
     it("should make a GET request with correct headers", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
-        const mockBuildCollectUrl = buildCollectUrl as vi.MockedFunction<
-            typeof buildCollectUrl
-        >;
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
 
         const fullUrl = "https://example.com/collect?p=/test&h=example.com";
         mockBuildCollectUrl.mockReturnValue(fullUrl);
@@ -66,9 +64,7 @@ describe("makeRequest", () => {
 
     it("should set up timeout and clear it on success", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
-        const mockBuildCollectUrl = buildCollectUrl as vi.MockedFunction<
-            typeof buildCollectUrl
-        >;
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
 
         mockBuildCollectUrl.mockReturnValue("https://example.com/collect");
         mockFetch.mockResolvedValue({
@@ -87,9 +83,7 @@ describe("makeRequest", () => {
 
     it("should use default timeout when not specified", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
-        const mockBuildCollectUrl = buildCollectUrl as vi.MockedFunction<
-            typeof buildCollectUrl
-        >;
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
 
         mockBuildCollectUrl.mockReturnValue("https://example.com/collect");
         mockFetch.mockResolvedValue({
@@ -106,9 +100,7 @@ describe("makeRequest", () => {
 
     it("should consume response text", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
-        const mockBuildCollectUrl = buildCollectUrl as vi.MockedFunction<
-            typeof buildCollectUrl
-        >;
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
 
         mockBuildCollectUrl.mockReturnValue("https://example.com/collect");
         const mockText = vi.fn().mockResolvedValue("response body");
@@ -123,9 +115,7 @@ describe("makeRequest", () => {
 
     it("should not throw on fetch error", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
-        const mockBuildCollectUrl = buildCollectUrl as vi.MockedFunction<
-            typeof buildCollectUrl
-        >;
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
 
         mockBuildCollectUrl.mockReturnValue("https://example.com/collect");
         mockFetch.mockRejectedValue(new Error("Network error"));
@@ -137,9 +127,7 @@ describe("makeRequest", () => {
 
     it("should not throw on timeout", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
-        const mockBuildCollectUrl = buildCollectUrl as vi.MockedFunction<
-            typeof buildCollectUrl
-        >;
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
 
         mockBuildCollectUrl.mockReturnValue("https://example.com/collect");
         mockFetch.mockImplementation(
@@ -153,9 +141,7 @@ describe("makeRequest", () => {
 
     it("should set up abort controller", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
-        const mockBuildCollectUrl = buildCollectUrl as vi.MockedFunction<
-            typeof buildCollectUrl
-        >;
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
 
         mockBuildCollectUrl.mockReturnValue("https://example.com/collect");
         mockFetch.mockResolvedValue({

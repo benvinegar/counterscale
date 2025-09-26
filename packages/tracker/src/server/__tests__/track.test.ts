@@ -83,7 +83,6 @@ describe("trackPageview", () => {
         });
 
         it("should use http protocol for localhost hostname", async () => {
-            const { makeRequest } = await import("../request");
             const {
                 getHostnameAndPath,
                 getReferrer,
@@ -175,7 +174,6 @@ describe("trackPageview", () => {
 
     describe("UTM parameter handling", () => {
         it("should extract and merge UTM parameters", async () => {
-            const { makeRequest } = await import("../request");
             const {
                 getHostnameAndPath,
                 getReferrer,
@@ -225,7 +223,6 @@ describe("trackPageview", () => {
         });
 
         it("should handle all UTM parameters from options", async () => {
-            const { makeRequest } = await import("../request");
             const {
                 getHostnameAndPath,
                 getReferrer,
