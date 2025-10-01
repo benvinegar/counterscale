@@ -9,7 +9,7 @@ export default defineConfig({
             provider: "v8", // or 'v8'
             exclude: [
                 "**/node_modules/**",
-                "**/{playwright,vite.loader,vite.module,vite.server}.config.*",
+                "**/{playwright,vite.loader,vite.module,vite.server,vite.integration}.config.*",
                 "src/tracker.ts", // covered by /integration tests
                 "integration/**",
                 ...coverageConfigDefaults.exclude,

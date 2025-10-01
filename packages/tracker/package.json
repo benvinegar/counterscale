@@ -12,8 +12,9 @@
     "scripts": {
         "build": "vite build -c vite.loader.config.ts && vite build -c vite.module.config.ts && vite build -c vite.server.config.ts",
         "lint": "eslint .",
-        "test": "vitest run && playwright test",
-        "test-ci": "vitest run --coverage && playwright test",
+        "test": "vitest run && pnpm run test:integration",
+        "test:integration": "playwright test && vitest run --config vitest.integration.config.ts",
+        "test-ci": "vitest run --coverage && pnpm run test:integration",
         "start": "node ./integration/server.js",
         "typecheck": "tsc"
     },

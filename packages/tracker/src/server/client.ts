@@ -19,7 +19,7 @@ export class ServerClient {
             this.userAgent = opts.userAgent;
         }
 
-        if (opts.timeout) {
+        if (opts.timeout !== undefined) {
             this.timeout = opts.timeout;
         }
     }
