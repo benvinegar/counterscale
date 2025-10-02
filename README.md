@@ -101,7 +101,7 @@ Counterscale.init({
 });
 ```
 
-__Available Methods__
+**Available Methods**
 | Method | Parameters | Return Type | Description |
 |--------|------------|-------------|-------------|
 | `init(opts)` | `ClientOpts` | `void` | Initializes the Counterscale client with site configuration. Creates a global client instance if one doesn't exist. |
@@ -110,6 +110,51 @@ __Available Methods__
 | `trackPageview(opts?)` | `TrackPageviewOpts?` | `void` | Tracks a pageview event. Requires client to be initialized first. Automatically detects URL and referrer if not provided. |
 | `cleanup()` | None | `void` | Cleans up the client instance and removes event listeners. Sets global client to undefined. |
 
+#### 3. Server-Side Module
+
+If you'd prefer to track analytics on the server, instead of running the tracker in the browser, use the `/server` module:
+
+```bash
+npm install @counterscale/tracker
+```
+
+```typescript
+import * as Counterscale from "@counterscale/tracker/server";
+
+// Initialize the tracker
+Counterscale.init({
+    siteId: "your-unique-site-id",
+    reporterUrl:
+        "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
+    reportOnLocalhost: false, // optional, defaults to false
+    timeout: 2000, // optional, defaults to 1000ms
+});
+
+// Track a pageview
+await Counterscale.trackPageview({
+    url: "https://example.com/page", // or relative: '/page'
+    hostname: "example.com", // required for relative URLs
+    referrer: "https://google.com",
+    utmSource: "social",
+    utmMedium: "twitter",
+});
+```
+
+**Server Module Methods**
+| Method | Parameters | Return Type | Description |
+|--------|------------|-------------|-------------|
+| `init(opts)` | `ServerClientOpts` | `void` | Initializes the server-side tracker. |
+| `isInitialized()` | None | `boolean` | Checks if the tracker has been initialized. |
+| `getInitializedClient()` | None | `ServerClient \| undefined` | Returns the initialized server client instance. |
+| `trackPageview(opts)` | `TrackPageviewOpts` | `Promise<void>` | Tracks a pageview event. Requires explicit URL and hostname parameters. |
+| `cleanup()` | None | `void` | Cleans up the server client instance. |
+
+The server module is designed for backend applications and differs from the client-side version:
+
+- No DOM-dependent features (auto-tracking, browser instrumentation)
+- Uses fetch API instead of XMLHttpRequest
+- Requires explicit URL and hostname parameters
+- Fire-and-forget - tracking errors won't throw exceptions
 
 ## Upgrading
 
