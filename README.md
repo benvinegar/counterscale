@@ -10,6 +10,8 @@ Counterscale is a simple web analytics tracker and dashboard that you self-host 
 
 It's designed to be easy to deploy and maintain, and should cost you near-zero to operate – even at high levels of traffic (Cloudflare's [free tier](https://developers.cloudflare.com/workers/platform/pricing/#workers) could hypothetically support up to 100k hits/day).
 
+_Counterscale is sponsored by [Modem, your dev-team's auto-triage PM](https://modem.dev)._
+
 ## License
 
 Counterscale is free, open source software made available under the MIT license. See: [LICENSE](LICENSE).
