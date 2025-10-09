@@ -1,0 +1,106 @@
+@layer base, starlight, theme, components, utilities;
+
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  --color-background: hsl(42 69% 85%);
+  --color-foreground: hsl(0 0% 20%);
+  --color-card: hsl(42 69% 88%);
+  --color-card-foreground: hsl(0 0% 20%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(0 0% 20%);
+  --color-primary: hsl(14 89% 59%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(42 30% 85%);
+  --color-secondary-foreground: hsl(0 0% 20%);
+  --color-muted: hsl(42 20% 88%);
+  --color-muted-foreground: hsl(0 0% 45%);
+  --color-accent: hsl(42 30% 85%);
+  --color-accent-foreground: hsl(0 0% 20%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-border: hsl(14 89% 59%);
+  --color-barchart: hsl(32.89 89.4% 70.39%);
+  --color-paldarkgrey: hsl(167.14 14% 39.22%);
+  --color-input: hsl(42 20% 88%);
+  --color-ring: hsl(14 89% 59%);
+  --color-dark: hsl(160 20% 25%);
+  --color-dark-foreground: hsl(0 0% 100%);
+  --radius: 0.75rem;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+:root {
+    --sl-color-accent-low: var(--color-dark);
+    --sl-color-accent: var(--color-primary);
+    --sl-color-accent-high: var(--color-barchart);
+    --sl-color-white: var(--color-primary-foreground);
+    --sl-color-gray-1: var(--color-card);
+    --sl-color-gray-2: var(--color-secondary);
+    --sl-color-gray-3: var(--color-muted);
+    --sl-color-gray-4: var(--color-muted-foreground);
+    --sl-color-gray-5: var(--color-paldarkgrey);
+    --sl-color-gray-6: var(--color-dark);
+    --sl-color-black: var(--color-foreground);
+
+    --sl-color-bg: var(--color-foreground);
+}
+
+/* Light mode colors. */
+:root[data-theme='light'] {
+    --sl-color-accent-low: var(--color-background);
+    --sl-color-accent: var(--color-primary);
+    --sl-color-accent-high: var(--color-dark);
+    --sl-color-white: var(--color-foreground);
+    --sl-color-gray-1: var(--color-dark);
+    --sl-color-gray-2: var(--color-paldarkgrey);
+    --sl-color-gray-3: var(--color-muted-foreground);
+    --sl-color-gray-4: var(--color-muted);
+    --sl-color-gray-5: var(--color-secondary);
+    --sl-color-gray-6: var(--color-card);
+    --sl-color-gray-7: var(--color-background);
+    --sl-color-black: var(--color-primary-foreground);
+
+    --sl-color-bg: var(--color-background);
+    --sl-color-hairline-shade: var(--color-primary);
+}
+
+.sl-link-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.site-title {
+  flex-direction: row-reverse;
+  gap: 3px;
+  color: var(--color-foreground);
+  font-size: 1.125rem;
+  img {
+    width: 24px;
+    height: 16.55px;
+  }
+}
+
+.hero {
+  padding-block: clamp(2.5rem,calc(1rem + 8vmin),8rem);
+  h1, span {
+    line-height: 1;
+  }
+  .actions {
+    gap: 0;
+  }
+}
+
+@media screen and (min-width: 800px) {
+  .hero {
+    grid-template-columns: 6fr 4fr;
+  }
+}
+
+.pagination-links a {
+  border: 1px solid var(--sl-color-hairline-shade);
+  box-shadow: none;
+}
