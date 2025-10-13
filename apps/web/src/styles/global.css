@@ -73,6 +73,13 @@
   font-weight: 500;
 }
 
+.sl-link-button.primary {
+  background: var(--sl-color-text-accent);
+  border-color: var(--sl-color-text-accent);
+  color: var(--sl-color-black);
+  text-decoration: none;
+}
+
 .site-title {
   flex-direction: row-reverse;
   gap: 3px;
