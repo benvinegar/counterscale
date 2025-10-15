@@ -414,29 +414,6 @@ export function ErrorBoundary() {
                     showContext: true,
                 };
                 break;
-            case 404:
-                errorInfo = {
-                    title: "Not Found",
-                    message: "The requested resource could not be found.",
-                    suggestion:
-                        "Please check the URL or try navigating back to the dashboard.",
-                    actionable: true,
-                    showRetry: false,
-                    showContext: true,
-                };
-                break;
-            case 403:
-                errorInfo = {
-                    title: "Access Denied",
-                    message:
-                        "You don't have permission to access this resource.",
-                    suggestion:
-                        "Please check your authentication status or contact an administrator.",
-                    actionable: true,
-                    showRetry: false,
-                    showContext: false,
-                };
-                break;
             default:
                 errorInfo = {
                     title: `Error ${error.status}`,

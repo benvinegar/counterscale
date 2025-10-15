@@ -123,53 +123,6 @@ describe("Dashboard ErrorBoundary", () => {
             expect(screen.getByText("Try Again")).toBeInTheDocument();
         });
 
-        test("displays not found error for 404 status", () => {
-            const error = {
-                status: 404,
-                data: "Not found",
-            };
-
-            vi.mocked(useRouteError).mockReturnValue(error);
-            vi.mocked(isRouteErrorResponse).mockReturnValue(true);
-
-            render(<ErrorBoundary />);
-
-            expect(screen.getByText("Not Found")).toBeInTheDocument();
-            expect(
-                screen.getByText("The requested resource could not be found."),
-            ).toBeInTheDocument();
-            expect(
-                screen.getByText(
-                    "Please check the URL or try navigating back to the dashboard.",
-                ),
-            ).toBeInTheDocument();
-            expect(screen.queryByText("Try Again")).not.toBeInTheDocument();
-        });
-
-        test("displays access denied error for 403 status", () => {
-            const error = {
-                status: 403,
-                data: "Forbidden",
-            };
-
-            vi.mocked(useRouteError).mockReturnValue(error);
-            vi.mocked(isRouteErrorResponse).mockReturnValue(true);
-
-            render(<ErrorBoundary />);
-
-            expect(screen.getByText("Access Denied")).toBeInTheDocument();
-            expect(
-                screen.getByText(
-                    "You don't have permission to access this resource.",
-                ),
-            ).toBeInTheDocument();
-            expect(
-                screen.getByText(
-                    "Please check your authentication status or contact an administrator.",
-                ),
-            ).toBeInTheDocument();
-        });
-
         test("displays generic error for other HTTP status codes", () => {
             const error = {
                 status: 400,
