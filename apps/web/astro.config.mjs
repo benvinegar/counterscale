@@ -1,0 +1,43 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import tailwindcss from '@tailwindcss/vite';
+
+import react from '@astrojs/react';
+
+// https://astro.build/config
+export default defineConfig({
+  integrations: [starlight({
+    title: 'Counterscale',
+    logo: {
+      src: './src/assets/arrow.svg',
+    },
+    head: [
+      {
+        tag: 'link',
+        attrs: {
+          href: "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap",
+          rel: "stylesheet",
+        },
+      },
+    ],
+    social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/benvinegar/counterscale' }],
+    sidebar: [
+      {
+        label: 'Guides',
+        items: [
+          // Each item here is one entry in the navigation menu.
+          { label: 'Example Guide', slug: 'guides/example' },
+        ],
+      },
+      {
+        label: 'Reference',
+        autogenerate: { directory: 'reference' },
+      },
+    ],
+    customCss: ['./src/styles/global.css'],
+	}), react()],
+  vite: {
+    plugins: [tailwindcss()],
+  },
+});

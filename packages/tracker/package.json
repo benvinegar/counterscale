@@ -19,7 +19,7 @@
         "typecheck": "tsc"
     },
     "devDependencies": {
-        "@counterscale/eslint-config": "*",
+        "@counterscale/eslint-config": "workspace:*",
         "@playwright/test": "^1.49.1",
         "@types/node": "^22.10.2",
         "@vitest/coverage-v8": "2.1",
