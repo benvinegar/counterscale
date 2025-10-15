@@ -5,6 +5,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "~/components/ui/select";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
 
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import {
@@ -342,18 +351,203 @@ export default function Dashboard() {
 
 export function ErrorBoundary() {
     const error = useRouteError();
+    const [searchParams] = useSearchParams();
 
-    const errorTitle = isRouteErrorResponse(error) ? error.status : "Error";
-    const errorBody = isRouteErrorResponse(error)
-        ? error.data
-        : error instanceof Error
-          ? error.message
-          : "Unknown error";
+    const siteId = searchParams.get("site");
+    const interval = searchParams.get("interval") || "7d";
+
+    let errorInfo = {
+        title: "Dashboard Error",
+        message: "An unexpected error occurred while loading the dashboard.",
+        suggestion:
+            "Please try refreshing the page or contact support if the issue persists.",
+        actionable: true,
+        showRetry: true,
+        showContext: true,
+    };
+
+    if (isRouteErrorResponse(error)) {
+        switch (error.status) {
+            case 501:
+                if (error.data?.includes("CF_ACCOUNT_ID")) {
+                    errorInfo = {
+                        title: "Configuration Error",
+                        message: "Missing Cloudflare Account ID configuration.",
+                        suggestion:
+                            "Please ensure CF_ACCOUNT_ID is properly configured in your environment variables.",
+                        actionable: false,
+                        showRetry: false,
+                        showContext: false,
+                    };
+                } else if (error.data?.includes("CF_BEARER_TOKEN")) {
+                    errorInfo = {
+                        title: "Configuration Error",
+                        message:
+                            "Missing Cloudflare Bearer Token configuration.",
+                        suggestion:
+                            "Please ensure CF_BEARER_TOKEN is properly configured in your environment variables.",
+                        actionable: false,
+                        showRetry: false,
+                        showContext: false,
+                    };
+                } else {
+                    errorInfo = {
+                        title: `Configuration Error (${error.status})`,
+                        message:
+                            error.data || "Server configuration is incomplete.",
+                        suggestion:
+                            "Please check your Cloudflare Analytics Engine configuration.",
+                        actionable: false,
+                        showRetry: false,
+                        showContext: false,
+                    };
+                }
+                break;
+            case 500:
+                errorInfo = {
+                    title: "Server Error",
+                    message: "The server encountered an internal error.",
+                    suggestion:
+                        "This is likely a temporary issue. Please try again in a few moments.",
+                    actionable: true,
+                    showRetry: true,
+                    showContext: true,
+                };
+                break;
+            default:
+                errorInfo = {
+                    title: `Error ${error.status}`,
+                    message:
+                        error.data ||
+                        error.statusText ||
+                        "An HTTP error occurred.",
+                    suggestion:
+                        "Please try refreshing the page or contact support if the issue persists.",
+                    actionable: true,
+                    showRetry: true,
+                    showContext: true,
+                };
+        }
+    } else if (error instanceof Error) {
+        if (error.message?.includes("Analytics Engine")) {
+            errorInfo = {
+                title: "Analytics Engine Error",
+                message: "Failed to connect to Cloudflare Analytics Engine.",
+                suggestion:
+                    "This could be due to network issues or Analytics Engine being temporarily unavailable. Please try again in a few moments.",
+                actionable: true,
+                showRetry: true,
+                showContext: true,
+            };
+        } else if (error.message?.includes("Authentication")) {
+            errorInfo = {
+                title: "Authentication Error",
+                message: error.message,
+                suggestion:
+                    "Please check your credentials and try logging in again.",
+                actionable: true,
+                showRetry: false,
+                showContext: false,
+            };
+        } else if (error.message?.includes("Invalid interval")) {
+            errorInfo = {
+                title: "Invalid Time Range",
+                message: "The selected time interval is not supported.",
+                suggestion:
+                    "Please select a different time range from the dropdown.",
+                actionable: true,
+                showRetry: false,
+                showContext: true,
+            };
+        } else {
+            errorInfo = {
+                title: "Application Error",
+                message:
+                    error.message ||
+                    "An unexpected application error occurred.",
+                suggestion:
+                    "Please try refreshing the page or contact support if the issue persists.",
+                actionable: true,
+                showRetry: true,
+                showContext: true,
+            };
+        }
+    }
+
+    const handleRetry = () => {
+        window.location.reload();
+    };
+
+    const handleGoHome = () => {
+        window.location.href = "/dashboard";
+    };
+
+    console.error("Dashboard Error:", error);
 
     return (
-        <div className="border-2 rounded p-4 bg-card">
-            <h1 className="text-2xl font-bold">{errorTitle}</h1>
-            <p className="text-lg">{errorBody}</p>
+        <div className="flex items-center justify-center min-h-[400px] p-4">
+            <Card className="max-w-2xl w-full">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <span className="text-2xl">⚠️</span>
+                        {errorInfo.title}
+                    </CardTitle>
+                    <CardDescription className="text-base">
+                        {errorInfo.message}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="bg-muted p-4 rounded-lg">
+                        <p className="text-sm text-muted-foreground">
+                            <strong>Suggestion:</strong> {errorInfo.suggestion}
+                        </p>
+                    </div>
+
+                    {errorInfo.showContext && (siteId || interval !== "7d") && (
+                        <div className="bg-muted p-4 rounded-lg">
+                            <p className="text-sm text-muted-foreground mb-2">
+                                <strong>Context when error occurred:</strong>
+                            </p>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                                {siteId && (
+                                    <li>
+                                        • Site:{" "}
+                                        <code className="bg-background px-1 rounded">
+                                            {siteId}
+                                        </code>
+                                    </li>
+                                )}
+                                <li>
+                                    • Time Range:{" "}
+                                    <code className="bg-background px-1 rounded">
+                                        {interval}
+                                    </code>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
+
+                    {errorInfo.actionable && (
+                        <CardFooter className="flex gap-2 px-0 pb-0">
+                            {errorInfo.showRetry && (
+                                <Button
+                                    onClick={handleRetry}
+                                    className="flex-1"
+                                >
+                                    Try Again
+                                </Button>
+                            )}
+                            <Button
+                                variant="outline"
+                                onClick={handleGoHome}
+                                className="flex-1"
+                            >
+                                Back to Dashboard
+                            </Button>
+                        </CardFooter>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }
