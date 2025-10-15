@@ -28,7 +28,7 @@
     },
     "dependencies": {
         "@clack/prompts": "^0.10.0",
-        "@counterscale/server": "3.2.0",
+        "@counterscale/server": "workspace:*",
         "@types/node": "^22.10.2",
         "bcryptjs": "^3.0.2",
         "chalk": "^5.3.0",

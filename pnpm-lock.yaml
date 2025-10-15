@@ -28,8 +28,8 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0
       '@counterscale/server':
-        specifier: 3.2.0
-        version: 3.2.0(@cloudflare/workers-types@4.20250803.0)(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(tsup@8.3.6(@microsoft/api-extractor@7.49.2(@types/node@22.13.1))(jiti@2.5.1)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0))(typescript@5.7.3)
+        specifier: workspace:*
+        version: link:../server
       '@types/node':
         specifier: ^22.10.2
         version: 22.13.1
@@ -602,10 +602,6 @@ packages:
 
   '@cloudflare/workers-types@4.20250803.0':
     resolution: {integrity: sha512-Zgfb9y971379/b0fDvSkH6l830dVDanO5kxUHbg2TI5kQDWMRtFPsAntRtEwRqOU7aFFDrDd4gp/bcs6+ZokUQ==}
-
-  '@counterscale/server@3.2.0':
-    resolution: {integrity: sha512-vuFxfma2v+bvQoRVzKWzyHvVLUg3+YMgNmNJcNfHea1Fpub2P9allf5ckw5NtqUdFkcCpvG/a28g4jdfNDsqbg==}
-    engines: {node: '>=20.0.0'}
 
   '@counterscale/tracker@3.2.0':
     resolution: {integrity: sha512-wdVx/PZbAV9OlpoCv3ZXOE/dSvBpz/Uk8xRr+s1xODglG2DpG/5UO9oMxCYs/Fa1581AjMuTURMDlMSq8Y9SUw==}
@@ -5496,36 +5492,6 @@ snapshots:
     optional: true
 
   '@cloudflare/workers-types@4.20250803.0': {}
-
-  '@counterscale/server@3.2.0(@cloudflare/workers-types@4.20250803.0)(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(tsup@8.3.6(@microsoft/api-extractor@7.49.2(@types/node@22.13.1))(jiti@2.5.1)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0))(typescript@5.7.3)':
-    dependencies:
-      '@cloudflare/kv-asset-handler': 0.3.4
-      '@counterscale/tracker': 3.2.0
-      '@radix-ui/react-select': 2.1.5(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@radix-ui/react-slot': 1.1.1(@types/react@18.3.18)(react@18.3.1)
-      '@react-router/cloudflare': 7.1.1(@cloudflare/workers-types@4.20250803.0)(react-router@7.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(tsup@8.3.6(@microsoft/api-extractor@7.49.2(@types/node@22.13.1))(jiti@2.5.1)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0))(typescript@5.7.3)
-      '@types/jsonwebtoken': 9.0.10
-      bcryptjs: 3.0.2
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      dayjs: 1.11.13
-      isbot: 5.1.22
-      jsonwebtoken: 9.0.2
-      lucide-react: 0.395.0(react@18.3.1)
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      react-router: 7.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      recharts: 2.13.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      tailwind-merge: 2.6.0
-      tailwindcss-animate: 1.0.7(tailwindcss@3.4.17)
-      ua-parser-js: 1.0.40
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - '@types/react'
-      - '@types/react-dom'
-      - tailwindcss
-      - tsup
-      - typescript
 
   '@counterscale/tracker@3.2.0': {}
 
