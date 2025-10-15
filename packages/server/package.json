@@ -55,7 +55,7 @@
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20250803.0",
-        "@counterscale/eslint-config": "*",
+        "@counterscale/eslint-config": "workspace:*",
         "@react-router/dev": "7.7.1",
         "@react-router/fs-routes": "7.7.1",
         "@testing-library/react": "^16.2.0",
