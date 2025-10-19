@@ -22,11 +22,30 @@ Counterscale is powered primarily by Cloudflare Workers and [Workers Analytics E
 
 ## Installation
 
-### Requirements
+### Quick Deploy
 
-* macOS or Linux environment
-* Node v20 or above
-* An active [Cloudflare](https://cloudflare.com) account (either free or paid)
+Deploy Counterscale to Cloudflare in one click:
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/benvinegar/counterscale/tree/main/packages/server)
+
+This will create a new repository in your GitHub account and deploy Counterscale with authentication disabled. You'll need to provide your Cloudflare API token and Account ID during the setup process.
+
+**Prerequisites for one-click deploy:**
+
+1. Enable [Cloudflare Analytics Engine](https://developers.cloudflare.com/analytics/analytics-engine/) in your Cloudflare dashboard
+2. Have your [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) ready (with Account Analytics permissions)
+
+**Note:** The one-click deploy creates a fork of the project in your GitHub account, which may make future upgrades more complex. For easier upgrades and full configuration options (including authentication), consider using the manual installation method below.
+
+### Manual Installation
+
+For full control over the installation process, including authentication options:
+
+#### Requirements
+
+- macOS or Linux environment
+- Node v20 or above
+- An active [Cloudflare](https://cloudflare.com) account (either free or paid)
 
 ### Cloudflare Preparation
 
@@ -99,7 +118,8 @@ import * as Counterscale from "@counterscale/tracker";
 
 Counterscale.init({
     siteId: "your-unique-site-id",
-    reporterUrl: "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
+    reporterUrl:
+        "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
 });
 ```
 
@@ -171,7 +191,6 @@ npx @counterscale/cli@latest install
 
 You won't have to enter a new API key, and your data will carry forrward.
 
-
 Counterscale uses [semantic versioning](https://semver.org/). If upgrading to a major version (e.g. 2.x, 3.x, 4.x), there may be extra steps. Please consult the [release notes](https://github.com/benvinegar/counterscale/releases).
 
 ## Troubleshooting
@@ -189,7 +208,8 @@ import * as Counterscale from "@counterscale/tracker";
 
 Counterscale.init({
     siteId: "your-unique-site-id",
-    reporterUrl: "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
+    reporterUrl:
+        "https://{subdomain-emitted-during-deploy}.workers.dev/collect",
     autoTrackPageviews: false, // <- don't forget this
 });
 
