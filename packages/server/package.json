@@ -91,5 +91,15 @@
     "publishConfig": {
         "access": "public",
         "registry": "https://registry.npmjs.org/"
+    },
+    "cloudflare": {
+        "bindings": {
+            "CF_BEARER_TOKEN": {
+                "description": "Your [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) with Account Analytics permissions"
+            },
+            "CF_ACCOUNT_ID": {
+                "description": "Your Cloudflare Account ID from the dashboard sidebar"
+            }
+        }
     }
 }

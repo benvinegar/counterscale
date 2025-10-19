@@ -1,10 +1,11 @@
 {
     "main": "./workers/app.ts",
     "name": "counterscale",
-    "compatibility_flags": [
-      "nodejs_compat"
-    ],
+    "compatibility_flags": ["nodejs_compat"],
     "compatibility_date": "2024-12-13",
+    "vars": {
+        "CF_AUTH_ENABLED": "false"
+    },
     "assets": {
         "directory": "./build/client"
     },
