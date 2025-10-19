@@ -2,9 +2,6 @@
 CF_BEARER_TOKEN=''
 CF_ACCOUNT_ID=''
 
-# Authentication settings (defaults to false)
-CF_AUTH_ENABLED='false'
-
 # Optional - only needed if CF_AUTH_ENABLED is set to true
 # CF_PASSWORD_HASH=''
 # CF_JWT_SECRET=''
