@@ -1,7 +1,8 @@
 import figlet from "figlet";
 import chalk from "chalk";
 import { highlight } from "cli-highlight";
-import { password, isCancel, cancel } from "@clack/prompts";
+import { password, isCancel, cancel, spinner } from "@clack/prompts";
+import { CloudflareClient } from "./cloudflare.js";
 
 export const CLI_COLORS: Record<string, [number, number, number]> = {
     orange: [245, 107, 61],
@@ -72,7 +73,9 @@ Counterscale.init({
 
 export const MIN_PASSWORD_LENGTH = 8;
 
-export async function promptForPassword(message: string = "Enter a password for authentication:"): Promise<string> {
+export async function promptForPassword(
+    message: string = "Enter a password for authentication:",
+): Promise<string> {
     const userPassword = await password({
         message,
         mask: "*",
@@ -96,4 +99,59 @@ export async function promptForPassword(message: string = "Enter a password for 
     }
 
     return userPassword;
+}
+
+export async function promptApiToken(): Promise<string> {
+    const cfApiToken = await password({
+        message: "Enter your Cloudflare API Token",
+        mask: "*",
+        validate: (value) => {
+            if (typeof value !== "string" || value.length === 0) {
+                return "API token is required";
+            }
+
+            if (value.length < 40) {
+                return "Token appears to be too short";
+            }
+
+            return undefined;
+        },
+    });
+
+    if (isCancel(cfApiToken)) {
+        cancel("Operation canceled.");
+        if (process.env.NODE_ENV === "test") {
+            throw new Error("Operation canceled");
+        }
+        process.exit(0);
+    }
+
+    if (typeof cfApiToken !== "string" || cfApiToken.length === 0) {
+        throw new Error("API token is required");
+    }
+
+    const s = spinner();
+    s.start("Validating token...");
+
+    try {
+        const result = await CloudflareClient.validateToken(cfApiToken);
+        s.stop("Token Validated");
+
+        if (!result.valid) {
+            throw new Error(
+                result.error ||
+                    "Invalid token or insufficient permissions. Please verify your token has 'Account Analytics: Read' permission.",
+            );
+        }
+    } catch (error) {
+        s.stop();
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error(
+            "Failed to validate token. Please check your internet connection.",
+        );
+    }
+
+    return cfApiToken;
 }

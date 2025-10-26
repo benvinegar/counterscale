@@ -4,7 +4,6 @@ import os from "node:os";
 
 import {
     intro,
-    password,
     text,
     log,
     confirm,
@@ -31,6 +30,7 @@ import {
     getPackageSnippet,
     CLI_COLORS,
     promptForPassword,
+    promptApiToken,
 } from "../lib/ui.js";
 import { generateJWTSecret, generatePasswordHash } from "../lib/auth.js";
 
@@ -40,57 +40,6 @@ export function bail() {
         throw new Error("Operation canceled");
     }
     process.exit(0);
-}
-
-export async function promptApiToken(): Promise<string> {
-    const cfApiToken = await password({
-        message: "Enter your Cloudflare API Token",
-        mask: "*",
-        validate: (value) => {
-            if (typeof value !== "string" || value.length === 0) {
-                return "API token is required";
-            }
-
-            if (value.length < 40) {
-                return "Token appears to be too short";
-            }
-
-            return undefined;
-        },
-    });
-
-    if (isCancel(cfApiToken)) {
-        bail();
-    }
-
-    if (typeof cfApiToken !== "string" || cfApiToken.length === 0) {
-        throw new Error("API token is required");
-    }
-
-    const s = spinner();
-    s.start("Validating token...");
-
-    try {
-        const result = await CloudflareClient.validateToken(cfApiToken);
-        s.stop("Token Validated");
-
-        if (!result.valid) {
-            throw new Error(
-                result.error ||
-                    "Invalid token or insufficient permissions. Please verify your token has 'Account Analytics: Read' permission.",
-            );
-        }
-    } catch (error) {
-        s.stop();
-        if (error instanceof Error) {
-            throw error;
-        }
-        throw new Error(
-            "Failed to validate token. Please check your internet connection.",
-        );
-    }
-
-    return cfApiToken;
 }
 
 export async function promptPasswordProtection(): Promise<boolean> {
@@ -331,18 +280,25 @@ Your token needs these permissions:
             }
         }
 
-        if (!secrets?.CF_AUTH_ENABLED || !secrets?.CF_PASSWORD_HASH || !secrets?.CF_JWT_SECRET) {
+        if (
+            !secrets?.CF_AUTH_ENABLED ||
+            !secrets?.CF_PASSWORD_HASH ||
+            !secrets?.CF_JWT_SECRET
+        ) {
             const enableAuth = await promptPasswordProtection();
-            
+
             const s = spinner();
             s.start(`Setting CounterScale Authentication Settings ...`);
-            
+
             if (enableAuth) {
                 // If auth is enabled, prompt for password and set all required secrets
-                const appPassword = await promptForPassword("Enter the password you will use to access the Counterscale Dashboard");
+                const appPassword = await promptForPassword(
+                    "Enter the password you will use to access the Counterscale Dashboard",
+                );
                 if (appPassword) {
                     const jwtSecret = generateJWTSecret();
-                    const passwordHash = await generatePasswordHash(appPassword);
+                    const passwordHash =
+                        await generatePasswordHash(appPassword);
 
                     if (
                         await cloudflare.setCloudflareSecrets({
