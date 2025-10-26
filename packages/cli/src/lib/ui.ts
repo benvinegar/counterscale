@@ -1,7 +1,7 @@
 import figlet from "figlet";
 import chalk from "chalk";
 import { highlight } from "cli-highlight";
-import { password, isCancel, cancel, spinner } from "@clack/prompts";
+import { password, text, isCancel, cancel, spinner } from "@clack/prompts";
 import { CloudflareClient } from "./cloudflare.js";
 
 export const CLI_COLORS: Record<string, [number, number, number]> = {
@@ -40,13 +40,16 @@ export function getTitle(
     return `${title}\n${subtitle}`;
 }
 
-export function getScriptSnippet(deployUrl: string) {
+export function getScriptSnippet(
+    deployUrl: string,
+    scriptName: string = "tracker",
+) {
     return highlight(
         `
 <script
     id="counterscale-script"
     data-site-id="YOUR_UNIQUE_SITE_ID__CHANGE_THIS"
-    src="${deployUrl}/tracker.js"
+    src="${deployUrl}/${scriptName}.js"
     defer
 ></script>`,
         { language: "html", theme: highlightTheme },
@@ -154,4 +157,44 @@ export async function promptApiToken(): Promise<string> {
     }
 
     return cfApiToken;
+}
+
+export async function promptTrackerScriptName(): Promise<string> {
+    const scriptName = await text({
+        message:
+            "Enter the tracker script name (e.g., tracker, analytics, counter, etc):",
+        placeholder: "tracker",
+        defaultValue: "tracker",
+        validate: (value) => {
+            if (typeof value !== "string" || value.length === 0) {
+                return "Script name is required";
+            }
+
+            // Check for invalid filename characters
+            const invalidChars = /[<>:"/\\|?*]/;
+            if (invalidChars.test(value)) {
+                return "Script name contains invalid characters";
+            }
+
+            if (value.length > 100) {
+                return "Script name is too long (max 100 characters)";
+            }
+
+            return undefined;
+        },
+    });
+
+    if (isCancel(scriptName)) {
+        cancel("Operation canceled.");
+        if (process.env.NODE_ENV === "test") {
+            throw new Error("Operation canceled");
+        }
+        process.exit(0);
+    }
+
+    if (typeof scriptName !== "string" || scriptName.length === 0) {
+        throw new Error("Script name is required");
+    }
+
+    return scriptName;
 }

@@ -1,10 +1,14 @@
 import { CloudflareClient } from "../lib/cloudflare.js";
 import { getServerPkgDir } from "../lib/config.js";
-import { promptApiToken } from "../lib/ui.js";
+import {
+    promptApiToken,
+    promptTrackerScriptName,
+    getScriptSnippet,
+} from "../lib/ui.js";
 import { select, isCancel, cancel } from "@clack/prompts";
 import path from "path";
 
-type SupportedSecret = "CF_BEARER_TOKEN";
+type SupportedSecret = "CF_BEARER_TOKEN" | "CF_TRACKER_SCRIPT_NAME";
 
 interface SecretConfig {
     key: SupportedSecret;
@@ -21,6 +25,16 @@ export const SECRETS_BY_ALIAS = new Map<string, SecretConfig>([
             name: "Cloudflare API Token",
             description: "Token used to authenticate with Cloudflare API",
             prompt: promptApiToken,
+        },
+    ],
+    [
+        "tracker-script",
+        {
+            key: "CF_TRACKER_SCRIPT_NAME",
+            name: "Tracker Script Name",
+            description:
+                "Custom name for the tracker.js file served from the server",
+            prompt: promptTrackerScriptName,
         },
     ],
 ]);
@@ -83,6 +97,14 @@ export async function envCommand(secretKey?: string) {
 
         if (success) {
             console.log(`✅ ${selectedSecret.name} updated successfully!`);
+
+            // Show HTML snippet for tracker script configuration
+            if (selectedSecret.key === "CF_TRACKER_SCRIPT_NAME") {
+                console.log(
+                    "\n📝 Use this HTML snippet in your website (replace YOUR_DEPLOY_URL with your actual deployment URL):",
+                );
+                console.log(getScriptSnippet("YOUR_DEPLOY_URL", secretValue));
+            }
         } else {
             console.error(`❌ Failed to update ${selectedSecret.name}`);
             process.exit(1);
