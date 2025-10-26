@@ -45,7 +45,7 @@
     --sl-color-gray-6: var(--color-dark);
     --sl-color-black: var(--color-foreground);
 
-    --sl-color-bg: var(--color-foreground);
+    --sl-color-bg: hsl(40, 11.1%, 10.6%);
 }
 
 /* Light mode colors. */
