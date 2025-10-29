@@ -41,7 +41,6 @@ import { isCancel } from "@clack/prompts";
 
 // Import after mocks are set up
 import {
-    promptApiToken,
     promptDeploy,
     promptProjectConfig,
     promptAccountSelection,
@@ -64,118 +63,6 @@ describe("install prompts", () => {
 
     afterEach(() => {
         mockExit.mockRestore();
-    });
-
-    describe("promptApiToken", () => {
-        let mockSpinner: {
-            start: ReturnType<typeof vi.fn>;
-            stop: ReturnType<typeof vi.fn>;
-        };
-
-        beforeEach(async () => {
-            mockSpinner = {
-                start: vi.fn(),
-                stop: vi.fn(),
-            };
-            const mockPrompts = await import("@clack/prompts");
-            (
-                mockPrompts.spinner as unknown as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockSpinner);
-        });
-
-        it("should return valid API token when validation passes", async () => {
-            const mockToken = "a".repeat(40);
-            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-                false,
-            );
-            const mockPrompts = await import("@clack/prompts");
-            (
-                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockResolvedValue(mockToken);
-
-            const mockCloudflare = await import("../../lib/cloudflare.js");
-            vi.mocked(
-                mockCloudflare.CloudflareClient.validateToken,
-            ).mockResolvedValue({ valid: true });
-
-            const result = await promptApiToken();
-            expect(result).toBe(mockToken);
-        });
-
-        it("should throw error if user cancels", async () => {
-            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-                true,
-            );
-            const mockPrompts = await import("@clack/prompts");
-            (
-                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockResolvedValue("token");
-
-            await expect(promptApiToken()).rejects.toThrow(
-                "Operation canceled",
-            );
-        });
-
-        it("should throw error if token validation fails", async () => {
-            const mockToken = "a".repeat(40);
-            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-                false,
-            );
-            const mockPrompts = await import("@clack/prompts");
-            (
-                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockResolvedValue(mockToken);
-
-            const mockCloudflare = await import("../../lib/cloudflare.js");
-            vi.mocked(
-                mockCloudflare.CloudflareClient.validateToken,
-            ).mockResolvedValue({
-                valid: false,
-                error: "Invalid token or insufficient permissions",
-            });
-
-            await expect(promptApiToken()).rejects.toThrow(
-                "Invalid token or insufficient permissions",
-            );
-        });
-
-        it("should throw error if validation throws", async () => {
-            const mockToken = "a".repeat(40);
-            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-                false,
-            );
-            const mockPrompts = await import("@clack/prompts");
-            (
-                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockResolvedValue(mockToken);
-
-            const mockCloudflare = await import("../../lib/cloudflare.js");
-            vi.mocked(
-                mockCloudflare.CloudflareClient.validateToken,
-            ).mockRejectedValue(new Error("Network error"));
-
-            await expect(promptApiToken()).rejects.toThrow("Network error");
-        });
-
-        it("should throw generic error if validation throws non-Error", async () => {
-            const mockToken = "a".repeat(40);
-            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-                false,
-            );
-            const mockPrompts = await import("@clack/prompts");
-            (
-                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
-            ).mockResolvedValue(mockToken);
-
-            const mockCloudflare = await import("../../lib/cloudflare.js");
-            vi.mocked(
-                mockCloudflare.CloudflareClient.validateToken,
-            ).mockRejectedValue("string error");
-
-            await expect(promptApiToken()).rejects.toThrow(
-                "Failed to validate token. Please check your internet connection.",
-            );
-        });
     });
 
     describe("promptDeploy", () => {

@@ -7,5 +7,7 @@ interface Env {
     CF_PASSWORD_HASH: string;
     CF_JWT_SECRET: string;
     CF_AUTH_ENABLED: string;
+    CF_TRACKER_SCRIPT_NAME?: string;
     WEB_COUNTER_AE: AnalyticsEngineDataset;
+    ASSETS: Fetcher;
 }

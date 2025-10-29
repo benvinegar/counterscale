@@ -6,6 +6,7 @@ import { getTitle } from "./lib/ui.js";
 import { getServerPkgDir } from "./lib/config.js";
 import { install } from "./commands/install.js";
 import { enableAuth, disableAuth, updatePassword } from "./commands/auth.js";
+import { envCommand, SECRETS_BY_ALIAS } from "./commands/env.js";
 
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs/yargs";
@@ -90,7 +91,23 @@ const parser = yargs(hideBin(process.argv))
                     .help();
                 authYargs.showHelp();
             }
-        }
+        },
+    )
+    .command(
+        "env [secret]",
+        "Update environment secrets",
+        (yargs) => {
+            const supportedSecrets = Array.from(SECRETS_BY_ALIAS.keys()).join(
+                ", ",
+            );
+            yargs.positional("secret", {
+                describe: `The secret to update. Supported: ${supportedSecrets}`,
+                type: "string",
+            });
+        },
+        async (argv) => {
+            await envCommand(argv.secret as string | undefined);
+        },
     )
     .options({
         verbose: {
