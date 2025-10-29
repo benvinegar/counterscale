@@ -1,24 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { loader } from "../$script";
 
-// Mock fetch globally
-global.fetch = vi.fn();
-
 describe("Dynamic script route", () => {
     const mockRequest = {
         url: "https://example.com/analytics.js",
     } as Request;
 
+    const mockAssetsFetch = vi.fn();
+
     const createMockContext = (customScriptName?: string) => ({
         cloudflare: {
             env: {
                 CF_TRACKER_SCRIPT_NAME: customScriptName,
+                ASSETS: {
+                    fetch: mockAssetsFetch,
+                },
             },
         },
     });
 
     beforeEach(() => {
         vi.clearAllMocks();
+        mockAssetsFetch.mockClear();
     });
 
     describe("loader", () => {
@@ -45,11 +48,14 @@ describe("Dynamic script route", () => {
         });
 
         it("should serve default tracker.js", async () => {
-            const mockTrackerContent = "console.log('tracker script');";
-            (global.fetch as any).mockResolvedValue({
-                ok: true,
-                text: () => Promise.resolve(mockTrackerContent),
-            });
+            const mockResponse = new Response(
+                "console.log('tracker script');",
+                {
+                    status: 200,
+                    headers: { "Content-Type": "application/javascript" },
+                },
+            );
+            mockAssetsFetch.mockResolvedValue(mockResponse);
 
             const response = await loader({
                 params: { script: "tracker.js" },
@@ -58,21 +64,20 @@ describe("Dynamic script route", () => {
             } as any);
 
             expect(response.status).toBe(200);
-            expect(await response.text()).toBe(mockTrackerContent);
-            expect(response.headers.get("Content-Type")).toBe(
-                "application/javascript",
+            expect(await response.text()).toBe(
+                "console.log('tracker script');",
             );
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(mockAssetsFetch).toHaveBeenCalledWith(
                 "https://example.com/tracker.js",
             );
         });
 
         it("should serve custom script name when env variable is set", async () => {
-            const mockTrackerContent = "console.log('custom script');";
-            (global.fetch as any).mockResolvedValue({
-                ok: true,
-                text: () => Promise.resolve(mockTrackerContent),
+            const mockResponse = new Response("console.log('custom script');", {
+                status: 200,
+                headers: { "Content-Type": "application/javascript" },
             });
+            mockAssetsFetch.mockResolvedValue(mockResponse);
 
             const response = await loader({
                 params: { script: "analytics.js" },
@@ -81,11 +86,8 @@ describe("Dynamic script route", () => {
             } as any);
 
             expect(response.status).toBe(200);
-            expect(await response.text()).toBe(mockTrackerContent);
-            expect(response.headers.get("Content-Type")).toBe(
-                "application/javascript",
-            );
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(await response.text()).toBe("console.log('custom script');");
+            expect(mockAssetsFetch).toHaveBeenCalledWith(
                 "https://example.com/tracker.js",
             );
         });
@@ -102,10 +104,7 @@ describe("Dynamic script route", () => {
         });
 
         it("should handle fetch errors gracefully", async () => {
-            (global.fetch as any).mockResolvedValue({
-                ok: false,
-                status: 404,
-            });
+            mockAssetsFetch.mockRejectedValue(new Error("Fetch failed"));
 
             const response = await loader({
                 params: { script: "tracker.js" },
@@ -118,7 +117,7 @@ describe("Dynamic script route", () => {
         });
 
         it("should handle network errors", async () => {
-            (global.fetch as any).mockRejectedValue(new Error("Network error"));
+            mockAssetsFetch.mockRejectedValue(new Error("Network error"));
 
             const response = await loader({
                 params: { script: "tracker.js" },
@@ -130,12 +129,18 @@ describe("Dynamic script route", () => {
             expect(await response.text()).toBe("Error serving script");
         });
 
-        it("should set correct headers", async () => {
-            const mockTrackerContent = "console.log('tracker script');";
-            (global.fetch as any).mockResolvedValue({
-                ok: true,
-                text: () => Promise.resolve(mockTrackerContent),
-            });
+        it("should return response from ASSETS fetch", async () => {
+            const mockResponse = new Response(
+                "console.log('tracker script');",
+                {
+                    status: 200,
+                    headers: {
+                        "Content-Type": "application/javascript",
+                        "Cache-Control": "public, max-age=3600",
+                    },
+                },
+            );
+            mockAssetsFetch.mockResolvedValue(mockResponse);
 
             const response = await loader({
                 params: { script: "tracker.js" },
@@ -143,17 +148,9 @@ describe("Dynamic script route", () => {
                 request: mockRequest,
             } as any);
 
-            expect(response.headers.get("Content-Type")).toBe(
-                "application/javascript",
-            );
-            expect(response.headers.get("Cache-Control")).toBe(
-                "public, max-age=3600",
-            );
-            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "*",
-            );
-            expect(response.headers.get("Access-Control-Allow-Methods")).toBe(
-                "GET",
+            expect(response).toBe(mockResponse);
+            expect(mockAssetsFetch).toHaveBeenCalledWith(
+                "https://example.com/tracker.js",
             );
         });
     });
