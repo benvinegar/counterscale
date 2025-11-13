@@ -464,6 +464,84 @@ export class AnalyticsEngineAPI {
         return returnPromise;
     }
 
+    async getAllCountsByAllColumnsForAllSites(
+        columns: (keyof typeof ColumnMappings)[],
+        startDateTime: Date,
+        endDateTime: Date,
+        tz?: string,
+    ): Promise<Map<string[], AnalyticsCountResult>> {
+        const columnsStr = columns.map((c) => ColumnMappings[c]).join(", ");
+        const columnsStrWithAliases = columns
+            .map((c) => ColumnMappings[c] + " as " + c)
+            .join(", ");
+
+        const startDateTimeSql = dayjs(startDateTime)
+            .tz(tz)
+            .utc()
+            .format("YYYY-MM-DD HH:mm:ss");
+        const endDateTimeSql = dayjs(endDateTime)
+            .tz(tz)
+            .utc()
+            .format("YYYY-MM-DD HH:mm:ss");
+
+        const query = `
+            SELECT 
+                timestamp,
+                SUM(_sample_interval) as count,
+                ${ColumnMappings.siteId} as siteId, 
+                ${ColumnMappings.newVisitor} as isVisitor, 
+                ${ColumnMappings.bounce} as isBounce,
+                ${columnsStrWithAliases}
+            FROM metricsDataset
+            WHERE timestamp >= toDateTime('${startDateTimeSql}') AND timestamp < toDateTime('${endDateTimeSql}')
+            GROUP BY timestamp,
+                ${ColumnMappings.siteId}, 
+                ${ColumnMappings.newVisitor}, 
+                ${ColumnMappings.bounce}, 
+                ${columnsStr}
+            ORDER BY count DESC
+        `;
+
+        type SelectionSet = {
+            date: string;
+            count: number;
+            isVisitor: number;
+            isBounce: number;
+        } & {
+            [K in keyof typeof ColumnMappings]: string;
+        };
+
+        return this.query(query).then(async (response) => {
+            if (!response.ok) {
+                throw new Error(response.status + response.statusText);
+            }
+
+            const responseData =
+                (await response.json()) as AnalyticsQueryResult<SelectionSet>;
+
+
+            return responseData.data.reduce((acc, row) => {
+                // key is the comma joined string of siteId + all columns
+                const key = [
+                    row.date,
+                    row.siteId,
+                    ...columns.map((c) => String(row[c]).trim()),
+                ];
+
+                if (!acc.has(key)) {
+                    acc.set(key, {
+                        views: 0,
+                        visitors: 0,
+                        bounces: 0,
+                    } as AnalyticsCountResult);
+                }
+
+                accumulateCountsFromRowResult(acc.get(key)!, row);
+                return acc;
+            }, new Map<string[], AnalyticsCountResult>());
+        });
+    }
+
     async getAllCountsByColumn<T extends keyof typeof ColumnMappings>(
         siteId: string,
         column: T,
