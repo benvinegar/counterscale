@@ -31,7 +31,7 @@ describe("Auth Commands", () => {
             getCloudflareSecrets: vi.fn(),
             setCloudflareSecrets: vi.fn(),
         };
-        (CloudflareClient as any).mockImplementation(() => mockCloudflareClient);
+        (CloudflareClient as any).mockImplementation(function() { return mockCloudflareClient });
 
         mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
         mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});

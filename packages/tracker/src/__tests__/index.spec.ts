@@ -18,19 +18,26 @@ interface MockXHR {
 describe("api", () => {
     let mockXhrObjects: MockXHR[] = [];
     beforeAll(() => {
-        const XMLHttpRequestMock = vi.fn(() => {
-            const obj = {
-                open: vi.fn(),
-                send: vi.fn(),
-                setRequestHeader: vi.fn(),
-                addEventListener: vi.fn(),
-                responseText: "",
-                status: 200,
-                statusText: "OK",
-            };
-            mockXhrObjects.push(obj);
-            return obj;
-        });
+        class XMLHttpRequestMock {
+            open: ReturnType<typeof vi.fn>;
+            send: ReturnType<typeof vi.fn>;
+            setRequestHeader: ReturnType<typeof vi.fn>;
+            addEventListener: ReturnType<typeof vi.fn>;
+            responseText: string;
+            status: number;
+            statusText: string;
+
+            constructor() {
+                this.open = vi.fn();
+                this.send = vi.fn();
+                this.setRequestHeader = vi.fn();
+                this.addEventListener = vi.fn();
+                this.responseText = "";
+                this.status = 200;
+                this.statusText = "OK";
+                mockXhrObjects.push(this);
+            }
+        }
 
         vi.stubGlobal("XMLHttpRequest", XMLHttpRequestMock);
 
@@ -67,7 +74,7 @@ describe("api", () => {
                     reporterUrl: "https://example.com/collect",
                     autoTrackPageviews: false,
                 });
-            }).not.toThrow()
+            }).not.toThrow();
         });
     });
 

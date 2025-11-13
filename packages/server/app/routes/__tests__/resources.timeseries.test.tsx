@@ -105,6 +105,9 @@ describe("TimeSeriesCard", () => {
     };
 
     beforeEach(() => {
+        // Clear mock call counts before each test
+        mockFetcher.submit.mockClear();
+
         // @ts-expect-error we don't need to provide all the properties of the mockFetcher
         vi.mocked(RemixReact.useFetcher).mockReturnValue(mockFetcher);
 
