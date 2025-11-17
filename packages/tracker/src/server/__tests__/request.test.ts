@@ -4,10 +4,13 @@ import type { CollectRequestParams } from "../../shared/types";
 
 // Mock fetch and buildCollectUrl
 global.fetch = vi.fn();
-global.AbortController = vi.fn().mockImplementation(() => ({
-    signal: {},
-    abort: vi.fn(),
-}));
+
+class MockAbortController {
+    signal = {} as AbortSignal;
+    abort = vi.fn();
+}
+
+global.AbortController = MockAbortController;
 global.setTimeout = vi.fn().mockImplementation(() => {
     return 123 as any; // Mock timeout ID
 }) as any;
@@ -27,7 +30,6 @@ describe("makeRequest", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        (global.AbortController as any).mockReturnValue(mockAbortController);
     });
 
     it("should make a GET request with correct headers", async () => {
@@ -148,8 +150,12 @@ describe("makeRequest", () => {
             text: vi.fn().mockResolvedValue("ok"),
         } as any);
 
+        // Spy on AbortController constructor
+        const abortControllerSpy = vi.spyOn(global, "AbortController");
+
         await makeRequest("https://example.com/collect", {} as any);
 
-        expect(global.AbortController).toHaveBeenCalled();
+        expect(abortControllerSpy).toHaveBeenCalled();
+        abortControllerSpy.mockRestore();
     });
 });
