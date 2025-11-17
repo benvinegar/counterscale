@@ -53,7 +53,6 @@ describe("install prompts", () => {
     beforeEach(() => {
         vi.resetModules();
         vi.resetAllMocks();
-        // @ts-expect-error <just couldnt sort this out>
         mockExit = vi
             .spyOn(process, "exit")
             .mockImplementation((..._args: unknown[]) => {

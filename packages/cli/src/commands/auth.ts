@@ -83,7 +83,7 @@ export async function updatePassword() {
         
         const existingSecrets = await cloudflare.getCloudflareSecrets();
         
-        if (!existingSecrets.CF_AUTH_ENABLED) {
+        if (!existingSecrets?.CF_AUTH_ENABLED) {
             console.error("❌ Authentication is not enabled. Run 'counterscale auth enable' first.");
             process.exit(1);
         }
