@@ -81,7 +81,7 @@ export default function TableCard({
                             className={`group [&_td]:last:rounded-b-md ${gridCols}`}
                             width={barChartPercentages[index]}
                         >
-                            <TableCell className="font-medium min-w-48 whitespace-normal relative flex items-center justify-start gap-2">
+                            <TableCell className="overflow-hidden font-medium min-w-48 whitespace-normal relative flex items-center justify-start gap-2">
                                 {/^https?:\/\//.test(label) ? (
                                     <>
                                         <img
@@ -100,7 +100,7 @@ export default function TableCard({
                                                 onClick={() =>
                                                     onClick(key as string)
                                                 }
-                                                className="hover:underline select-text text-left whitespace-nowrap text-ellipsis"
+                                                className="hover:underline select-text text-left truncate"
                                             >
                                                 {formattedLabel}
                                             </button>
@@ -124,7 +124,7 @@ export default function TableCard({
                                                 onClick={() =>
                                                     onClick(key as string)
                                                 }
-                                                className="hover:underline select-text text-left"
+                                                className="hover:underline select-text text-left truncate"
                                             >
                                                 {formattedLabel}
                                             </button>
