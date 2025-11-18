@@ -10,7 +10,10 @@ import {
 } from "../../lib/ui.js";
 
 // Mock dependencies
-vi.mock("../../lib/cloudflare.js");
+vi.mock("../../lib/cloudflare.js", () => ({
+    CloudflareClient: vi.fn(),
+}));
+
 vi.mock("../../lib/config.js");
 vi.mock("@clack/prompts");
 vi.mock("../../lib/ui.js");
@@ -20,12 +23,6 @@ describe("env.ts", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.mocked(getServerPkgDir).mockReturnValue("/mock/server/dir");
-        vi.mocked(CloudflareClient).mockImplementation(
-            () =>
-                ({
-                    setCloudflareSecrets: vi.fn().mockResolvedValue(true),
-                }) as any,
-        );
     });
 
     describe("SECRETS_BY_ALIAS", () => {
@@ -56,12 +53,12 @@ describe("env.ts", () => {
         it("should update secret when valid secret key is provided", async () => {
             vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
             const mockSetSecrets = vi.fn().mockResolvedValue(true);
-            vi.mocked(CloudflareClient).mockImplementation(
-                () =>
-                    ({
-                        setCloudflareSecrets: mockSetSecrets,
-                    }) as any,
-            );
+
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    setCloudflareSecrets: mockSetSecrets,
+                } as any;
+            });
 
             await envCommand("token");
 
@@ -76,12 +73,12 @@ describe("env.ts", () => {
             );
             vi.mocked(getScriptSnippet).mockReturnValue("mock-snippet");
             const mockSetSecrets = vi.fn().mockResolvedValue(true);
-            vi.mocked(CloudflareClient).mockImplementation(
-                () =>
-                    ({
-                        setCloudflareSecrets: mockSetSecrets,
-                    }) as any,
-            );
+
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    setCloudflareSecrets: mockSetSecrets,
+                } as any;
+            });
 
             const consoleSpy = vi
                 .spyOn(console, "log")
@@ -124,12 +121,12 @@ describe("env.ts", () => {
             vi.mocked(select).mockResolvedValue("token");
             vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
             const mockSetSecrets = vi.fn().mockResolvedValue(true);
-            vi.mocked(CloudflareClient).mockImplementation(
-                () =>
-                    ({
-                        setCloudflareSecrets: mockSetSecrets,
-                    }) as any,
-            );
+
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    setCloudflareSecrets: mockSetSecrets,
+                } as any;
+            });
 
             await envCommand();
 
@@ -168,12 +165,12 @@ describe("env.ts", () => {
         it("should handle secret update failure", async () => {
             vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
             const mockSetSecrets = vi.fn().mockResolvedValue(false);
-            vi.mocked(CloudflareClient).mockImplementation(
-                () =>
-                    ({
-                        setCloudflareSecrets: mockSetSecrets,
-                    }) as any,
-            );
+
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    setCloudflareSecrets: mockSetSecrets,
+                } as any;
+            });
 
             const consoleSpy = vi
                 .spyOn(console, "error")
