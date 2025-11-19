@@ -7333,4 +7333,13 @@ declare abstract class WorkflowInstance {
         type: string;
         payload: unknown;
     }): Promise<void>;
+interface Env {
+    CF_BEARER_TOKEN: string;
+    CF_ACCOUNT_ID: string;
+    CF_PASSWORD_HASH: string;
+    CF_JWT_SECRET: string;
+    CF_AUTH_ENABLED: string;
+    CF_TRACKER_SCRIPT_NAME?: string;
+    WEB_COUNTER_AE: AnalyticsEngineDataset;
+    ASSETS: Fetcher;
 }
