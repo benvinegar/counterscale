@@ -6,6 +6,7 @@
     ],
     "compatibility_date": "2024-12-13",
     "assets": {
+        "binding": "ASSETS",
         "directory": "./build/client"
     },
     "analytics_engine_datasets": [
