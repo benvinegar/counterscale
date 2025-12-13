@@ -22,6 +22,7 @@ export default {
         env: Env,
         ctx: ExecutionContext,
     ) {
+        if (env.CF_STORAGE_ENABLED === "false") return
         try {
             ctx.waitUntil(
                 extractAsArrow(
