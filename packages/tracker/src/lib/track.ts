@@ -38,35 +38,34 @@ function getCanonicalUrl() {
 }
 
 function getBrowserReferrer(hostname: string, referrer: string): string {
-    if (
-        !referrer &&
-        document.referrer &&
-        document.referrer.indexOf(hostname) < 0
-    ) {
-        referrer = document.referrer;
+    // First, check if we have an explicit referrer parameter
+    if (referrer) {
+        return getReferrer(hostname, referrer);
+    }
+
+    // If no explicit referrer, check document.referrer
+    if (document.referrer && document.referrer.indexOf(hostname) < 0) {
+        return getReferrer(hostname, document.referrer);
     }
 
     // If still no referrer, check query parameters
-    if (!referrer) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const referrerParams = [
-            "ref",
-            "referer",
-            "referrer",
-            "source",
-            "utm_source",
-        ];
+    const urlParams = new URLSearchParams(window.location.search);
+    const referrerParams = [
+        "ref",
+        "referer",
+        "referrer",
+        "source",
+        "utm_source",
+    ];
 
-        for (const param of referrerParams) {
-            const value = urlParams.get(param);
-            if (value) {
-                referrer = value;
-                break;
-            }
+    for (const param of referrerParams) {
+        const value = urlParams.get(param);
+        if (value) {
+            return getReferrer(hostname, value);
         }
     }
 
-    return getReferrer(hostname, referrer || "");
+    return getReferrer(hostname, "");
 }
 
 export async function trackPageview(
