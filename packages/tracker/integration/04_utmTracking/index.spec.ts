@@ -21,7 +21,7 @@ test("tracks UTM parameters when present in URL", async ({ page }) => {
     expect(params.get("sid")).toBe("utm-test-site-id");
     expect(params.get("h")).toBe("http://localhost");
     expect(params.get("p")).toBe("/04_utmTracking/");
-    expect(params.get("r")).toBe("");
+    expect(params.get("r")).toBe("google"); // utm_source is now used as referrer
 
     expect(params.get("us")).toBe("google"); // utm_source
     expect(params.get("um")).toBe("cpc"); // utm_medium
@@ -99,4 +99,50 @@ test("handles mixed UTM and non-UTM parameters", async ({ page }) => {
     expect(params.has("um")).toBe(false);
     expect(params.has("ut")).toBe(false);
     expect(params.has("uco")).toBe(false);
+});
+
+test("tracks referrer from query parameters when document.referrer is missing", async ({
+    page,
+}) => {
+    const collectRequestPromise = page.waitForRequest((request) =>
+        request.url().includes("/collect"),
+    );
+
+    // Navigate with referrer query parameter
+    await page.goto(
+        "http://localhost:3004/04_utmTracking/?ref=external-site.com",
+    );
+
+    const request = await collectRequestPromise;
+    expect(request).toBeTruthy();
+
+    const url = request.url();
+    const params = new URLSearchParams(url.split("?")[1]);
+
+    expect(params.get("sid")).toBe("utm-test-site-id");
+    expect(params.get("h")).toBe("http://localhost");
+    expect(params.get("p")).toBe("/04_utmTracking/");
+    expect(params.get("r")).toBe("external-site.com"); // ref parameter used as referrer
+});
+
+test("prioritizes referrer query parameters in correct order", async ({
+    page,
+}) => {
+    const collectRequestPromise = page.waitForRequest((request) =>
+        request.url().includes("/collect"),
+    );
+
+    // Navigate with multiple referrer parameters - should use 'ref' (first in priority)
+    await page.goto(
+        "http://localhost:3004/04_utmTracking/?utm_source=second.com&ref=first.com&source=third.com",
+    );
+
+    const request = await collectRequestPromise;
+    expect(request).toBeTruthy();
+
+    const url = request.url();
+    const params = new URLSearchParams(url.split("?")[1]);
+
+    expect(params.get("r")).toBe("first.com"); // Should use 'ref' since it comes first in priority
+    expect(params.get("us")).toBe("second.com"); // utm_source still tracked as UTM parameter
 });
