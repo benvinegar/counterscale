@@ -1,4 +1,8 @@
-import type { ExportedHandler } from "@cloudflare/workers-types";
+import type { 
+    ExecutionContext,
+    ExportedHandler,
+    ScheduledController,
+} from "@cloudflare/workers-types";
 import { createRequestHandler, type ServerBuild } from "react-router";
 
 /**
@@ -8,10 +12,31 @@ import { createRequestHandler, type ServerBuild } from "react-router";
  */
 import { getLoadContext } from "../app/load-context";
 import * as build from "../build/server";
+import { extractAsArrow } from "./lib/arrow";
 
 const requestHandler = createRequestHandler(build as unknown as ServerBuild);
 
 export default {
+        async scheduled(
+        _controller: ScheduledController,
+        env: Env,
+        ctx: ExecutionContext,
+    ) {
+        if (env.CF_STORAGE_ENABLED === "false") return
+        try {
+            ctx.waitUntil(
+                extractAsArrow(
+                    {
+                        accountId: env.CF_ACCOUNT_ID,
+                        bearerToken: env.CF_BEARER_TOKEN,
+                    },
+                    env.DAILY_ROLLUPS,
+                ),
+            );
+        } catch (error) {
+            console.error(error);
+        }
+    },
     // @ts-expect-error TODO figure out types here
     async fetch(request: any, env: any, ctx: any) {
         try {

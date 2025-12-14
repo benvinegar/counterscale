@@ -2,7 +2,7 @@
 import { vi, test, describe, beforeEach, afterEach, expect } from "vitest";
 import "vitest-dom/extend-expect";
 
-import { loader } from "../cache";
+import { CacheLoaderBody, loader } from "../cache";
 
 describe("Cache route", () => {
     beforeEach(() => {
@@ -54,7 +54,7 @@ describe("Cache route", () => {
             const response = await loader({ request } as any);
 
             // Verify the content of the response
-            const data = await response.json();
+            const data = await response.json() as CacheLoaderBody;
 
             // Should return a hit count > 0 for returning visitors
             expect(data.ht).toBeGreaterThan(0);
@@ -81,7 +81,7 @@ describe("Cache route", () => {
             const response = await loader({ request } as any);
 
             // Verify the content of the response
-            const data = await response.json();
+            const data = await response.json() as CacheLoaderBody;
 
             // Should be the first hit (new visitor) because a new day began
             expect(data.ht).toBe(1);
@@ -104,7 +104,7 @@ describe("Cache route", () => {
             const response = await loader({ request } as any);
 
             // Verify the content of the response
-            const data = await response.json();
+            const data = await response.json() as CacheLoaderBody;
 
             // Should be the first hit (new visitor) because > 30 days passed
             expect(data.ht).toBe(1);
@@ -127,7 +127,7 @@ describe("Cache route", () => {
             const response = await loader({ request } as any);
 
             // Verify the content of the response
-            const data = await response.json();
+            const data = await response.json() as CacheLoaderBody;
 
             // Should be the first hit (new visitor) because > 24 hours passed
             expect(data.ht).toBe(1);
@@ -156,7 +156,7 @@ describe("Cache route", () => {
             const response = await loader({ request } as any);
 
             // Verify the content of the response
-            const data = await response.json();
+            const data = await response.json() as CacheLoaderBody;
 
             // Should return a hit count > 0 for returning visitors
             expect(data.ht).toBe(2);
@@ -189,7 +189,7 @@ describe("Cache route", () => {
             const response = await loader({ request } as any);
 
             // Verify the content of the response
-            const data = await response.json();
+            const data = await response.json() as CacheLoaderBody;
 
             // Should be the third hit (returning visitor)
             expect(data.ht).toBe(3);

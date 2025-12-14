@@ -6,6 +6,7 @@ import { getTitle } from "./lib/ui.js";
 import { getServerPkgDir } from "./lib/config.js";
 import { install } from "./commands/install.js";
 import { enableAuth, disableAuth, updatePassword } from "./commands/auth.js";
+import { enableStorage, disableStorage } from "./commands/storage.js";
 import { envCommand, SECRETS_BY_ALIAS } from "./commands/env.js";
 
 import { hideBin } from "yargs/helpers";
@@ -90,6 +91,47 @@ const parser = yargs(hideBin(process.argv))
                     )
                     .help();
                 authYargs.showHelp();
+            }
+        },
+    )
+    .command(
+        "storage",
+        "Manage long term storage settings",
+        (yargs) => {
+            const storageYargs = yargs
+                .command(
+                    "enable",
+                    "Enable long term data storage for your Counterscale data",
+                    {},
+                    enableStorage,
+                )
+                .command(
+                    "disable",
+                    "Disable long term data storage for your Counterscale data",
+                    {},
+                    disableStorage,
+                )
+                .help();
+            return storageYargs;
+        },
+        async (argv) => {
+            // Show help if no subcommand was provided
+            if (argv._.length === 1) {
+                const storageYargs = yargs(hideBin(process.argv))
+                    .command(
+                        "enable",
+                        "Enable storage for your Counterscale deployment",
+                        {},
+                        enableStorage,
+                    )
+                    .command(
+                        "disable",
+                        "Disable storage for your Counterscale deployment",
+                        {},
+                        disableStorage,
+                    )
+                    .help();
+                storageYargs.showHelp();
             }
         },
     )

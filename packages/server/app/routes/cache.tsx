@@ -1,6 +1,10 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { handleCacheHeaders } from "~/analytics/collect";
 
+export type CacheLoaderBody = {
+  ht: number;
+}
+
 /**
  * Loader function for the /cache route.
  *
@@ -17,7 +21,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     // Return the hit count to the client
     const payload = {
         ht: hits, // Number of hits in the current session (hit type)
-    };
+    } satisfies CacheLoaderBody;
 
     // Return the JSON payload with the appropriate Last-Modified header
     return new Response(JSON.stringify(payload), {
