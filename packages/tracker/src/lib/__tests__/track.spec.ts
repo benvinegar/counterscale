@@ -279,7 +279,7 @@ describe("trackPageview", () => {
                 expect.objectContaining({
                     p: "/test-path",
                     h: "http://localhost",
-                    r: "",
+                    r: "google",
                     sid: "test-site",
                     ht: "1",
                     us: "google",
@@ -423,6 +423,237 @@ describe("trackPageview", () => {
             expect(callArgs).not.toHaveProperty("um");
             expect(callArgs).not.toHaveProperty("ut");
             expect(callArgs).not.toHaveProperty("uco");
+        });
+    });
+
+    describe("referrer query parameter tracking", () => {
+        test("should use ref parameter when document.referrer is missing", async () => {
+            // Mock location with ref parameter
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?ref=external-site.com",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "external-site.com",
+                }),
+            );
+        });
+
+        test("should use referer parameter when document.referrer is missing", async () => {
+            // Mock location with referer parameter
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?referer=external-site.com",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "external-site.com",
+                }),
+            );
+        });
+
+        test("should use referrer parameter when document.referrer is missing", async () => {
+            // Mock location with referrer parameter
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?referrer=external-site.com",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "external-site.com",
+                }),
+            );
+        });
+
+        test("should use source parameter when document.referrer is missing", async () => {
+            // Mock location with source parameter
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?source=external-site.com",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "external-site.com",
+                }),
+            );
+        });
+
+        test("should use utm_source parameter when document.referrer is missing", async () => {
+            // Mock location with utm_source parameter
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?utm_source=external-site.com",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "external-site.com",
+                }),
+            );
+        });
+
+        test("should prioritize first matching referrer parameter in order", async () => {
+            // Mock location with multiple referrer parameters
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?utm_source=second.com&ref=first.com",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "first.com", // Should use 'ref' since it comes first in the priority list
+                }),
+            );
+        });
+
+        test("should prefer document.referrer over query parameters", async () => {
+            // Mock document.referrer and location with ref parameter
+            Object.defineProperty(document, "referrer", {
+                writable: true,
+                value: "https://document-referrer.com",
+            });
+
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?ref=query-referrer.com",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "https://document-referrer.com", // Should use document.referrer
+                }),
+            );
+        });
+
+        test("should handle empty referrer query parameters", async () => {
+            // Mock location with empty referrer parameters
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?ref=&referer=&referrer=&source=&utm_source=",
+                    host: "example.com",
+                },
+            });
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledTimes(1);
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    r: "", // Should be empty when all parameters are empty
+                }),
+            );
         });
     });
 });

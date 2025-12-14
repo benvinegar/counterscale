@@ -46,6 +46,26 @@ function getBrowserReferrer(hostname: string, referrer: string): string {
         referrer = document.referrer;
     }
 
+    // If still no referrer, check query parameters
+    if (!referrer) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrerParams = [
+            "ref",
+            "referer",
+            "referrer",
+            "source",
+            "utm_source",
+        ];
+
+        for (const param of referrerParams) {
+            const value = urlParams.get(param);
+            if (value) {
+                referrer = value;
+                break;
+            }
+        }
+    }
+
     return getReferrer(hostname, referrer || "");
 }
 
