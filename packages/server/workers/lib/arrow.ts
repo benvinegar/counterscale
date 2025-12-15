@@ -1,5 +1,5 @@
-import { AnalyticsEngineAPI } from "~/analytics/query";
-import { ColumnMappings } from "~/analytics/schema";
+import { AnalyticsEngineAPI } from "../../app/analytics/query";
+import { ColumnMappings } from "../../app/analytics/schema";
 import { tableFromJSON, tableToIPC } from "apache-arrow";
 import dayjs from "dayjs";
 
