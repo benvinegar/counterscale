@@ -33,7 +33,8 @@ function init() {
     const siteId = script?.getAttribute("data-site-id") || getLegacySiteId();
     const reportOnLocalhost = (script?.hasAttribute("data-report-localhost") && script?.getAttribute("data-report-localhost") !== "false") || false;
 
-    const reporterUrl = script?.src.replace("tracker.js", "collect");
+    // Extract base URL by removing the script filename (supports custom script names)
+    const reporterUrl = script?.src.replace(/[^/]+\.js$/, "collect");
 
     if (!siteId || !reporterUrl) {
         return;
