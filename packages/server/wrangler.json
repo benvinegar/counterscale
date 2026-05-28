@@ -5,10 +5,12 @@
     "compatibility_date": "2024-12-13",
     "assets": {
         "binding": "ASSETS",
-        "directory": "./build/client"
+        "directory": "./build/client",
+        "run_worker_first": ["/tracker.js"]
     },
     "vars": {
-        "CF_DATASET_NAME": "metricsDataset"
+        "CF_DATASET_NAME": "metricsDataset",
+        "TRACKER_ALLOWED_ORIGINS": ""
     },
     "analytics_engine_datasets": [
         {

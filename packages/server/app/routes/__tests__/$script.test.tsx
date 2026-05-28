@@ -2,16 +2,24 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { loader } from "../$script";
 
 describe("Dynamic script route", () => {
-    const mockRequest = {
-        url: "https://example.com/analytics.js",
-    } as Request;
+    const buildMockRequest = (origin?: string): Request =>
+        ({
+            url: "https://example.com/analytics.js",
+            headers: new Headers(origin ? { Origin: origin } : {}),
+        }) as Request;
+
+    const mockRequest = buildMockRequest();
 
     const mockAssetsFetch = vi.fn();
 
-    const createMockContext = (customScriptName?: string) => ({
+    const createMockContext = (
+        customScriptName?: string,
+        allowedOrigins?: string,
+    ) => ({
         cloudflare: {
             env: {
                 CF_TRACKER_SCRIPT_NAME: customScriptName,
+                TRACKER_ALLOWED_ORIGINS: allowedOrigins,
                 ASSETS: {
                     fetch: mockAssetsFetch,
                 },
@@ -148,9 +156,135 @@ describe("Dynamic script route", () => {
                 request: mockRequest,
             } as any);
 
-            expect(response).toBe(mockResponse);
+            expect(response.status).toBe(200);
+            expect(response.headers.get("Cache-Control")).toBe(
+                "public, max-age=3600",
+            );
+            expect(await response.text()).toBe(
+                "console.log('tracker script');",
+            );
             expect(mockAssetsFetch).toHaveBeenCalledWith(
                 "https://example.com/tracker.js",
+            );
+        });
+    });
+
+    describe("Access-Control-Allow-Origin header", () => {
+        const buildAssetResponse = () =>
+            new Response("console.log('tracker');", {
+                status: 200,
+                headers: { "Content-Type": "application/javascript" },
+            });
+
+        it("defaults to '*' when TRACKER_ALLOWED_ORIGINS is missing", async () => {
+            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
+
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(),
+                request: buildMockRequest("https://anything.example"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "*",
+            );
+            expect(response.headers.get("Vary")).toBeNull();
+        });
+
+        it("defaults to '*' when TRACKER_ALLOWED_ORIGINS is empty", async () => {
+            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
+
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(undefined, "   "),
+                request: buildMockRequest("https://anything.example"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "*",
+            );
+        });
+
+        it("echoes a matching Origin and sets Vary: Origin", async () => {
+            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
+
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(
+                    undefined,
+                    "https://foo.com, https://bar.com",
+                ),
+                request: buildMockRequest("https://bar.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "https://bar.com",
+            );
+            expect(response.headers.get("Vary")).toBe("Origin");
+        });
+
+        it("matches subdomains of listed bare hosts", async () => {
+            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
+
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(undefined, "shiftinbits.com"),
+                request: buildMockRequest("https://test.shiftinbits.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "https://test.shiftinbits.com",
+            );
+        });
+
+        it("matches subdomains of listed origins", async () => {
+            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
+
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(
+                    undefined,
+                    "https://shiftinbits.com",
+                ),
+                request: buildMockRequest("https://a.b.shiftinbits.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "https://a.b.shiftinbits.com",
+            );
+        });
+
+        it("does not treat sibling domains as subdomains", async () => {
+            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
+
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(
+                    undefined,
+                    "https://foo.com, https://bar.com",
+                ),
+                request: buildMockRequest("https://evil-foo.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "https://foo.com",
+            );
+        });
+
+        it("falls back to first allowed origin when Origin is missing", async () => {
+            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
+
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(
+                    undefined,
+                    "https://foo.com, https://bar.com",
+                ),
+                request: buildMockRequest(),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "https://foo.com",
             );
         });
     });
