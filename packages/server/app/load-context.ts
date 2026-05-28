@@ -25,6 +25,7 @@ export const getLoadContext: GetLoadContext = ({ context }) => {
     const analyticsEngine = new AnalyticsEngineAPI(
         context.cloudflare.env.CF_ACCOUNT_ID,
         context.cloudflare.env.CF_BEARER_TOKEN,
+        context.cloudflare.env.CF_DATASET_NAME,
     );
 
     return {

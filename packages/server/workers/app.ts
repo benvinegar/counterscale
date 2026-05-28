@@ -29,6 +29,7 @@ export default {
                     {
                         accountId: env.CF_ACCOUNT_ID,
                         bearerToken: env.CF_BEARER_TOKEN,
+                        dataset: env.CF_DATASET_NAME,
                     },
                     env.DAILY_ROLLUPS,
                 ),

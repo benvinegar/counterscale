@@ -4,10 +4,14 @@ import { tableFromJSON, tableToIPC } from "apache-arrow";
 import dayjs from "dayjs";
 
 export async function extractAsArrow(
-    { accountId, bearerToken }: { accountId: string; bearerToken: string },
+    {
+        accountId,
+        bearerToken,
+        dataset,
+    }: { accountId: string; bearerToken: string; dataset?: string },
     bucket: R2Bucket,
 ) {
-    const api = new AnalyticsEngineAPI(accountId, bearerToken);
+    const api = new AnalyticsEngineAPI(accountId, bearerToken, dataset);
 
     // Get yesterday's date range
     const yesterday = dayjs().subtract(1, "day");
@@ -141,7 +145,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
         try {
             const result = await extractAsArrow(
-                { accountId, bearerToken },
+                {
+                    accountId,
+                    bearerToken,
+                    dataset: process.env.CF_DATASET_NAME,
+                },
                 mockBucket,
             );
             console.log("Success:", result);
