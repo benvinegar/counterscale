@@ -11,7 +11,7 @@
         },
         "@counterscale/server#copytracker": {
             "dependsOn": ["^@counterscale/tracker#build"],
-            "outputs": ["public/tracker.js"]
+            "outputs": ["app/tracker/tracker.js"]
         },
         "dev": {
             "dependsOn": ["^@counterscale/server#copytracker"],

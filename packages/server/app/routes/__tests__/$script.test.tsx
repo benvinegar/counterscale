@@ -196,5 +196,33 @@ describe("Dynamic script route", () => {
                 "https://foo.com",
             );
         });
+
+        it("normalizes bare-host fallback to https:// in the ACAO header", async () => {
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(undefined, "shiftinbits.com"),
+                request: buildMockRequest("https://evil.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "https://shiftinbits.com",
+            );
+        });
+
+        it("does not let http:// origins match https:// list entries", async () => {
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(
+                    undefined,
+                    "https://foo.com, https://bar.com",
+                ),
+                request: buildMockRequest("http://foo.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "https://foo.com",
+            );
+            expect(response.headers.get("Vary")).toBe("Origin");
+        });
     });
 });

@@ -45,7 +45,8 @@ function resolveAllowedOrigin(
     const list = (allowedOriginsVar ?? "")
         .split(",")
         .map((o) => o.trim())
-        .filter((o) => o.length > 0);
+        .filter((o) => o.length > 0)
+        .map(normalizeOriginEntry);
 
     if (list.length === 0) {
         return "*";
@@ -58,27 +59,37 @@ function resolveAllowedOrigin(
     return list[0];
 }
 
+function normalizeOriginEntry(entry: string): string {
+    const lower = entry.toLowerCase();
+    if (lower.startsWith("http://") || lower.startsWith("https://")) {
+        return entry;
+    }
+    return `https://${entry.replace(/^\*\./, "")}`;
+}
+
 function originMatchesList(origin: string, list: string[]): boolean {
-    let originHost: string;
+    let originUrl: URL;
     try {
-        originHost = new URL(origin).hostname.toLowerCase();
+        originUrl = new URL(origin);
     } catch {
         return false;
     }
+    const originHost = originUrl.hostname.toLowerCase();
+    const originScheme = originUrl.protocol;
 
     return list.some((entry) => {
-        const entryHost = extractHost(entry).toLowerCase();
-        if (!entryHost) return false;
+        let entryUrl: URL;
+        try {
+            entryUrl = new URL(entry);
+        } catch {
+            return false;
+        }
+        if (entryUrl.protocol !== originScheme) {
+            return false;
+        }
+        const entryHost = entryUrl.hostname.toLowerCase();
         return (
             originHost === entryHost || originHost.endsWith(`.${entryHost}`)
         );
     });
-}
-
-function extractHost(value: string): string {
-    try {
-        return new URL(value).hostname;
-    } catch {
-        return value.replace(/^\*\./, "");
-    }
 }
