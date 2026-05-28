@@ -1,4 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+vi.mock("../../tracker/tracker.js?raw", () => ({
+    default: "console.log('tracker script');",
+}));
+
 import { loader } from "../$script";
 
 describe("Dynamic script route", () => {
@@ -10,8 +15,6 @@ describe("Dynamic script route", () => {
 
     const mockRequest = buildMockRequest();
 
-    const mockAssetsFetch = vi.fn();
-
     const createMockContext = (
         customScriptName?: string,
         allowedOrigins?: string,
@@ -20,16 +23,12 @@ describe("Dynamic script route", () => {
             env: {
                 CF_TRACKER_SCRIPT_NAME: customScriptName,
                 TRACKER_ALLOWED_ORIGINS: allowedOrigins,
-                ASSETS: {
-                    fetch: mockAssetsFetch,
-                },
             },
         },
     });
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockAssetsFetch.mockClear();
     });
 
     describe("loader", () => {
@@ -55,51 +54,6 @@ describe("Dynamic script route", () => {
             expect(await response.text()).toBe("Not Found");
         });
 
-        it("should serve default tracker.js", async () => {
-            const mockResponse = new Response(
-                "console.log('tracker script');",
-                {
-                    status: 200,
-                    headers: { "Content-Type": "application/javascript" },
-                },
-            );
-            mockAssetsFetch.mockResolvedValue(mockResponse);
-
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(),
-                request: mockRequest,
-            } as any);
-
-            expect(response.status).toBe(200);
-            expect(await response.text()).toBe(
-                "console.log('tracker script');",
-            );
-            expect(mockAssetsFetch).toHaveBeenCalledWith(
-                "https://example.com/tracker.js",
-            );
-        });
-
-        it("should serve custom script name when env variable is set", async () => {
-            const mockResponse = new Response("console.log('custom script');", {
-                status: 200,
-                headers: { "Content-Type": "application/javascript" },
-            });
-            mockAssetsFetch.mockResolvedValue(mockResponse);
-
-            const response = await loader({
-                params: { script: "analytics.js" },
-                context: createMockContext("analytics"),
-                request: mockRequest,
-            } as any);
-
-            expect(response.status).toBe(200);
-            expect(await response.text()).toBe("console.log('custom script');");
-            expect(mockAssetsFetch).toHaveBeenCalledWith(
-                "https://example.com/tracker.js",
-            );
-        });
-
         it("should return 404 for unmatched script names", async () => {
             const response = await loader({
                 params: { script: "unknown.js" },
@@ -111,45 +65,7 @@ describe("Dynamic script route", () => {
             expect(await response.text()).toBe("Script not found");
         });
 
-        it("should handle fetch errors gracefully", async () => {
-            mockAssetsFetch.mockRejectedValue(new Error("Fetch failed"));
-
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(),
-                request: mockRequest,
-            } as any);
-
-            expect(response.status).toBe(500);
-            expect(await response.text()).toBe("Error serving script");
-        });
-
-        it("should handle network errors", async () => {
-            mockAssetsFetch.mockRejectedValue(new Error("Network error"));
-
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(),
-                request: mockRequest,
-            } as any);
-
-            expect(response.status).toBe(500);
-            expect(await response.text()).toBe("Error serving script");
-        });
-
-        it("should return response from ASSETS fetch", async () => {
-            const mockResponse = new Response(
-                "console.log('tracker script');",
-                {
-                    status: 200,
-                    headers: {
-                        "Content-Type": "application/javascript",
-                        "Cache-Control": "public, max-age=3600",
-                    },
-                },
-            );
-            mockAssetsFetch.mockResolvedValue(mockResponse);
-
+        it("should serve the bundled tracker source for tracker.js", async () => {
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(),
@@ -157,28 +73,33 @@ describe("Dynamic script route", () => {
             } as any);
 
             expect(response.status).toBe(200);
+            expect(response.headers.get("Content-Type")).toBe(
+                "application/javascript; charset=utf-8",
+            );
             expect(response.headers.get("Cache-Control")).toBe(
                 "public, max-age=3600",
             );
             expect(await response.text()).toBe(
                 "console.log('tracker script');",
             );
-            expect(mockAssetsFetch).toHaveBeenCalledWith(
-                "https://example.com/tracker.js",
+        });
+
+        it("should serve the bundled source for a renamed tracker", async () => {
+            const response = await loader({
+                params: { script: "analytics.js" },
+                context: createMockContext("analytics"),
+                request: mockRequest,
+            } as any);
+
+            expect(response.status).toBe(200);
+            expect(await response.text()).toBe(
+                "console.log('tracker script');",
             );
         });
     });
 
     describe("Access-Control-Allow-Origin header", () => {
-        const buildAssetResponse = () =>
-            new Response("console.log('tracker');", {
-                status: 200,
-                headers: { "Content-Type": "application/javascript" },
-            });
-
         it("defaults to '*' when TRACKER_ALLOWED_ORIGINS is missing", async () => {
-            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
-
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(),
@@ -192,8 +113,6 @@ describe("Dynamic script route", () => {
         });
 
         it("defaults to '*' when TRACKER_ALLOWED_ORIGINS is empty", async () => {
-            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
-
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(undefined, "   "),
@@ -206,8 +125,6 @@ describe("Dynamic script route", () => {
         });
 
         it("echoes a matching Origin and sets Vary: Origin", async () => {
-            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
-
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(
@@ -224,8 +141,6 @@ describe("Dynamic script route", () => {
         });
 
         it("matches subdomains of listed bare hosts", async () => {
-            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
-
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(undefined, "shiftinbits.com"),
@@ -238,8 +153,6 @@ describe("Dynamic script route", () => {
         });
 
         it("matches subdomains of listed origins", async () => {
-            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
-
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(
@@ -255,8 +168,6 @@ describe("Dynamic script route", () => {
         });
 
         it("does not treat sibling domains as subdomains", async () => {
-            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
-
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(
@@ -272,8 +183,6 @@ describe("Dynamic script route", () => {
         });
 
         it("falls back to first allowed origin when Origin is missing", async () => {
-            mockAssetsFetch.mockResolvedValue(buildAssetResponse());
-
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(
