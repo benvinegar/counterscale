@@ -1,6 +1,11 @@
 import type { AnalyticsEngineDataset } from "@cloudflare/workers-types";
 import { IDevice, UAParser } from "ua-parser-js";
 import { maskBrowserVersion } from "~/lib/utils";
+import {
+    parseAllowedOrigins,
+    extractHost,
+    isHostAllowed,
+} from "~/lib/allowedOrigins";
 
 // Cookieless visitor/session tracking
 // Uses the approach described here: https://notes.normally.com/cookieless-unique-visitor-counts/
@@ -142,6 +147,18 @@ export function collectRequestHandler(
         return new Response("Missing siteId", { status: 400 });
     }
 
+    // Optional allowlist enforcement. When TRACKER_ALLOWED_ORIGINS is set, drop
+    // (silently) any hit whose reported host or Origin/Referer header isn't an
+    // allowed origin. CORS can't gate the worker, so we enforce it here.
+    // Best-effort: these signals are client-controlled and spoofable.
+    const allowedOrigins = parseAllowedOrigins(env.TRACKER_ALLOWED_ORIGINS);
+    if (
+        allowedOrigins.length > 0 &&
+        !requestIsAllowed(request, params, allowedOrigins)
+    ) {
+        return trackingGifResponse();
+    }
+
     const userAgent = request.headers.get("user-agent") || undefined;
 
     const parsedUserAgent = new UAParser(userAgent);
@@ -210,7 +227,37 @@ export function collectRequestHandler(
 
     writeDataPoint(env.WEB_COUNTER_AE, data);
 
-    // encode 1x1 transparent gif
+    return trackingGifResponse(nextLastModifiedDate);
+}
+
+/**
+ * Returns true if the request's reported host (h) and any present
+ * Origin/Referer header all resolve to an allowed origin. Requires at least
+ * one usable signal. The analytics referrer (params.r) is intentionally NOT
+ * checked — it's the visitor's traffic source, not the embedding page.
+ */
+function requestIsAllowed(
+    request: Request,
+    params: { [key: string]: string },
+    allowedOrigins: string[],
+): boolean {
+    const candidates = [
+        params.h,
+        request.headers.get("origin"),
+        request.headers.get("referer"),
+    ];
+    const hosts = candidates
+        .map((candidate) => extractHost(candidate))
+        .filter((host): host is string => host !== null);
+
+    return (
+        hosts.length > 0 &&
+        hosts.every((host) => isHostAllowed(host, allowedOrigins))
+    );
+}
+
+/** Encodes the 1x1 transparent tracking gif response. */
+function trackingGifResponse(nextLastModifiedDate?: Date): Response {
     const gif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     const gifData = atob(gif);
     const gifLength = gifData.length;

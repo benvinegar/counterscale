@@ -99,11 +99,15 @@ describe("Dynamic script route", () => {
     });
 
     describe("Access-Control-Allow-Origin header", () => {
-        it("defaults to '*' when TRACKER_ALLOWED_ORIGINS is missing", async () => {
+        // The tracker script is served with a wildcard ACAO regardless of
+        // Origin or the allowlist: CORS can't gate who loads a script, and a
+        // wildcard keeps SRI (crossorigin="anonymous") working without
+        // fragmenting the CDN cache. Origin enforcement lives in /collect.
+        it("is '*' when no Origin header is present", async () => {
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(),
-                request: buildMockRequest("https://anything.example"),
+                request: buildMockRequest(),
             } as any);
 
             expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
@@ -112,19 +116,7 @@ describe("Dynamic script route", () => {
             expect(response.headers.get("Vary")).toBeNull();
         });
 
-        it("defaults to '*' when TRACKER_ALLOWED_ORIGINS is empty", async () => {
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(undefined, "   "),
-                request: buildMockRequest("https://anything.example"),
-            } as any);
-
-            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "*",
-            );
-        });
-
-        it("echoes a matching Origin and sets Vary: Origin", async () => {
+        it("is '*' even when an allowlist is configured and Origin matches", async () => {
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(
@@ -135,69 +127,12 @@ describe("Dynamic script route", () => {
             } as any);
 
             expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "https://bar.com",
+                "*",
             );
-            expect(response.headers.get("Vary")).toBe("Origin");
+            expect(response.headers.get("Vary")).toBeNull();
         });
 
-        it("matches subdomains of listed bare hosts", async () => {
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(undefined, "shiftinbits.com"),
-                request: buildMockRequest("https://test.shiftinbits.com"),
-            } as any);
-
-            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "https://test.shiftinbits.com",
-            );
-        });
-
-        it("matches subdomains of listed origins", async () => {
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(
-                    undefined,
-                    "https://shiftinbits.com",
-                ),
-                request: buildMockRequest("https://a.b.shiftinbits.com"),
-            } as any);
-
-            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "https://a.b.shiftinbits.com",
-            );
-        });
-
-        it("does not treat sibling domains as subdomains", async () => {
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(
-                    undefined,
-                    "https://foo.com, https://bar.com",
-                ),
-                request: buildMockRequest("https://evil-foo.com"),
-            } as any);
-
-            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "https://foo.com",
-            );
-        });
-
-        it("falls back to first allowed origin when Origin is missing", async () => {
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(
-                    undefined,
-                    "https://foo.com, https://bar.com",
-                ),
-                request: buildMockRequest(),
-            } as any);
-
-            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "https://foo.com",
-            );
-        });
-
-        it("normalizes bare-host fallback to https:// in the ACAO header", async () => {
+        it("is '*' for an Origin not in the allowlist", async () => {
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(undefined, "shiftinbits.com"),
@@ -205,24 +140,8 @@ describe("Dynamic script route", () => {
             } as any);
 
             expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "https://shiftinbits.com",
+                "*",
             );
-        });
-
-        it("does not let http:// origins match https:// list entries", async () => {
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(
-                    undefined,
-                    "https://foo.com, https://bar.com",
-                ),
-                request: buildMockRequest("http://foo.com"),
-            } as any);
-
-            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-                "https://foo.com",
-            );
-            expect(response.headers.get("Vary")).toBe("Origin");
         });
     });
 });
