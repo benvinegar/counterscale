@@ -201,6 +201,26 @@ Counterscale.trackPageview();
 
 The deployment URL can always be changed to go behind a custom domain you own. [More here](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
+### Allowed Origins: Restricting Which Sites Can Report
+
+By default, a Counterscale deployment records hits from any site that loads your tracker (or posts to `/collect`). To limit recording to specific domains, set the `TRACKER_ALLOWED_ORIGINS` environment variable on the Cloudflare Worker to a comma-separated list of allowed domains:
+
+```
+TRACKER_ALLOWED_ORIGINS=example.com,myblog.io,acme.dev
+```
+
+- Each entry matches the specified domain **and any of its subdomains**, you only need the parent domain. `example.com` already covers `blog.example.com`, `app.example.com`, and any other subdomain, so there's no need to list them separately. Lookalikes such as `notexample.com` are not matched. Entries may be bare hostnames or include a scheme (`https://example.com`), both are treated the same.
+- When set, hits whose origin isn't on the list are silently ignored: the tracker still returns a normal response, but no data is recorded.
+- Leave it empty (the default) or set it to `*` to disable the allowlist and record from any origin.
+
+You can set this variable in one of two ways:
+
+- **Cloudflare dashboard:** Workers & Pages → Counterscale worker → Settings → Variables and Secrets → add or set `TRACKER_ALLOWED_ORIGINS`, then redeploy.
+- **From source:** edit the `vars` block in `packages/server/wrangler.json` and redeploy.
+
+> [!NOTE]
+> This is a best-effort filter. The signals it checks (`Origin`, `Referer`, and the reported hostname) are supplied by the client and can be spoofed by non-browser tools, so it deters casual or accidental cross-site reporting rather than a determined attacker. Recorded data is also partitioned by site ID, which further limits the impact of unwanted hits.
+
 ## CLI Commands
 
 Counterscale provides a command-line interface (CLI) to help you install, configure, and manage your deployment.
