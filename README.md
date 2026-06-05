@@ -63,7 +63,7 @@ NOTE: _If this is your first time deploying Counterscale, it may take take a few
 
 ### Start Recording Web Traffic from Your Website(s)
 
-You can load the tracking code using one of two methods:
+You can load the tracking code using one of the following methods:
 
 #### 1. Script Loader (CDN)
 
