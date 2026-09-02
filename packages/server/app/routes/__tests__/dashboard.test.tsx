@@ -179,6 +179,30 @@ describe("Dashboard route", () => {
             });
         });
 
+        test("does not truncate the sites dropdown to the default query limit", async () => {
+            // Regression test: the dropdown query intentionally spans the full 90d
+            // retention window, but used to inherit getSitesOrderedByHits' default
+            // limit of 10, so deployments with more than 10 active sites silently
+            // lost the rest -- with no pagination or indication in the UI.
+            fetch.mockResolvedValueOnce(
+                createFetchResponse({
+                    data: [{ siteId: "test-siteid", count: 1 }],
+                }),
+            );
+
+            await loader({
+                ...getDefaultContext(),
+                // @ts-expect-error we don't need to provide all the properties of the request object
+                request: {
+                    url: "http://localhost:3000/dashboard?site=test-siteid",
+                },
+            });
+
+            const sitesQuery = (fetch as Mock).mock.calls[0][1].body;
+            const limit = sitesQuery.match(/LIMIT (\d+)/)?.[1];
+            expect(Number(limit)).toBeGreaterThan(10);
+        });
+
         test("returns a valid empty result set when no data (no sites, no anything)", async () => {
             vi.setSystemTime(new Date("2024-01-18T09:33:02").getTime());
 

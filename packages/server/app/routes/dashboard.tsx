@@ -57,6 +57,11 @@ export const meta: MetaFunction = () => {
 
 const MAX_RETENTION_DAYS = 90;
 
+// Upper bound on how many sites the "sites" dropdown will list. Effectively
+// unbounded for any realistic deployment; exists only so the query doesn't
+// fall back to the much smaller default limit in getSitesOrderedByHits.
+const MAX_SITES = 1000;
+
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     await requireAuth(request, context.cloudflare.env);
 
@@ -107,6 +112,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     //                will show up in the dropdown.
     const sitesByHits = analyticsEngine.getSitesOrderedByHits(
         `${MAX_RETENTION_DAYS}d`,
+        MAX_SITES,
     );
 
     const intervalType = getIntervalType(interval);
