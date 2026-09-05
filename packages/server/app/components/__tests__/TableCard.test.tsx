@@ -29,6 +29,17 @@ describe("TableCard", () => {
         expect(screen.getByText("50")).toBeInTheDocument();
     });
 
+    test("disables hover styling for the header only", () => {
+        render(<TableCard {...defaultProps} />);
+
+        const headerRow = screen.getByText("Site").parentElement;
+        const bodyRow = screen.getByText("example.com").parentElement;
+
+        expect(headerRow).toHaveClass("hover:bg-transparent");
+        expect(headerRow).not.toHaveClass("hover:bg-muted/50");
+        expect(bodyRow).toHaveClass("hover:bg-muted/50");
+    });
+
     test("renders external link icon for URLs", () => {
         const propsWithUrls = {
             countByProperty: [
