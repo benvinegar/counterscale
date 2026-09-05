@@ -45,7 +45,7 @@ export default function TableCard({
     return (
         <Table>
             <TableHeader>
-                <TableRow className={`${gridCols}`}>
+                <TableRow className={`${gridCols} hover:bg-transparent`}>
                     {(columnHeaders || []).map((header: string, index) => (
                         <TableHead
                             key={header}
