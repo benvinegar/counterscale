@@ -118,7 +118,7 @@ describe("CloudflareClient", () => {
             });
         });
 
-        it("should return empty object when worker not created", async () => {
+        it("should return empty object for the legacy worker-not-found error", async () => {
             vi.mocked($).mockImplementation(() => {
                 throw "other content \n[code: 10007] Worker not found";
             });
@@ -127,12 +127,22 @@ describe("CloudflareClient", () => {
             expect(result).toEqual({});
         });
 
-        it("should throw on other errors", async () => {
+        it("should return empty object for the current worker-not-found error", async () => {
             vi.mocked($).mockImplementation(() => {
-                throw "Unknown error";
+                throw '✘ [ERROR] Worker "counterscale" not found.';
             });
 
-            await expect(client.getCloudflareSecrets()).rejects.toThrow();
+            const result = await client.getCloudflareSecrets();
+            expect(result).toEqual({});
+        });
+
+        it("should propagate unrelated not-found errors", async () => {
+            const error = 'Resource "counterscale" not found.';
+            vi.mocked($).mockImplementation(() => {
+                throw error;
+            });
+
+            await expect(client.getCloudflareSecrets()).rejects.toBe(error);
         });
     });
 

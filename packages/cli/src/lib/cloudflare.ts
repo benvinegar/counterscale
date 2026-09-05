@@ -21,6 +21,17 @@ interface TokenValidationResponse {
     errors?: Array<{ code: number; message: string }>;
 }
 
+function isWorkerNotFoundError(error: unknown): boolean {
+    if (typeof error !== "string") {
+        return false;
+    }
+
+    return (
+        error.includes("[code: 10007]") ||
+        /\bWorker\s+"[^"\r\n]+"\s+not found\./i.test(error)
+    );
+}
+
 export class CloudflareClient {
     private configPath: string;
 
@@ -162,10 +173,7 @@ export class CloudflareClient {
             rawSecrets = await this.fetchCloudflareSecrets();
         } catch (err) {
             // worker not created yet
-            if (
-                typeof err === "string" &&
-                err.indexOf("[code: 10007]") !== -1
-            ) {
+            if (isWorkerNotFoundError(err)) {
                 return {};
             }
             throw err;
