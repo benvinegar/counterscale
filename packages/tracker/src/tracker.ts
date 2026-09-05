@@ -9,6 +9,14 @@ function findReporterScript() {
     return el;
 }
 
+function getReporterUrl(script: HTMLScriptElement | null): string | undefined {
+    if (!script?.src) {
+        return undefined;
+    }
+
+    return new URL("collect", script.src).href;
+}
+
 function getLegacySiteId(): string | undefined {
     // backwards compatibility layer with legacy API for setting
     // site id using inline script + global variables
@@ -33,7 +41,7 @@ function init() {
     const siteId = script?.getAttribute("data-site-id") || getLegacySiteId();
     const reportOnLocalhost = (script?.hasAttribute("data-report-localhost") && script?.getAttribute("data-report-localhost") !== "false") || false;
 
-    const reporterUrl = script?.src.replace("tracker.js", "collect");
+    const reporterUrl = getReporterUrl(script);
 
     if (!siteId || !reporterUrl) {
         return;
