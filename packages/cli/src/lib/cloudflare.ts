@@ -1,10 +1,27 @@
 import { $, ProcessOutput } from "zx";
+import { createRequire } from "node:module";
+import { existsSync } from "node:fs";
 import path from "path";
 import { homedir } from "node:os";
 
 interface SecretItem {
     name: string;
     type: string;
+}
+
+export function getBundledWranglerBinPath(): string | null {
+    try {
+        const require = createRequire(import.meta.url);
+        const packageJsonPath = require.resolve("wrangler/package.json");
+        const binPath = path.join(
+            path.dirname(packageJsonPath),
+            "bin",
+            "wrangler.js",
+        );
+        return existsSync(binPath) ? binPath : null;
+    } catch {
+        return null;
+    }
 }
 
 interface AccountInfo {
@@ -41,9 +58,16 @@ export class CloudflareClient {
             path.join(homedir(), ".counterscale", "wrangler.json");
     }
 
+    private wranglerArgv(): string[] {
+        const binPath = getBundledWranglerBinPath();
+        return binPath ? ["node", binPath] : ["npx", "wrangler"];
+    }
+
     async getAccountId(): Promise<string | null> {
         try {
-            const result = await $({ quiet: true })`npx wrangler whoami`;
+            const result = await $({
+                quiet: true,
+            })`${this.wranglerArgv()} whoami`;
             const match = result.stdout.match(/([0-9a-f]{32})/);
             return match ? match[0] : null;
         } catch (error) {
@@ -56,7 +80,9 @@ export class CloudflareClient {
 
     async getAccounts(): Promise<AccountInfo[]> {
         try {
-            const result = await $({ quiet: true })`npx wrangler whoami`;
+            const result = await $({
+                quiet: true,
+            })`${this.wranglerArgv()} whoami`;
             const accounts = this.parseAccountsFromTable(result.stdout);
             
             // If table parsing failed, fall back to single account
@@ -104,7 +130,7 @@ export class CloudflareClient {
     private async fetchCloudflareSecrets(): Promise<string> {
         try {
             const result =
-                await $`npx wrangler secret list --config ${this.configPath}`;
+                await $`${this.wranglerArgv()} secret list --config ${this.configPath}`;
             return result.stdout;
         } catch (error) {
             throw error instanceof ProcessOutput
@@ -192,7 +218,7 @@ export class CloudflareClient {
     ): Promise<boolean> {
         for (const [key, value] of Object.entries(secrets)) {
             try {
-                await $`echo ${value} | npx wrangler secret put ${key} --config ${this.configPath}`;
+                await $`echo ${value} | ${this.wranglerArgv()} secret put ${key} --config ${this.configPath}`;
             } catch {
                 return false;
             }
@@ -204,7 +230,7 @@ export class CloudflareClient {
         try {
             const p = $({
                 quiet: true,
-            })`npx wrangler deploy --config ${this.configPath} --var VERSION:${version}`;
+            })`${this.wranglerArgv()} deploy --config ${this.configPath} --var VERSION:${version}`;
 
             let output = "";
             for await (const text of p) {

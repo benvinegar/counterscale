@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { CloudflareClient } from "../cloudflare.js";
+import { CloudflareClient, getBundledWranglerBinPath } from "../cloudflare.js";
 import { ProcessOutput } from "zx";
 import path from "path";
 import { homedir } from "node:os";
+
+const nodeModuleState = vi.hoisted(() => ({ throwOnCreateRequire: false }));
 
 // Mock the entire zx module
 vi.mock("zx", async (importOriginal) => {
@@ -10,6 +12,19 @@ vi.mock("zx", async (importOriginal) => {
     return {
         ...actual,
         $: vi.fn(),
+    };
+});
+
+vi.mock("node:module", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("node:module")>();
+    return {
+        ...actual,
+        createRequire: vi.fn((...args) => {
+            if (nodeModuleState.throwOnCreateRequire) {
+                throw new Error("Simulated resolution failure");
+            }
+            return actual.createRequire(...args);
+        }),
     };
 });
 
@@ -25,6 +40,7 @@ describe("CloudflareClient", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        nodeModuleState.throwOnCreateRequire = false;
         client = new CloudflareClient(mockConfigPath);
     });
 
@@ -42,6 +58,76 @@ describe("CloudflareClient", () => {
 
         it("should use provided config path", () => {
             expect(client["configPath"]).toBe(mockConfigPath);
+        });
+    });
+
+    describe("wrangler binary resolution", () => {
+        const mockAccountId = "1234567890abcdef1234567890abcdef";
+
+        // captured[i] holds the interpolated substitution values of the i-th
+        // `$` invocation. Templates like `${argv} secret list --config ${path}`
+        // yield multiple substitutions, so argv is itself a nested array.
+        function captureSubs(): unknown[][] {
+            const captured: unknown[][] = [];
+            vi.mocked($).mockImplementation(((...args: unknown[]) => {
+                const [strings, ...subs] = args;
+                if (!Array.isArray(strings)) {
+                    return ((
+                        templateStrings: TemplateStringsArray,
+                        ...subs: unknown[]
+                    ) => {
+                        captured.push(subs);
+                        return {
+                            stdout: `random content ${mockAccountId} \nmore random content`,
+                            stderr: "",
+                            exitCode: 0,
+                        };
+                    }) as any;
+                }
+                captured.push(subs);
+                return {
+                    stdout: JSON.stringify([]),
+                    stderr: "",
+                    exitCode: 0,
+                } as any;
+            }) as any);
+            return captured;
+        }
+
+        it("should resolve the wrangler binary bundled with the CLI", () => {
+            const binPath = getBundledWranglerBinPath();
+            expect(binPath).toMatch(/[\\/]bin[\\/]wrangler\.js$/);
+            expect(binPath).toContain("node_modules");
+        });
+
+        it("should spawn the bundled wrangler binary for whoami", async () => {
+            const captured = captureSubs();
+
+            await client.getAccountId();
+
+            expect(captured[0]).toEqual([
+                ["node", getBundledWranglerBinPath()],
+            ]);
+        });
+
+        it("should spawn the bundled wrangler binary for secret list", async () => {
+            const captured = captureSubs();
+
+            await client.getCloudflareSecrets();
+
+            expect(captured[0]).toEqual([
+                ["node", getBundledWranglerBinPath()],
+                mockConfigPath,
+            ]);
+        });
+
+        it("should fall back to npx wrangler when the bundled binary cannot be resolved", async () => {
+            nodeModuleState.throwOnCreateRequire = true;
+            const captured = captureSubs();
+
+            await client.getAccountId();
+
+            expect(captured[0]).toEqual([["npx", "wrangler"]]);
         });
     });
 
