@@ -23,10 +23,5 @@
     "engines": {
         "node": ">=20",
         "pnpm": ">=9"
-    },
-    "pnpm": {
-        "patchedDependencies": {
-            "apache-arrow": "patches/apache-arrow.patch"
-        }
     }
 }
