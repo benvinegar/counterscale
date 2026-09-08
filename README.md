@@ -294,7 +294,7 @@ There is only one "database": the Cloudflare Analytics Engine dataset, which is 
 Right now there is no local "test" database. This means in local development:
 
 - Writes will no-op (no hits will be recorded)
-- Reads will be read from the production Analaytics Engine dataset (local development shows production data)
+- Reads will be read from the production Analytics Engine dataset (local development shows production data)
 
 ### Sampling
 
