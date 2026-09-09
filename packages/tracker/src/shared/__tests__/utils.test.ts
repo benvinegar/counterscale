@@ -4,7 +4,7 @@ import {
     getHostnameAndPath,
     getReferrer,
     getUtmParamsFromUrl,
-    getUtmParamsFromBrowserUrl,
+    extractUtmParams,
     mergeUtmParams,
     queryParamStringify,
 } from "../utils";
@@ -220,11 +220,11 @@ describe("Shared Utils", () => {
         });
     });
 
-    describe("getUtmParamsFromBrowserUrl", () => {
+    describe("extractUtmParams", () => {
         it("should extract UTM parameters from path with query string", () => {
             const url = "/page?utm_source=google&utm_medium=cpc";
 
-            const result = getUtmParamsFromBrowserUrl(url);
+            const result = extractUtmParams(url);
 
             expect(result).toEqual({
                 us: "google",
@@ -232,10 +232,16 @@ describe("Shared Utils", () => {
             });
         });
 
+        it("should extract UTM parameters from a bare search string", () => {
+            const result = extractUtmParams("?utm_source=google");
+
+            expect(result).toEqual({ us: "google" });
+        });
+
         it("should return empty object for path without query string", () => {
             const url = "/page";
 
-            const result = getUtmParamsFromBrowserUrl(url);
+            const result = extractUtmParams(url);
 
             expect(result).toEqual({});
         });
@@ -244,7 +250,7 @@ describe("Shared Utils", () => {
             const url =
                 "/page?other=value&utm_source=facebook&another=param&utm_campaign=test";
 
-            const result = getUtmParamsFromBrowserUrl(url);
+            const result = extractUtmParams(url);
 
             expect(result).toEqual({
                 us: "facebook",
@@ -255,7 +261,7 @@ describe("Shared Utils", () => {
         it("should ignore empty UTM values", () => {
             const url = "/page?utm_source=&utm_medium=email&utm_campaign=";
 
-            const result = getUtmParamsFromBrowserUrl(url);
+            const result = extractUtmParams(url);
 
             expect(result).toEqual({
                 um: "email",

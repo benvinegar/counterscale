@@ -64,10 +64,13 @@ export function getUtmParamsFromUrl(url: string): UtmParams {
     return utmParams;
 }
 
-export function getUtmParamsFromBrowserUrl(url: string): UtmParams {
+/**
+ * Extracts UTM parameters from either a full URL, a path with a query string,
+ * or a bare search string such as "?utm_source=google".
+ */
+export function extractUtmParams(url: string): UtmParams {
     const utmParams: UtmParams = {};
 
-    // Extract query string from path (browser-specific implementation)
     const queryStart = url.indexOf("?");
     if (queryStart === -1) return utmParams;
 

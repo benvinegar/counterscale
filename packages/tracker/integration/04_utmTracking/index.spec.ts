@@ -101,6 +101,30 @@ test("handles mixed UTM and non-UTM parameters", async ({ page }) => {
     expect(params.has("uco")).toBe(false);
 });
 
+test("tracks UTM parameters when page has a canonical link without query string", async ({
+    page,
+}) => {
+    const collectRequestPromise = page.waitForRequest((request) =>
+        request.url().includes("/collect"),
+    );
+
+    await page.goto(
+        "http://localhost:3004/04_utmTracking/canonical.html?utm_source=google&utm_medium=cpc&utm_campaign=summer_sale",
+    );
+
+    const request = await collectRequestPromise;
+    expect(request).toBeTruthy();
+
+    const url = request.url();
+    const params = new URLSearchParams(url.split("?")[1]);
+
+    // The canonical URL has no query string, but the UTM params from the
+    // actual visited URL should still be tracked.
+    expect(params.get("us")).toBe("google"); // utm_source
+    expect(params.get("um")).toBe("cpc"); // utm_medium
+    expect(params.get("uc")).toBe("summer_sale"); // utm_campaign
+});
+
 test("tracks referrer from query parameters when document.referrer is missing", async ({
     page,
 }) => {

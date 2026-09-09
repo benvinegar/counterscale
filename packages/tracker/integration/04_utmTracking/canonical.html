@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+    <head>
+        <title>04 UTM Tracking - Canonical URL</title>
+        <link rel="canonical" href="http://localhost:3004/04_utmTracking/canonical" />
+    </head>
+    <body>
+        <h1>UTM Tracking Test (canonical URL, no query string)</h1>
+
+        <script>
+            (function () {
+                window.counterscale = {
+                    q: [
+                        ["set", "siteId", "utm-test-site-id"],
+                        ["trackPageview"],
+                    ],
+                };
+            })();
+        </script>
+        <script
+            id="counterscale-script"
+            data-report-localhost
+            src="http://localhost:3004/tracker.js"
+        ></script>
+    </body>
+</html>

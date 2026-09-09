@@ -291,6 +291,37 @@ describe("trackPageview", () => {
             );
         });
 
+        test("should take UTM parameters from location when a canonical link is present", async () => {
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: {
+                    pathname: "/test-path",
+                    search: "?utm_source=google&utm_medium=cpc",
+                    host: "example.com",
+                },
+            });
+            vi.spyOn(document, "querySelector").mockReturnValue({
+                href: "https://canonical.example/clean-path",
+            } as HTMLLinkElement);
+
+            const client = new Client({
+                siteId: "test-site",
+                reporterUrl: "https://example.com/collect",
+                autoTrackPageviews: false,
+            });
+
+            await trackPageview(client);
+
+            expect(makeRequestMock).toHaveBeenCalledWith(
+                "https://example.com/collect",
+                expect.objectContaining({
+                    p: "/clean-path",
+                    us: "google",
+                    um: "cpc",
+                }),
+            );
+        });
+
         test("should include only non-empty UTM parameters", async () => {
             // Mock location with partial UTM parameters
             Object.defineProperty(window, "location", {

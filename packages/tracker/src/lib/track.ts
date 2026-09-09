@@ -4,7 +4,7 @@ import { makeRequest, checkCacheStatus } from "./request";
 import {
     getHostnameAndPath,
     getReferrer,
-    getUtmParamsFromBrowserUrl,
+    extractUtmParams,
     isLocalhostAddress,
 } from "../shared/utils";
 import { buildCollectRequestParams } from "../shared/request";
@@ -92,7 +92,10 @@ export async function trackPageview(
 
     const { hostname, path } = getHostnameAndPath(url, true);
     const referrer = getBrowserReferrer(hostname, opts.referrer || "");
-    const utmParams = getUtmParamsFromBrowserUrl(url);
+    // Canonical hrefs typically omit the query string, so UTM params must come
+    // from the URL the visitor actually landed on, not the canonical URL.
+    const utmSource = opts.url || window.location.search;
+    const utmParams = extractUtmParams(utmSource);
 
     let hitType: string | undefined;
     try {
