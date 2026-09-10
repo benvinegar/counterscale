@@ -1,10 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { CloudflareClient, getBundledWranglerBinPath } from "../cloudflare.js";
+import {
+    CloudflareClient,
+    getBundledWranglerBinPath,
+    resetWranglerBinPathCache,
+} from "../cloudflare.js";
 import { ProcessOutput } from "zx";
 import path from "path";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 
-const nodeModuleState = vi.hoisted(() => ({ throwOnCreateRequire: false }));
+const nodeModuleState = vi.hoisted(() => ({
+    throwOnCreateRequire: false,
+    failExistsCheck: false,
+}));
 
 // Mock the entire zx module
 vi.mock("zx", async (importOriginal) => {
@@ -28,6 +36,19 @@ vi.mock("node:module", async (importOriginal) => {
     };
 });
 
+vi.mock("node:fs", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("node:fs")>();
+    return {
+        ...actual,
+        existsSync: vi.fn((...args) => {
+            if (nodeModuleState.failExistsCheck) {
+                return false;
+            }
+            return actual.existsSync(...args);
+        }),
+    };
+});
+
 // Import and spy on the mocked function
 const { $ } = await import("zx");
 
@@ -41,6 +62,8 @@ describe("CloudflareClient", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         nodeModuleState.throwOnCreateRequire = false;
+        nodeModuleState.failExistsCheck = false;
+        resetWranglerBinPathCache();
         client = new CloudflareClient(mockConfigPath);
     });
 
@@ -100,6 +123,20 @@ describe("CloudflareClient", () => {
             expect(binPath).toContain("node_modules");
         });
 
+        it("should memoize the resolved binary path across calls", () => {
+            getBundledWranglerBinPath();
+
+            const createRequireSpy = vi.mocked(createRequire);
+            const callsAfterFirstResolution =
+                createRequireSpy.mock.calls.length;
+
+            getBundledWranglerBinPath();
+
+            expect(createRequireSpy.mock.calls.length).toBe(
+                callsAfterFirstResolution,
+            );
+        });
+
         it("should spawn the bundled wrangler binary for whoami", async () => {
             const captured = captureSubs();
 
@@ -121,13 +158,36 @@ describe("CloudflareClient", () => {
             ]);
         });
 
-        it("should fall back to npx wrangler when the bundled binary cannot be resolved", async () => {
+        it("should fall back to npx wrangler and warn when the bundled binary cannot be resolved", async () => {
             nodeModuleState.throwOnCreateRequire = true;
+            const warnSpy = vi
+                .spyOn(console, "warn")
+                .mockImplementation(() => {});
             const captured = captureSubs();
 
             await client.getAccountId();
 
             expect(captured[0]).toEqual([["npx", "wrangler"]]);
+            expect(warnSpy).toHaveBeenCalledWith(
+                "Failed to resolve bundled wrangler binary, falling back to npx:",
+                expect.anything(),
+            );
+            warnSpy.mockRestore();
+        });
+
+        it("should warn when the resolved binary path does not exist", () => {
+            nodeModuleState.failExistsCheck = true;
+            const warnSpy = vi
+                .spyOn(console, "warn")
+                .mockImplementation(() => {});
+
+            expect(getBundledWranglerBinPath()).toBeNull();
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringMatching(
+                    /Bundled wrangler binary not found at .*bin[\\/]wrangler\.js, falling back to npx/,
+                ),
+            );
+            warnSpy.mockRestore();
         });
     });
 
