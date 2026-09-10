@@ -1,10 +1,48 @@
 import { $, ProcessOutput } from "zx";
+import { createRequire } from "node:module";
+import { existsSync } from "node:fs";
 import path from "path";
 import { homedir } from "node:os";
 
 interface SecretItem {
     name: string;
     type: string;
+}
+
+let cachedWranglerBinPath: string | null | undefined;
+
+export function getBundledWranglerBinPath(): string | null {
+    if (cachedWranglerBinPath !== undefined) {
+        return cachedWranglerBinPath;
+    }
+
+    try {
+        const require = createRequire(import.meta.url);
+        const packageJsonPath = require.resolve("wrangler/package.json");
+        const binPath = path.join(
+            path.dirname(packageJsonPath),
+            "bin",
+            "wrangler.js",
+        );
+        cachedWranglerBinPath = existsSync(binPath) ? binPath : null;
+        if (!cachedWranglerBinPath) {
+            console.warn(
+                `Bundled wrangler binary not found at ${binPath}, falling back to npx`,
+            );
+        }
+    } catch (err) {
+        console.warn(
+            "Failed to resolve bundled wrangler binary, falling back to npx:",
+            err,
+        );
+        cachedWranglerBinPath = null;
+    }
+
+    return cachedWranglerBinPath;
+}
+
+export function resetWranglerBinPathCache(): void {
+    cachedWranglerBinPath = undefined;
 }
 
 interface AccountInfo {
@@ -41,9 +79,16 @@ export class CloudflareClient {
             path.join(homedir(), ".counterscale", "wrangler.json");
     }
 
+    private wranglerArgv(): string[] {
+        const binPath = getBundledWranglerBinPath();
+        return binPath ? ["node", binPath] : ["npx", "wrangler"];
+    }
+
     async getAccountId(): Promise<string | null> {
         try {
-            const result = await $({ quiet: true })`npx wrangler whoami`;
+            const result = await $({
+                quiet: true,
+            })`${this.wranglerArgv()} whoami`;
             const match = result.stdout.match(/([0-9a-f]{32})/);
             return match ? match[0] : null;
         } catch (error) {
@@ -56,17 +101,24 @@ export class CloudflareClient {
 
     async getAccounts(): Promise<AccountInfo[]> {
         try {
-            const result = await $({ quiet: true })`npx wrangler whoami`;
+            const result = await $({
+                quiet: true,
+            })`${this.wranglerArgv()} whoami`;
             const accounts = this.parseAccountsFromTable(result.stdout);
-            
+
             // If table parsing failed, fall back to single account
             if (accounts.length === 0) {
                 const accountId = await this.getAccountId();
                 if (accountId) {
-                    return [{ id: accountId, name: `Account ${accountId.slice(-6)}` }];
+                    return [
+                        {
+                            id: accountId,
+                            name: `Account ${accountId.slice(-6)}`,
+                        },
+                    ];
                 }
             }
-            
+
             return accounts;
         } catch (error) {
             if (error instanceof ProcessOutput) {
@@ -78,33 +130,40 @@ export class CloudflareClient {
 
     private parseAccountsFromTable(output: string): AccountInfo[] {
         const accounts: AccountInfo[] = [];
-        const lines = output.split('\n');
-        
+        const lines = output.split("\n");
+
         for (const line of lines) {
             // Skip header and separator lines
-            if (!line.includes('│') || line.includes('Account Name') || line.includes('─')) {
+            if (
+                !line.includes("│") ||
+                line.includes("Account Name") ||
+                line.includes("─")
+            ) {
                 continue;
             }
-            
-            const parts = line.split('│').map(part => part.trim()).filter(Boolean);
-            
+
+            const parts = line
+                .split("│")
+                .map((part) => part.trim())
+                .filter(Boolean);
+
             if (parts.length >= 2) {
                 const [name, id] = parts;
-                
+
                 // Validate account ID format (32 hex characters)
                 if (/^[0-9a-f]{32}$/.test(id)) {
                     accounts.push({ id, name });
                 }
             }
         }
-        
+
         return accounts;
     }
 
     private async fetchCloudflareSecrets(): Promise<string> {
         try {
             const result =
-                await $`npx wrangler secret list --config ${this.configPath}`;
+                await $`${this.wranglerArgv()} secret list --config ${this.configPath}`;
             return result.stdout;
         } catch (error) {
             throw error instanceof ProcessOutput
@@ -147,7 +206,8 @@ export class CloudflareClient {
             const data: TokenValidationResponse = await response.json();
 
             if (!data.success) {
-                const errorMessage = data.errors?.[0]?.message || "Token validation failed";
+                const errorMessage =
+                    data.errors?.[0]?.message || "Token validation failed";
                 return { valid: false, error: errorMessage };
             }
 
@@ -192,7 +252,7 @@ export class CloudflareClient {
     ): Promise<boolean> {
         for (const [key, value] of Object.entries(secrets)) {
             try {
-                await $`echo ${value} | npx wrangler secret put ${key} --config ${this.configPath}`;
+                await $`echo ${value} | ${this.wranglerArgv()} secret put ${key} --config ${this.configPath}`;
             } catch {
                 return false;
             }
@@ -204,7 +264,7 @@ export class CloudflareClient {
         try {
             const p = $({
                 quiet: true,
-            })`npx wrangler deploy --config ${this.configPath} --var VERSION:${version}`;
+            })`${this.wranglerArgv()} deploy --config ${this.configPath} --var VERSION:${version}`;
 
             let output = "";
             for await (const text of p) {
@@ -226,4 +286,3 @@ export class CloudflareClient {
         }
     }
 }
-

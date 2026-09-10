@@ -1,8 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { CloudflareClient } from "../cloudflare.js";
+import {
+    CloudflareClient,
+    getBundledWranglerBinPath,
+    resetWranglerBinPathCache,
+} from "../cloudflare.js";
 import { ProcessOutput } from "zx";
 import path from "path";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
+
+const nodeModuleState = vi.hoisted(() => ({
+    throwOnCreateRequire: false,
+    failExistsCheck: false,
+}));
 
 // Mock the entire zx module
 vi.mock("zx", async (importOriginal) => {
@@ -10,6 +20,32 @@ vi.mock("zx", async (importOriginal) => {
     return {
         ...actual,
         $: vi.fn(),
+    };
+});
+
+vi.mock("node:module", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("node:module")>();
+    return {
+        ...actual,
+        createRequire: vi.fn((...args) => {
+            if (nodeModuleState.throwOnCreateRequire) {
+                throw new Error("Simulated resolution failure");
+            }
+            return actual.createRequire(...args);
+        }),
+    };
+});
+
+vi.mock("node:fs", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("node:fs")>();
+    return {
+        ...actual,
+        existsSync: vi.fn((...args) => {
+            if (nodeModuleState.failExistsCheck) {
+                return false;
+            }
+            return actual.existsSync(...args);
+        }),
     };
 });
 
@@ -25,6 +61,9 @@ describe("CloudflareClient", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        nodeModuleState.throwOnCreateRequire = false;
+        nodeModuleState.failExistsCheck = false;
+        resetWranglerBinPathCache();
         client = new CloudflareClient(mockConfigPath);
     });
 
@@ -42,6 +81,113 @@ describe("CloudflareClient", () => {
 
         it("should use provided config path", () => {
             expect(client["configPath"]).toBe(mockConfigPath);
+        });
+    });
+
+    describe("wrangler binary resolution", () => {
+        const mockAccountId = "1234567890abcdef1234567890abcdef";
+
+        // captured[i] holds the interpolated substitution values of the i-th
+        // `$` invocation. Templates like `${argv} secret list --config ${path}`
+        // yield multiple substitutions, so argv is itself a nested array.
+        function captureSubs(): unknown[][] {
+            const captured: unknown[][] = [];
+            vi.mocked($).mockImplementation(((...args: unknown[]) => {
+                const [strings, ...subs] = args;
+                if (!Array.isArray(strings)) {
+                    return ((
+                        templateStrings: TemplateStringsArray,
+                        ...subs: unknown[]
+                    ) => {
+                        captured.push(subs);
+                        return {
+                            stdout: `random content ${mockAccountId} \nmore random content`,
+                            stderr: "",
+                            exitCode: 0,
+                        };
+                    }) as any;
+                }
+                captured.push(subs);
+                return {
+                    stdout: JSON.stringify([]),
+                    stderr: "",
+                    exitCode: 0,
+                } as any;
+            }) as any);
+            return captured;
+        }
+
+        it("should resolve the wrangler binary bundled with the CLI", () => {
+            const binPath = getBundledWranglerBinPath();
+            expect(binPath).toMatch(/[\\/]bin[\\/]wrangler\.js$/);
+            expect(binPath).toContain("node_modules");
+        });
+
+        it("should memoize the resolved binary path across calls", () => {
+            getBundledWranglerBinPath();
+
+            const createRequireSpy = vi.mocked(createRequire);
+            const callsAfterFirstResolution =
+                createRequireSpy.mock.calls.length;
+
+            getBundledWranglerBinPath();
+
+            expect(createRequireSpy.mock.calls.length).toBe(
+                callsAfterFirstResolution,
+            );
+        });
+
+        it("should spawn the bundled wrangler binary for whoami", async () => {
+            const captured = captureSubs();
+
+            await client.getAccountId();
+
+            expect(captured[0]).toEqual([
+                ["node", getBundledWranglerBinPath()],
+            ]);
+        });
+
+        it("should spawn the bundled wrangler binary for secret list", async () => {
+            const captured = captureSubs();
+
+            await client.getCloudflareSecrets();
+
+            expect(captured[0]).toEqual([
+                ["node", getBundledWranglerBinPath()],
+                mockConfigPath,
+            ]);
+        });
+
+        it("should fall back to npx wrangler and warn when the bundled binary cannot be resolved", async () => {
+            nodeModuleState.throwOnCreateRequire = true;
+            const warnSpy = vi
+                .spyOn(console, "warn")
+                .mockImplementation(() => {});
+            const captured = captureSubs();
+
+            await client.getAccountId();
+
+            expect(captured[0]).toEqual([["npx", "wrangler"]]);
+            expect(warnSpy).toHaveBeenCalledWith(
+                "Failed to resolve bundled wrangler binary, falling back to npx:",
+                expect.anything(),
+            );
+            warnSpy.mockRestore();
+        });
+
+        it("should warn when the resolved binary path does not exist", () => {
+            nodeModuleState.failExistsCheck = true;
+            const warnSpy = vi
+                .spyOn(console, "warn")
+                .mockImplementation(() => {});
+
+            expect(getBundledWranglerBinPath()).toBeNull();
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringMatching(
+                    /Bundled wrangler binary not found at .*bin[\\/]wrangler\.js, falling back to npx/,
+                ),
+            );
+            warnSpy.mockRestore();
         });
     });
 
