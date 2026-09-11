@@ -518,6 +518,118 @@ describe("CloudflareClient.validateToken", () => {
         expect(result.error).toBe("Invalid or expired token");
     });
 
+    it("should fall back to the account verify endpoint when the user endpoint returns 401", async () => {
+        (global.fetch as any)
+            .mockResolvedValueOnce({
+                ok: false,
+                status: 401,
+                statusText: "Unauthorized",
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    success: true,
+                    result: { id: "test-id", status: "active" },
+                }),
+            });
+
+        const result = await CloudflareClient.validateToken(
+            "account-owned-token",
+            "1234567890abcdef1234567890abcdef",
+        );
+
+        expect(result.valid).toBe(true);
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect(global.fetch).toHaveBeenNthCalledWith(
+            2,
+            "https://api.cloudflare.com/client/v4/accounts/1234567890abcdef1234567890abcdef/tokens/verify",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: "Bearer account-owned-token",
+                    "Content-Type": "application/json",
+                },
+            },
+        );
+    });
+
+    it("should not fall back to the account verify endpoint without an account ID", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: false,
+            status: 401,
+            statusText: "Unauthorized",
+        });
+
+        const result = await CloudflareClient.validateToken("invalid-token");
+
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Invalid or expired token");
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should return valid: false when both verify endpoints return 401", async () => {
+        (global.fetch as any)
+            .mockResolvedValueOnce({
+                ok: false,
+                status: 401,
+                statusText: "Unauthorized",
+            })
+            .mockResolvedValueOnce({
+                ok: false,
+                status: 401,
+                statusText: "Unauthorized",
+            });
+
+        const result = await CloudflareClient.validateToken(
+            "invalid-account-token",
+            "1234567890abcdef1234567890abcdef",
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Invalid or expired token");
+    });
+
+    it("should surface the account endpoint error when the fallback fails", async () => {
+        (global.fetch as any)
+            .mockResolvedValueOnce({
+                ok: false,
+                status: 401,
+                statusText: "Unauthorized",
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    success: true,
+                    result: { id: "test-id", status: "disabled" },
+                }),
+            });
+
+        const result = await CloudflareClient.validateToken(
+            "disabled-account-token",
+            "1234567890abcdef1234567890abcdef",
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Token is not active");
+    });
+
+    it("should not fall back to the account verify endpoint on non-401 failures", async () => {
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: false,
+            status: 403,
+            statusText: "Forbidden",
+        });
+
+        const result = await CloudflareClient.validateToken(
+            "insufficient-permissions",
+            "1234567890abcdef1234567890abcdef",
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe("Token lacks required permissions");
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
     it("should return valid: false for 403 forbidden", async () => {
         (global.fetch as any).mockResolvedValueOnce({
             ok: false,

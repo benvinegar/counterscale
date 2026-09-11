@@ -3,6 +3,7 @@ import chalk from "chalk";
 import { highlight } from "cli-highlight";
 import { password, text, isCancel, cancel, spinner } from "@clack/prompts";
 import { CloudflareClient } from "./cloudflare.js";
+import type { TokenValidationResult } from "./cloudflare.js";
 
 export const CLI_COLORS: Record<string, [number, number, number]> = {
     orange: [245, 107, 61],
@@ -104,7 +105,7 @@ export async function promptForPassword(
     return userPassword;
 }
 
-export async function promptApiToken(): Promise<string> {
+export async function promptApiToken(accountId?: string): Promise<string> {
     const cfApiToken = await password({
         message: "Enter your Cloudflare API Token",
         mask: "*",
@@ -136,16 +137,9 @@ export async function promptApiToken(): Promise<string> {
     const s = spinner();
     s.start("Validating token...");
 
+    let result: TokenValidationResult;
     try {
-        const result = await CloudflareClient.validateToken(cfApiToken);
-        s.stop("Token Validated");
-
-        if (!result.valid) {
-            throw new Error(
-                result.error ||
-                    "Invalid token or insufficient permissions. Please verify your token has 'Account Analytics: Read' permission.",
-            );
-        }
+        result = await CloudflareClient.validateToken(cfApiToken, accountId);
     } catch (error) {
         s.stop();
         if (error instanceof Error) {
@@ -155,6 +149,16 @@ export async function promptApiToken(): Promise<string> {
             "Failed to validate token. Please check your internet connection.",
         );
     }
+
+    if (!result.valid) {
+        s.stop("Token validation failed", 1);
+        throw new Error(
+            result.error ||
+                "Invalid token or insufficient permissions. Please verify your token has 'Account Analytics: Read' permission.",
+        );
+    }
+
+    s.stop("Token Validated");
 
     return cfApiToken;
 }
