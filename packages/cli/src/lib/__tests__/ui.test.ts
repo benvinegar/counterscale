@@ -253,6 +253,30 @@ describe("UI module", () => {
 
             const result = await promptApiToken();
             expect(result).toBe(mockToken);
+            expect(mockSpinner.stop).toHaveBeenCalledWith("Token Validated");
+        });
+
+        it("should pass the account ID to validateToken", async () => {
+            const mockToken = "a".repeat(40);
+            const accountId = "1234567890abcdef1234567890abcdef";
+            (isCancel as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+                false,
+            );
+            const mockPrompts = await import("@clack/prompts");
+            (
+                mockPrompts.password as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue(mockToken);
+
+            const mockCloudflare = await import("../cloudflare.js");
+            vi.mocked(
+                mockCloudflare.CloudflareClient.validateToken,
+            ).mockResolvedValue({ valid: true });
+
+            const result = await promptApiToken(accountId);
+            expect(result).toBe(mockToken);
+            expect(
+                mockCloudflare.CloudflareClient.validateToken,
+            ).toHaveBeenCalledWith(mockToken, accountId);
         });
 
         it("should throw error if user cancels", async () => {
@@ -289,6 +313,13 @@ describe("UI module", () => {
 
             await expect(promptApiToken()).rejects.toThrow(
                 "Invalid token or insufficient permissions",
+            );
+            expect(mockSpinner.stop).toHaveBeenCalledWith(
+                "Token validation failed",
+                1,
+            );
+            expect(mockSpinner.stop).not.toHaveBeenCalledWith(
+                "Token Validated",
             );
         });
 

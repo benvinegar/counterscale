@@ -53,15 +53,22 @@ describe("env.ts", () => {
         it("should update secret when valid secret key is provided", async () => {
             vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
             const mockSetSecrets = vi.fn().mockResolvedValue(true);
+            const mockGetAccountId = vi
+                .fn()
+                .mockResolvedValue("1234567890abcdef1234567890abcdef");
 
             vi.mocked(CloudflareClient).mockImplementation(function () {
                 return {
                     setCloudflareSecrets: mockSetSecrets,
+                    getAccountId: mockGetAccountId,
                 } as any;
             });
 
             await envCommand("token");
 
+            expect(promptApiToken).toHaveBeenCalledWith(
+                "1234567890abcdef1234567890abcdef",
+            );
             expect(mockSetSecrets).toHaveBeenCalledWith({
                 CF_BEARER_TOKEN: "mock-api-token",
             });
@@ -73,10 +80,14 @@ describe("env.ts", () => {
             );
             vi.mocked(getScriptSnippet).mockReturnValue("mock-snippet");
             const mockSetSecrets = vi.fn().mockResolvedValue(true);
+            const mockGetAccountId = vi
+                .fn()
+                .mockResolvedValue("1234567890abcdef1234567890abcdef");
 
             vi.mocked(CloudflareClient).mockImplementation(function () {
                 return {
                     setCloudflareSecrets: mockSetSecrets,
+                    getAccountId: mockGetAccountId,
                 } as any;
             });
 
@@ -86,6 +97,8 @@ describe("env.ts", () => {
 
             await envCommand("tracker-script");
 
+            expect(mockGetAccountId).not.toHaveBeenCalled();
+            expect(promptTrackerScriptName).toHaveBeenCalledWith(undefined);
             expect(consoleSpy).toHaveBeenCalledWith(
                 expect.stringContaining("Use this HTML snippet"),
             );
@@ -121,10 +134,14 @@ describe("env.ts", () => {
             vi.mocked(select).mockResolvedValue("token");
             vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
             const mockSetSecrets = vi.fn().mockResolvedValue(true);
+            const mockGetAccountId = vi
+                .fn()
+                .mockResolvedValue("1234567890abcdef1234567890abcdef");
 
             vi.mocked(CloudflareClient).mockImplementation(function () {
                 return {
                     setCloudflareSecrets: mockSetSecrets,
+                    getAccountId: mockGetAccountId,
                 } as any;
             });
 
@@ -165,10 +182,14 @@ describe("env.ts", () => {
         it("should handle secret update failure", async () => {
             vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
             const mockSetSecrets = vi.fn().mockResolvedValue(false);
+            const mockGetAccountId = vi
+                .fn()
+                .mockResolvedValue("1234567890abcdef1234567890abcdef");
 
             vi.mocked(CloudflareClient).mockImplementation(function () {
                 return {
                     setCloudflareSecrets: mockSetSecrets,
+                    getAccountId: mockGetAccountId,
                 } as any;
             });
 
@@ -196,6 +217,15 @@ describe("env.ts", () => {
             vi.mocked(promptApiToken).mockRejectedValue(
                 new Error("Prompt error"),
             );
+            const mockGetAccountId = vi
+                .fn()
+                .mockResolvedValue("1234567890abcdef1234567890abcdef");
+
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    getAccountId: mockGetAccountId,
+                } as any;
+            });
             const consoleSpy = vi
                 .spyOn(console, "error")
                 .mockImplementation(() => {});
@@ -215,6 +245,48 @@ describe("env.ts", () => {
 
             consoleSpy.mockRestore();
             processSpy.mockRestore();
+        });
+
+        it("should fall back to user-token validation when account ID lookup fails", async () => {
+            vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
+            const mockSetSecrets = vi.fn().mockResolvedValue(true);
+            const mockGetAccountId = vi
+                .fn()
+                .mockRejectedValue(new Error("Not authenticated"));
+
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    setCloudflareSecrets: mockSetSecrets,
+                    getAccountId: mockGetAccountId,
+                } as any;
+            });
+
+            await envCommand("token");
+
+            expect(promptApiToken).toHaveBeenCalledWith(undefined);
+            expect(mockSetSecrets).toHaveBeenCalledWith({
+                CF_BEARER_TOKEN: "mock-api-token",
+            });
+        });
+
+        it("should fall back to user-token validation when no account ID is found", async () => {
+            vi.mocked(promptApiToken).mockResolvedValue("mock-api-token");
+            const mockSetSecrets = vi.fn().mockResolvedValue(true);
+            const mockGetAccountId = vi.fn().mockResolvedValue(null);
+
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    setCloudflareSecrets: mockSetSecrets,
+                    getAccountId: mockGetAccountId,
+                } as any;
+            });
+
+            await envCommand("token");
+
+            expect(promptApiToken).toHaveBeenCalledWith(undefined);
+            expect(mockSetSecrets).toHaveBeenCalledWith({
+                CF_BEARER_TOKEN: "mock-api-token",
+            });
         });
 
         it("should throw error when secret configuration not found", async () => {

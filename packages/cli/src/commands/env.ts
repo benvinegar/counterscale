@@ -14,7 +14,7 @@ interface SecretConfig {
     key: SupportedSecret;
     name: string;
     description: string;
-    prompt: () => Promise<string>;
+    prompt: (accountId?: string) => Promise<string>;
 }
 
 export const SECRETS_BY_ALIAS = new Map<string, SecretConfig>([
@@ -89,7 +89,16 @@ export async function envCommand(secretKey?: string) {
 
         console.log(`Updating ${selectedSecret.name}...`);
 
-        const secretValue = await selectedSecret.prompt();
+        let accountId: string | undefined;
+        if (selectedSecret.key === "CF_BEARER_TOKEN") {
+            try {
+                accountId = (await cloudflare.getAccountId()) ?? undefined;
+            } catch {
+                accountId = undefined;
+            }
+        }
+
+        const secretValue = await selectedSecret.prompt(accountId);
 
         const success = await cloudflare.setCloudflareSecrets({
             [selectedSecret.key]: secretValue,

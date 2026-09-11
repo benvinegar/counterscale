@@ -257,11 +257,15 @@ export async function install(
                     "https://dash.cloudflare.com/profile/api-tokens",
                 )}
 
+Or use an account-owned token from your account's API Tokens page: ${chalk.bold(
+                    `https://dash.cloudflare.com/${accountId}/api-tokens`,
+                )}
+
 Your token needs these permissions:
 
 - Account Analytics: Read`,
             );
-            const apiToken = await promptApiToken();
+            const apiToken = await promptApiToken(accountId);
             if (apiToken) {
                 const s = spinner();
                 s.start(`Setting Cloudflare API token ...`);

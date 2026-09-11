@@ -59,6 +59,15 @@ interface TokenValidationResponse {
     errors?: Array<{ code: number; message: string }>;
 }
 
+export interface TokenValidationResult {
+    valid: boolean;
+    error?: string;
+}
+
+interface TokenVerificationResult extends TokenValidationResult {
+    httpStatus?: number;
+}
+
 function isWorkerNotFoundError(error: unknown): boolean {
     if (typeof error !== "string") {
         return false;
@@ -172,34 +181,38 @@ export class CloudflareClient {
         }
     }
 
-    static async validateToken(
+    private static async verifyTokenAtUrl(
         token: string,
-    ): Promise<{ valid: boolean; error?: string }> {
+        url: string,
+    ): Promise<TokenVerificationResult> {
         try {
-            const response = await fetch(
-                "https://api.cloudflare.com/client/v4/user/tokens/verify",
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
                 },
-            );
+            });
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    return { valid: false, error: "Invalid or expired token" };
+                    return {
+                        valid: false,
+                        error: "Invalid or expired token",
+                        httpStatus: 401,
+                    };
                 }
                 if (response.status === 403) {
                     return {
                         valid: false,
                         error: "Token lacks required permissions",
+                        httpStatus: 403,
                     };
                 }
                 return {
                     valid: false,
                     error: `HTTP ${response.status}: ${response.statusText}`,
+                    httpStatus: response.status,
                 };
             }
 
@@ -225,6 +238,38 @@ export class CloudflareClient {
                         : "Network error during validation",
             };
         }
+    }
+
+    static async validateToken(
+        token: string,
+        accountId?: string,
+    ): Promise<TokenValidationResult> {
+        const userResult = await CloudflareClient.verifyTokenAtUrl(
+            token,
+            "https://api.cloudflare.com/client/v4/user/tokens/verify",
+        );
+
+        if (userResult.valid) {
+            return { valid: true };
+        }
+
+        // Account-owned tokens (created from an account's API Tokens page)
+        // always fail the user-scoped verify endpoint, so retry against the
+        // account-scoped endpoint for the account being installed to.
+        if (accountId && userResult.httpStatus === 401) {
+            const accountResult = await CloudflareClient.verifyTokenAtUrl(
+                token,
+                `https://api.cloudflare.com/client/v4/accounts/${accountId}/tokens/verify`,
+            );
+
+            if (accountResult.valid) {
+                return { valid: true };
+            }
+
+            return { valid: false, error: accountResult.error };
+        }
+
+        return { valid: false, error: userResult.error };
     }
 
     async getCloudflareSecrets(): Promise<Record<string, string>> {
