@@ -427,3 +427,151 @@ describe("collectRequestHandler", () => {
         expect(blobs[14]).toBe(""); // utm_content (empty)
     });
 });
+
+describe("collectRequestHandler allowlist enforcement", () => {
+    const UA =
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
+
+    function buildRequest(opts: {
+        h: string;
+        r?: string;
+        origin?: string;
+        referer?: string;
+    }) {
+        const headers: Record<string, string> = { "user-agent": UA };
+        if (opts.origin) headers["origin"] = opts.origin;
+        if (opts.referer) headers["referer"] = opts.referer;
+        return {
+            method: "GET",
+            url:
+                "https://example.com/collect?" +
+                new URLSearchParams({
+                    sid: "example",
+                    h: opts.h,
+                    p: "/",
+                    r: opts.r ?? "",
+                    ht: "1",
+                }).toString(),
+            headers: {
+                get: (header: string) => headers[header],
+            },
+        };
+    }
+
+    function makeEnv(allowed?: string) {
+        return {
+            WEB_COUNTER_AE: { writeDataPoint: vi.fn() },
+            TRACKER_ALLOWED_ORIGINS: allowed,
+        } as unknown as Env;
+    }
+
+    test("writes when h matches a listed origin via subdomain", () => {
+        const env = makeEnv("pmux.io");
+        collectRequestHandler(
+            buildRequest({ h: "https://docs.pmux.io" }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+
+    test("silently drops (200 gif, no write) when h is not allowed", () => {
+        const env = makeEnv("pmux.io");
+        const response = collectRequestHandler(
+            buildRequest({ h: "https://evil.com" }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).not.toHaveBeenCalled();
+        expect(response.status).toBe(200);
+        expect(response.headers.get("Content-Type")).toBe("image/gif");
+        // Drop path must NOT set Last-Modified: the tracker uses it for
+        // cookieless visit counting, and updating it on a dropped hit would
+        // corrupt session state.
+        expect(response.headers.get("Last-Modified")).toBeNull();
+    });
+
+    test("writes when h is a bare hostname (no scheme) that is allowed", () => {
+        const env = makeEnv("pmux.io");
+        collectRequestHandler(buildRequest({ h: "docs.pmux.io" }) as any, env);
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+
+    test("writes when only the Referer header is present and allowed", () => {
+        const env = makeEnv("pmux.io");
+        collectRequestHandler(
+            buildRequest({
+                h: "https://docs.pmux.io",
+                referer: "https://docs.pmux.io/guide",
+            }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+
+    test("does not drop legit traffic from an opaque 'null' Origin", () => {
+        // Sandboxed iframes send Origin: null; this must not block an
+        // otherwise-allowed hit.
+        const env = makeEnv("pmux.io");
+        collectRequestHandler(
+            buildRequest({ h: "https://docs.pmux.io", origin: "null" }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+
+    test("'*' in the allowlist disables enforcement (allow all)", () => {
+        const env = makeEnv("*");
+        collectRequestHandler(
+            buildRequest({ h: "https://anything.com" }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+
+    test("drops when h is allowed but the Origin header is not", () => {
+        const env = makeEnv("pmux.io");
+        collectRequestHandler(
+            buildRequest({
+                h: "https://docs.pmux.io",
+                origin: "https://evil.com",
+            }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).not.toHaveBeenCalled();
+    });
+
+    test("writes when h, Origin, and Referer headers all match", () => {
+        const env = makeEnv("pmux.io");
+        collectRequestHandler(
+            buildRequest({
+                h: "https://docs.pmux.io",
+                origin: "https://docs.pmux.io",
+                referer: "https://docs.pmux.io/guide",
+            }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+
+    test("ignores the analytics referrer (r) param for enforcement", () => {
+        // r is the visitor's traffic source, not the embedding page; it must
+        // not be validated against the allowlist.
+        const env = makeEnv("pmux.io");
+        collectRequestHandler(
+            buildRequest({
+                h: "https://docs.pmux.io",
+                r: "https://google.com",
+            }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+
+    test("writes for any host when the allowlist is unset (opt-in)", () => {
+        const env = makeEnv(undefined);
+        collectRequestHandler(
+            buildRequest({ h: "https://anything.com" }) as any,
+            env,
+        );
+        expect(env.WEB_COUNTER_AE.writeDataPoint).toHaveBeenCalled();
+    });
+});

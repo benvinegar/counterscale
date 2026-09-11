@@ -1,27 +1,34 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+vi.mock("../../tracker/tracker.js?raw", () => ({
+    default: "console.log('tracker script');",
+}));
+
 import { loader } from "../$script";
 
 describe("Dynamic script route", () => {
-    const mockRequest = {
-        url: "https://example.com/analytics.js",
-    } as Request;
+    const buildMockRequest = (origin?: string): Request =>
+        ({
+            url: "https://example.com/analytics.js",
+            headers: new Headers(origin ? { Origin: origin } : {}),
+        }) as Request;
 
-    const mockAssetsFetch = vi.fn();
+    const mockRequest = buildMockRequest();
 
-    const createMockContext = (customScriptName?: string) => ({
+    const createMockContext = (
+        customScriptName?: string,
+        allowedOrigins?: string,
+    ) => ({
         cloudflare: {
             env: {
                 CF_TRACKER_SCRIPT_NAME: customScriptName,
-                ASSETS: {
-                    fetch: mockAssetsFetch,
-                },
+                TRACKER_ALLOWED_ORIGINS: allowedOrigins,
             },
         },
     });
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockAssetsFetch.mockClear();
     });
 
     describe("loader", () => {
@@ -47,51 +54,6 @@ describe("Dynamic script route", () => {
             expect(await response.text()).toBe("Not Found");
         });
 
-        it("should serve default tracker.js", async () => {
-            const mockResponse = new Response(
-                "console.log('tracker script');",
-                {
-                    status: 200,
-                    headers: { "Content-Type": "application/javascript" },
-                },
-            );
-            mockAssetsFetch.mockResolvedValue(mockResponse);
-
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(),
-                request: mockRequest,
-            } as any);
-
-            expect(response.status).toBe(200);
-            expect(await response.text()).toBe(
-                "console.log('tracker script');",
-            );
-            expect(mockAssetsFetch).toHaveBeenCalledWith(
-                "https://example.com/tracker.js",
-            );
-        });
-
-        it("should serve custom script name when env variable is set", async () => {
-            const mockResponse = new Response("console.log('custom script');", {
-                status: 200,
-                headers: { "Content-Type": "application/javascript" },
-            });
-            mockAssetsFetch.mockResolvedValue(mockResponse);
-
-            const response = await loader({
-                params: { script: "analytics.js" },
-                context: createMockContext("analytics"),
-                request: mockRequest,
-            } as any);
-
-            expect(response.status).toBe(200);
-            expect(await response.text()).toBe("console.log('custom script');");
-            expect(mockAssetsFetch).toHaveBeenCalledWith(
-                "https://example.com/tracker.js",
-            );
-        });
-
         it("should return 404 for unmatched script names", async () => {
             const response = await loader({
                 params: { script: "unknown.js" },
@@ -103,54 +65,82 @@ describe("Dynamic script route", () => {
             expect(await response.text()).toBe("Script not found");
         });
 
-        it("should handle fetch errors gracefully", async () => {
-            mockAssetsFetch.mockRejectedValue(new Error("Fetch failed"));
-
+        it("should serve the bundled tracker source for tracker.js", async () => {
             const response = await loader({
                 params: { script: "tracker.js" },
                 context: createMockContext(),
                 request: mockRequest,
             } as any);
 
-            expect(response.status).toBe(500);
-            expect(await response.text()).toBe("Error serving script");
-        });
-
-        it("should handle network errors", async () => {
-            mockAssetsFetch.mockRejectedValue(new Error("Network error"));
-
-            const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(),
-                request: mockRequest,
-            } as any);
-
-            expect(response.status).toBe(500);
-            expect(await response.text()).toBe("Error serving script");
-        });
-
-        it("should return response from ASSETS fetch", async () => {
-            const mockResponse = new Response(
-                "console.log('tracker script');",
-                {
-                    status: 200,
-                    headers: {
-                        "Content-Type": "application/javascript",
-                        "Cache-Control": "public, max-age=3600",
-                    },
-                },
+            expect(response.status).toBe(200);
+            expect(response.headers.get("Content-Type")).toBe(
+                "application/javascript; charset=utf-8",
             );
-            mockAssetsFetch.mockResolvedValue(mockResponse);
+            expect(response.headers.get("Cache-Control")).toBe(
+                "public, max-age=3600",
+            );
+            expect(await response.text()).toBe(
+                "console.log('tracker script');",
+            );
+        });
 
+        it("should serve the bundled source for a renamed tracker", async () => {
             const response = await loader({
-                params: { script: "tracker.js" },
-                context: createMockContext(),
+                params: { script: "analytics.js" },
+                context: createMockContext("analytics"),
                 request: mockRequest,
             } as any);
 
-            expect(response).toBe(mockResponse);
-            expect(mockAssetsFetch).toHaveBeenCalledWith(
-                "https://example.com/tracker.js",
+            expect(response.status).toBe(200);
+            expect(await response.text()).toBe(
+                "console.log('tracker script');",
+            );
+        });
+    });
+
+    describe("Access-Control-Allow-Origin header", () => {
+        // The tracker script is served with a wildcard ACAO regardless of
+        // Origin or the allowlist: CORS can't gate who loads a script, and a
+        // wildcard keeps SRI (crossorigin="anonymous") working without
+        // fragmenting the CDN cache. Origin enforcement lives in /collect.
+        it("is '*' when no Origin header is present", async () => {
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(),
+                request: buildMockRequest(),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "*",
+            );
+            expect(response.headers.get("Vary")).toBeNull();
+        });
+
+        it("is '*' even when an allowlist is configured and Origin matches", async () => {
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(
+                    undefined,
+                    "https://foo.com, https://bar.com",
+                ),
+                request: buildMockRequest("https://bar.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "*",
+            );
+            expect(response.headers.get("Vary")).toBeNull();
+        });
+
+        it("is '*' for an Origin not in the allowlist", async () => {
+            const response = await loader({
+                params: { script: "tracker.js" },
+                context: createMockContext(undefined, "shiftinbits.com"),
+                request: buildMockRequest("https://evil.com"),
+            } as any);
+
+            expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+                "*",
             );
         });
     });

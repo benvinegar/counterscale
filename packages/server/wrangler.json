@@ -7,6 +7,10 @@
         "binding": "ASSETS",
         "directory": "./build/client"
     },
+    "vars": {
+        "CF_DATASET_NAME": "metricsDataset",
+        "TRACKER_ALLOWED_ORIGINS": ""
+    },
     "analytics_engine_datasets": [
         {
             "binding": "WEB_COUNTER_AE",

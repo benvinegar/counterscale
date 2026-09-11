@@ -14,3 +14,6 @@ dist
 coverage
 playwright-report
 __screenshots__
+
+# Copied from ../tracker/dist (see packages/server/package.json copytracker script)
+packages/server/app/tracker/tracker.js
