@@ -11,6 +11,8 @@ vi.mock("@clack/prompts", () => ({
     text: vi.fn(),
     select: vi.fn(),
     intro: vi.fn(),
+    note: vi.fn(),
+    outro: vi.fn(),
     spinner: vi.fn(() => ({
         start: vi.fn(),
         stop: vi.fn(),
@@ -18,6 +20,24 @@ vi.mock("@clack/prompts", () => ({
     log: {
         info: vi.fn(),
     },
+}));
+
+vi.mock("../../lib/config.js");
+
+vi.mock("../../lib/ui.js", () => ({
+    CLI_COLORS: {
+        orange: [245, 107, 61],
+        tan: [243, 227, 190],
+        teal: [0, 205, 205],
+    },
+    MIN_PASSWORD_LENGTH: 8,
+    getTitle: vi.fn(),
+    highlightTheme: {},
+    getScriptSnippet: vi.fn(),
+    getPackageSnippet: vi.fn(),
+    promptForPassword: vi.fn(),
+    promptApiToken: vi.fn(),
+    promptTrackerScriptName: vi.fn(),
 }));
 
 vi.mock("../../lib/cloudflare.js", () => {
@@ -37,15 +57,22 @@ vi.mock("../../lib/cloudflare.js", () => {
 });
 
 // Now import the actual modules
-import { isCancel } from "@clack/prompts";
+import { isCancel, note, confirm, spinner } from "@clack/prompts";
 
 // Import after mocks are set up
 import {
     promptDeploy,
     promptProjectConfig,
     promptAccountSelection,
+    install,
     type AccountInfo,
 } from "../install.js";
+import { CloudflareClient } from "../../lib/cloudflare.js";
+import {
+    getWorkerAndDatasetName,
+    stageDeployConfig,
+} from "../../lib/config.js";
+import { promptApiToken } from "../../lib/ui.js";
 
 describe("install prompts", () => {
     let mockExit: ReturnType<typeof vi.spyOn>;
@@ -254,6 +281,60 @@ describe("install prompts", () => {
                         label: "Account 1 (abcdef)",
                     },
                 ],
+            });
+        });
+    });
+
+    describe("install", () => {
+        it("should prompt for an API token with the selected account ID when CF_BEARER_TOKEN is missing", async () => {
+            const accountId = "1234567890abcdef1234567890abcdef";
+            const apiToken = "m".repeat(40);
+
+            vi.mocked(spinner).mockImplementation(
+                () =>
+                    ({
+                        start: vi.fn(),
+                        stop: vi.fn(),
+                    }) as any,
+            );
+
+            const mockSetSecrets = vi.fn().mockResolvedValue(true);
+            vi.mocked(CloudflareClient).mockImplementation(function () {
+                return {
+                    getAccounts: vi
+                        .fn()
+                        .mockResolvedValue([
+                            { id: accountId, name: "Test Account" },
+                        ]),
+                    getCloudflareSecrets: vi.fn().mockResolvedValue({
+                        CF_AUTH_ENABLED: "true",
+                        CF_PASSWORD_HASH: "hash",
+                        CF_JWT_SECRET: "secret",
+                    }),
+                    setCloudflareSecrets: mockSetSecrets,
+                    deploy: vi.fn(),
+                } as any;
+            });
+
+            vi.mocked(getWorkerAndDatasetName).mockReturnValue({
+                workerName: "counterscale",
+                analyticsDataset: "metricsDataset",
+            });
+            vi.mocked(stageDeployConfig).mockResolvedValue(undefined);
+            vi.mocked(promptApiToken).mockResolvedValue(apiToken);
+            vi.mocked(confirm).mockResolvedValue(false);
+
+            await install({} as any, "/mock/server/dir", { version: "3.5.0" });
+
+            expect(promptApiToken).toHaveBeenCalledWith(accountId);
+            expect(note).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    `https://dash.cloudflare.com/${accountId}/api-tokens`,
+                ),
+            );
+            expect(mockSetSecrets).toHaveBeenCalledWith({
+                CF_ACCOUNT_ID: accountId,
+                CF_BEARER_TOKEN: apiToken,
             });
         });
     });
