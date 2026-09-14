@@ -8,8 +8,7 @@
         "directory": "./build/client"
     },
     "vars": {
-        "CF_DATASET_NAME": "metricsDataset",
-        "TRACKER_ALLOWED_ORIGINS": ""
+        "CF_DATASET_NAME": "metricsDataset"
     },
     "analytics_engine_datasets": [
         {
