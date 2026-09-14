@@ -30,6 +30,12 @@ describe("parseAllowedOrigins", () => {
         ).toEqual(["foo.com", "bar.com", "baz.com"]);
     });
 
+    test("keeps bracketed IPv6 entries intact (with or without a port)", () => {
+        expect(
+            parseAllowedOrigins("[::1], https://[2001:db8::1]:8080"),
+        ).toEqual(["[::1]", "[2001:db8::1]"]);
+    });
+
     test("drops empty entries from trailing/duplicate commas", () => {
         expect(parseAllowedOrigins("foo.com,,bar.com,")).toEqual([
             "foo.com",

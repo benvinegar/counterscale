@@ -7,16 +7,11 @@
 
 /**
  * Normalize a single allowlist entry to a bare, lowercase hostname.
- * Strips scheme, leading "*." wildcard, port, and path.
+ * Strips a leading "*." wildcard, then scheme, port, and path (via
+ * extractHost, so bracketed IPv6 entries such as "[::1]" survive intact).
  */
 function normalizeEntry(entry: string): string {
-    return entry
-        .trim()
-        .toLowerCase()
-        .replace(/^[a-z][a-z0-9+.-]*:\/\//, "") // scheme://
-        .replace(/^\*\./, "") // wildcard prefix
-        .split("/")[0] // path
-        .split(":")[0]; // port
+    return extractHost(entry.trim().replace(/^\*\./, "")) ?? "";
 }
 
 /**

@@ -210,13 +210,16 @@ TRACKER_ALLOWED_ORIGINS=example.com,myblog.io,acme.dev
 ```
 
 - Each entry matches the specified domain **and any of its subdomains**, you only need the parent domain. `example.com` already covers `blog.example.com`, `app.example.com`, and any other subdomain, so there's no need to list them separately. Lookalikes such as `notexample.com` are not matched. Entries may be bare hostnames or include a scheme (`https://example.com`), both are treated the same.
-- When set, hits whose origin isn't on the list are silently ignored: the tracker still returns a normal response, but no data is recorded.
-- Leave it empty (the default) or set it to `*` to disable the allowlist and record from any origin.
+- When set, hits whose origin isn't on the list are ignored: the tracker still returns a normal response, but no data is recorded. Each dropped hit is logged as a warning in the Worker's logs (Workers & Pages → your worker → Logs), so if your dashboard looks empty after enabling this, check there first.
+- Leave it unset (the default) or set it to `*` to disable the allowlist and record from any origin.
 
-You can set this variable in one of two ways:
+Set it as a **secret** on the Worker so it survives redeploys. Plain-text variables added in the Cloudflare dashboard are overwritten the next time the worker is deployed (via the CLI or `wrangler deploy`), which would silently turn the allowlist back off. Either:
 
-- **Cloudflare dashboard:** Workers & Pages → Counterscale worker → Settings → Variables and Secrets → add or set `TRACKER_ALLOWED_ORIGINS`, then redeploy.
-- **From source:** edit the `vars` block in `packages/server/wrangler.json` and redeploy.
+- **Cloudflare dashboard:** Workers & Pages → Counterscale worker → Settings → Variables and Secrets → Add, choose type **Secret**, name `TRACKER_ALLOWED_ORIGINS`.
+- **From source:** `npx wrangler secret put TRACKER_ALLOWED_ORIGINS` in `packages/server`.
+
+> [!WARNING]
+> The tracker reports the page's `<link rel="canonical">` URL as the hostname when one is present. If your pages declare a canonical URL on a different domain, that domain must also be in the allowlist or those hits will be dropped.
 
 > [!NOTE]
 > This is a best-effort filter. The signals it checks (`Origin`, `Referer`, and the reported hostname) are supplied by the client and can be spoofed by non-browser tools, so it deters casual or accidental cross-site reporting rather than a determined attacker. Recorded data is also partitioned by site ID, which further limits the impact of unwanted hits.

@@ -148,14 +148,17 @@ export function collectRequestHandler(
     }
 
     // Optional allowlist enforcement. When TRACKER_ALLOWED_ORIGINS is set, drop
-    // (silently) any hit whose reported host or Origin/Referer header isn't an
-    // allowed origin. CORS can't gate the worker, so we enforce it here.
+    // any hit whose reported host or Origin/Referer header isn't an allowed
+    // origin. CORS can't gate the worker, so we enforce it here.
     // Best-effort: these signals are client-controlled and spoofable.
     const allowedOrigins = parseAllowedOrigins(env.TRACKER_ALLOWED_ORIGINS);
     if (
         allowedOrigins.length > 0 &&
         !requestIsAllowed(request, params, allowedOrigins)
     ) {
+        console.warn(
+            `Dropped hit for site "${siteId}": host "${params.h}" / origin "${request.headers.get("origin")}" / referer "${request.headers.get("referer")}" not in TRACKER_ALLOWED_ORIGINS`,
+        );
         return trackingGifResponse();
     }
 
