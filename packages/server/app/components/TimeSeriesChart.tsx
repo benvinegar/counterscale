@@ -162,7 +162,7 @@ export default function TimeSeriesChart({
                 <YAxis
                     yAxisId="bounceRate"
                     dataKey="bounceRate"
-                    domain={[0, 120]}
+                    domain={[0, 100]}
                     hide={true}
                 />
 
