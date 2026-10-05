@@ -218,6 +218,11 @@ export async function install(
     // If --advanced is true, prompt the user for worker name and analytics dataset name.
     // Otherwise, stick to the default values read from the server package.
     if (opts.advanced) {
+        log.warn(
+            "If you previously installed with a custom worker name or analytics dataset, " +
+                "re-enter the same values below — accepting the defaults will repoint your " +
+                "deployment at a fresh dataset and your existing analytics will appear empty.",
+        );
         ({ workerName, analyticsDataset } = await promptProjectConfig(
             workerName,
             analyticsDataset,

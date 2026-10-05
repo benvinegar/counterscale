@@ -123,6 +123,11 @@ export function readInitialServerConfig() {
  * converted to be absolute. This makes it so that the `wrangler deploy` command can be
  * run from any directory.
  */
+// Mirrors the validation in AnalyticsEngineAPI's constructor — the dataset
+// name is interpolated into raw SQL on the read path, and only matching names
+// will pass the server-side guard.
+export const DATASET_NAME_PATTERN = /^[A-Za-z0-9_]+$/;
+
 export async function stageDeployConfig(
     targetPath: string,
     initialDeployConfig: ReturnType<typeof JSON.parse>,
@@ -130,6 +135,12 @@ export async function stageDeployConfig(
     analyticsDataset: string,
     accountId?: string,
 ): Promise<void> {
+    if (!DATASET_NAME_PATTERN.test(analyticsDataset)) {
+        throw new Error(
+            `Invalid Analytics Engine dataset name: ${analyticsDataset}. Only letters, digits, and underscores are allowed.`,
+        );
+    }
+
     const serverPkgDir = getServerPkgDir();
 
     const outDeployConfig = makePathsAbsolute(
@@ -138,6 +149,10 @@ export async function stageDeployConfig(
     );
     outDeployConfig.name = workerName;
     outDeployConfig.analytics_engine_datasets[0].dataset = analyticsDataset;
+    outDeployConfig.vars = {
+        ...(outDeployConfig.vars ?? {}),
+        CF_DATASET_NAME: analyticsDataset,
+    };
 
     if (accountId) {
         outDeployConfig.account_id = accountId;

@@ -682,3 +682,50 @@ describe("intervalToSql", () => {
         });
     });
 });
+
+describe("AnalyticsEngineAPI dataset name", () => {
+    let fetch: Mock;
+    beforeEach(() => {
+        fetch = global.fetch = vi.fn();
+        fetch.mockResolvedValue(createFetchResponse({ data: [] }));
+        vi.useFakeTimers();
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    test("defaults to metricsDataset when no dataset arg is provided", () => {
+        const api = new AnalyticsEngineAPI("acct", "tok");
+        expect(api.dataset).toBe("metricsDataset");
+    });
+
+    test("defaults to metricsDataset when empty string is provided", () => {
+        const api = new AnalyticsEngineAPI("acct", "tok", "");
+        expect(api.dataset).toBe("metricsDataset");
+    });
+
+    test("uses the provided custom dataset name", () => {
+        const api = new AnalyticsEngineAPI("acct", "tok", "counterscaleMetrics");
+        expect(api.dataset).toBe("counterscaleMetrics");
+    });
+
+    test("rejects invalid dataset names", () => {
+        expect(
+            () => new AnalyticsEngineAPI("acct", "tok", "bad name; DROP"),
+        ).toThrow(/Invalid Analytics Engine dataset name/);
+    });
+
+    test("getCounts emits SQL referencing the custom dataset", async () => {
+        const api = new AnalyticsEngineAPI(
+            "acct",
+            "tok",
+            "counterscaleMetrics",
+        );
+        await api.getCounts("site1", "7d");
+        expect(fetch).toHaveBeenCalled();
+        const body = fetch.mock.calls[0][1].body as string;
+        expect(body).toContain("FROM counterscaleMetrics");
+        expect(body).not.toContain("FROM metricsDataset");
+    });
+});
