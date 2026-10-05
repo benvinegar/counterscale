@@ -254,7 +254,7 @@ describe("CLI Functions", () => {
                 "/target/wrangler.json",
                 initialConfig,
                 "new-worker",
-                "new-dataset",
+                "newDataset",
             );
 
             // Verify writeFileSync was called with the correct arguments
@@ -271,8 +271,11 @@ describe("CLI Functions", () => {
             // Verify worker name and dataset were updated
             expect(writtenConfig.name).toBe("new-worker");
             expect(writtenConfig.analytics_engine_datasets[0].dataset).toBe(
-                "new-dataset",
+                "newDataset",
             );
+            // Verify CF_DATASET_NAME var was set so the dashboard's SQL
+            // read path uses the same dataset as the AE binding.
+            expect(writtenConfig.vars.CF_DATASET_NAME).toBe("newDataset");
 
             // Verify paths were made absolute
             expect(writtenConfig.build.cwd).toMatch(/^\//); // Should start with /
@@ -294,7 +297,7 @@ describe("CLI Functions", () => {
                 "/target/wrangler.json",
                 initialConfig,
                 "new-worker",
-                "new-dataset",
+                "newDataset",
                 accountId,
             );
 
@@ -319,7 +322,7 @@ describe("CLI Functions", () => {
                 "/target/wrangler.json",
                 initialConfig,
                 "new-worker",
-                "new-dataset",
+                "newDataset",
             );
 
             const writtenConfig = JSON.parse(
