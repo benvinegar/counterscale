@@ -8,6 +8,10 @@ import {
     expect,
     Mock,
 } from "vitest";
+
+vi.mock("~/lib/auth", () => ({
+    requireAuth: vi.fn(),
+}));
 import "vitest-dom/extend-expect";
 
 import { loader } from "../resources.utm-campaign";

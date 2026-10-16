@@ -3,6 +3,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { getFiltersFromSearchParams, paramsFromUrl } from "~/lib/utils";
 import PaginatedTableCard from "~/components/PaginatedTableCard";
 import { SearchFilters } from "~/lib/types";
+import { requireAuth } from "~/lib/auth";
 
 function convertCountryCodesToNames(
     countByCountry: [string, number][],
@@ -24,6 +25,7 @@ function convertCountryCodesToNames(
 }
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
+    await requireAuth(request, context.cloudflare.env);
     const { analyticsEngine } = context;
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
     const url = new URL(request.url);

@@ -6,8 +6,10 @@ import PaginatedTableCard from "~/components/PaginatedTableCard";
 
 import { paramsFromUrl, getFiltersFromSearchParams } from "~/lib/utils";
 import { SearchFilters } from "~/lib/types";
+import { requireAuth } from "~/lib/auth";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
+    await requireAuth(request, context.cloudflare.env);
     const { analyticsEngine } = context;
 
     const { interval, site, page = 1 } = paramsFromUrl(request.url);
