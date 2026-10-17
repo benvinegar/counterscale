@@ -64,6 +64,33 @@ describe("makeRequest", () => {
         });
     });
 
+    it("should send a custom User-Agent when one is given", async () => {
+        const { buildCollectUrl } = await import("../../shared/request");
+        const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
+
+        mockBuildCollectUrl.mockReturnValue("https://example.com/collect");
+        mockFetch.mockResolvedValue({
+            text: vi.fn().mockResolvedValue("ok"),
+        } as any);
+
+        await makeRequest(
+            "https://example.com/collect",
+            { p: "/test", h: "example.com", r: "", sid: "test-site" },
+            1000,
+            "MyApp/1.2.3",
+        );
+
+        expect(mockFetch).toHaveBeenCalledWith(
+            "https://example.com/collect",
+            expect.objectContaining({
+                headers: {
+                    "Content-Type": "text/plain",
+                    "User-Agent": "MyApp/1.2.3",
+                },
+            }),
+        );
+    });
+
     it("should set up timeout and clear it on success", async () => {
         const { buildCollectUrl } = await import("../../shared/request");
         const mockBuildCollectUrl = buildCollectUrl as ReturnType<typeof vi.fn>;
