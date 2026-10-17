@@ -312,6 +312,7 @@ describe("trackPageview", () => {
                 "https://example.com/collect",
                 requestParams,
                 1000,
+                undefined,
             );
         });
 
@@ -348,6 +349,92 @@ describe("trackPageview", () => {
                 expect.any(String),
                 expect.any(Object),
                 5000,
+                undefined,
+            );
+        });
+
+        it("should send the client userAgent", async () => {
+            const { makeRequest } = await import("../request");
+            const {
+                getHostnameAndPath,
+                getReferrer,
+                isLocalhostAddress,
+                getUtmParamsFromUrl,
+                mergeUtmParams,
+            } = await import("../../shared/utils");
+            const { buildCollectRequestParams } = await import(
+                "../../shared/request"
+            );
+
+            vi.mocked(getHostnameAndPath).mockReturnValue({
+                hostname: "https://example.com",
+                path: "/test",
+            });
+            vi.mocked(getReferrer).mockReturnValue("");
+            vi.mocked(isLocalhostAddress).mockReturnValue(false);
+            vi.mocked(getUtmParamsFromUrl).mockReturnValue({});
+            vi.mocked(mergeUtmParams).mockReturnValue({});
+            vi.mocked(buildCollectRequestParams).mockReturnValue({
+                p: "/test",
+                h: "https://example.com",
+                r: "",
+                sid: "test-site",
+            });
+
+            client.userAgent = "MyApp/1.2.3";
+
+            await trackPageview(client, {
+                url: "https://example.com/test",
+            });
+
+            expect(makeRequest).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.any(Object),
+                1000,
+                "MyApp/1.2.3",
+            );
+        });
+
+        it("should let a per-call userAgent override the client's", async () => {
+            const { makeRequest } = await import("../request");
+            const {
+                getHostnameAndPath,
+                getReferrer,
+                isLocalhostAddress,
+                getUtmParamsFromUrl,
+                mergeUtmParams,
+            } = await import("../../shared/utils");
+            const { buildCollectRequestParams } = await import(
+                "../../shared/request"
+            );
+
+            vi.mocked(getHostnameAndPath).mockReturnValue({
+                hostname: "https://example.com",
+                path: "/test",
+            });
+            vi.mocked(getReferrer).mockReturnValue("");
+            vi.mocked(isLocalhostAddress).mockReturnValue(false);
+            vi.mocked(getUtmParamsFromUrl).mockReturnValue({});
+            vi.mocked(mergeUtmParams).mockReturnValue({});
+            vi.mocked(buildCollectRequestParams).mockReturnValue({
+                p: "/test",
+                h: "https://example.com",
+                r: "",
+                sid: "test-site",
+            });
+
+            client.userAgent = "MyApp/1.2.3";
+
+            await trackPageview(client, {
+                url: "https://example.com/test",
+                userAgent: "Mozilla/5.0 (Visitor)",
+            });
+
+            expect(makeRequest).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.any(Object),
+                1000,
+                "Mozilla/5.0 (Visitor)",
             );
         });
     });

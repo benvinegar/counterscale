@@ -1,10 +1,13 @@
 import type { CollectRequestParams } from "../shared/types";
 import { buildCollectUrl } from "../shared/request";
 
+const DEFAULT_USER_AGENT = "Counterscale-Tracker-Server/3.2.0";
+
 export async function makeRequest(
     url: string,
     params: CollectRequestParams,
     timeout = 1000,
+    userAgent = DEFAULT_USER_AGENT,
 ): Promise<void> {
     try {
         const fullUrl = buildCollectUrl(url, params, true); // Filter empty strings for server
@@ -16,7 +19,7 @@ export async function makeRequest(
             method: "GET",
             headers: {
                 "Content-Type": "text/plain",
-                "User-Agent": "Counterscale-Tracker-Server/3.2.0",
+                "User-Agent": userAgent,
             },
             signal: controller.signal,
         });

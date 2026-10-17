@@ -92,5 +92,10 @@ export async function trackPageview(
         "1",
     );
 
-    await makeRequest(client.reporterUrl, requestParams, client.timeout);
+    await makeRequest(
+        client.reporterUrl,
+        requestParams,
+        client.timeout,
+        opts.userAgent ?? client.userAgent,
+    );
 }
